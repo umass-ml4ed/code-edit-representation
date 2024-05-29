@@ -1,0 +1,81 @@
+##################################################
+# exp_opts
+##################################################
+seed: 0
+exp_name: 'cer' 
+use_neptune: false
+save_model: true
+testing: true # only use a very small portion of the dataset for testing purposes
+neptune_project: 'hhjami/Code-Edit-Representation' # change to your own "username/projectname"
+log_train_every_itr: 100
+model_save_dir: 'checkpoints'
+use_cuda: false
+##################################################
+# data_opts
+##################################################
+data_path: 'data'
+test_size: 0.2 # percentage of test dataset
+max_len: 200 # maximum number of submission per student 
+label_type: 'binary' # score division category, choose from 'binary', 'tenary' or 'raw'
+first_ast_convertible: true # whether to use student first submission to each question
+##################################################
+# model_opts
+##################################################
+model_name: 't5-base'
+model_inp_dim: 768 # Fixed at 768 as it's the output dimension of flan-t5
+##################################################
+# model_lstm_opts
+##################################################
+use_lstm: true 
+lstm_inp_dim: 968 # Fixed at 968 as it's 768+200 (200 is the prompt embedding)
+lstm_hid_dim: 64
+train_lstm: true 
+lstm_lr: 0.00001
+cls_lr: 0.001
+##################################################
+# model_gpt_opts
+##################################################
+okt_model: 'funcom' # pre-trained GPT model: choose from 'student', 'funcom' or 'gpt-2'
+train_okt: true
+##################################################
+# train_generator_opts
+##################################################
+epochs: 50
+batch_size: 1
+lr: 0.00001
+lr_linear: 0.001
+lr_weight: 0.001
+use_scheduler: true
+warmup_ratio: 0.1
+##################################################
+# evaluation configs
+##################################################
+nsamples: 1
+k: 1
+p: 0
+##################################################
+# q model configs
+##################################################
+use_q_model: true
+lr_q: 0.001
+weight_q_loss_continuous: 1.0
+weight_q_loss_discrete: 1.0
+learn_sigma: false
+dim_normal: 1
+dim_categorical: 1
+num_classes_categorical: 10
+sample_h_hat_train: true # Disable sampling for performance comparison with equivalent non stochastic model
+use_h_bar_static: false # Enable static h bar instead of time varying h bar from LSTM
+h_bar_static_dim: 0
+compare_without_info_reg: false # Compare change in Q model loss without mutual information-regularization (Q loss) in loss
+##################################################
+# interpret configs
+##################################################
+checkpoint: '20230809_211604'
+start: 0
+end: 1
+most_freq_student: false
+most_freq_problem: false
+interpret_train: false
+index: 0
+same_h_hat_discrete: false
