@@ -3,13 +3,13 @@
 ##################################################
 seed: 0
 exp_name: 'cer' 
-use_neptune: false
-save_model: true
+use_neptune: true
+save_model: false
 testing: true # only use a very small portion of the dataset for testing purposes
 neptune_project: 'hhjami/Code-Edit-Representation' # change to your own "username/projectname"
 log_train_every_itr: 100
 model_save_dir: 'checkpoints'
-use_cuda: false
+use_cuda: true
 ##################################################
 # data_opts
 ##################################################
@@ -41,7 +41,7 @@ train_okt: true
 # train_generator_opts
 ##################################################
 epochs: 50
-batch_size: 1
+batch_size: 8
 lr: 0.00001
 lr_linear: 0.001
 lr_weight: 0.001

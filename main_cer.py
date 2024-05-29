@@ -41,21 +41,26 @@ def main(configs):
     #    device = torch.device("mps")
     else:
         device = torch.device('cpu')    
+    
+    print(device)
 
     # Test on smaller fraction of dataset
     if configs.testing:
-        configs.use_neptune = False
+        # configs.use_neptune = False
         configs.epochs = 2
     
     # Use neptune.ai to track experiments
     run = None
     if configs.use_neptune:
+        if 'NEPTUNE_API_TOKEN' not in os.environ:
+            print("Please set the NEPTUNE_API_TOKEN environment variable")
+            sys.exit(1)
+        print(os.environ['NEPTUNE_API_TOKEN'])
         run = neptune.init_run(
             project=configs.neptune_project,
             
             #Set Neptune API token as an environment variable. This is a secure way to pass the token. The token can also be saved in the config directly, but it must be removed before pushing to git.
             api_token=os.environ['NEPTUNE_API_TOKEN'], 
-            
             capture_hardware_metrics = False,
             name=configs.exp_name + '_{}'.format(now), # mark the experiment using the current date and time
             custom_run_id=configs.exp_name + '_{}'.format(now),
@@ -133,45 +138,27 @@ def main(configs):
     
     criterion = ContrastiveLoss()
     model.train()
-    for ep in tqdm(range(configs.epochs), desc="epochs"):
-        running_loss = 0.0
-        for idx, batch in enumerate(tqdm(train_loader, desc="training", leave=False)):
-            # print(batch)
-            A1 = batch['A1']
-            A2 = batch['A2']
-            B1 = batch['B1']
-            B2 = batch['B2']
-            label = batch['label']
+    # for ep in tqdm(range(configs.epochs), desc="epochs"):
+    #     for idx, batch in enumerate(tqdm(train_loader, desc="training", leave=False)):
+    #         A1 = batch['A1']
+    #         A2 = batch['A2']
+    #         B1 = batch['B1']
+    #         B2 = batch['B2']
+    #         label = batch['label']
 
-            # # Move to GPU if available
-            # if torch.cuda.is_available():
-            #     A1, A2, B1, B2, labels = A1.cuda(), A2.cuda(), B1.cuda(), B2.cuda(), labels.cuda()
-
-            optimizer.zero_grad()
+    #         optimizer.zero_grad()
             
-            outputs = model(A1, A2, B1, B2)
-            loss = criterion(outputs, label)
-            loss.backward()
-            optimizer.step()
-            
-            running_loss += loss.item()
-            if idx % 10 == 9:    # print every 10 batches
-                print(f'Epoch {epoch + 1}, Batch {i + 1}, Loss: {running_loss / 10:.4f}')
-                running_loss = 0.0
-
-    print('Finished Training')
+    #         outputs = model(A1, A2, B1, B2)
+    #         loss = criterion(outputs, label)
+    #         loss.backward()
+    #         optimizer.step()
 
     for ep in tqdm(range(configs.epochs), desc="epochs"):
         train_logs, test_logs, valid_logs = [], [], []
         
         ## training
         for idx, batch in enumerate(tqdm(train_loader, desc="training", leave=False)):
-            # # TODO p1: we don't need to return stuff, the optimizer will update params in place?
-            # train_log = generator_step(batch, lstm_inputs, model, lstm, linear, q_model, student_params_h_bar_static, student_params_h_hat_mu, 
-            #                             student_params_h_hat_sigma, student_params_h_hat_discrete, optimizers_generator, optimizers_lstm, optimizers_q,
-            #                             configs, train=True, scheduler=scheduler, device=device, 
-            #                             student_params_h_hat_discrete_copy=student_params_h_hat_discrete_copy)
-            train_log = generator_step(batch, model, optimizer, scheduler, configs, train=True, device=device)
+            train_log = generator_step(batch, model, criterion, optimizer, scheduler, configs, device=device)
             train_logs.append(train_log)
             ## save results to neptune.ai
             if configs.log_train_every_itr and configs.use_neptune:
@@ -182,14 +169,12 @@ def main(configs):
 
         ## validation
         for idx, batch in enumerate(tqdm(valid_loader, desc="validation", leave=False)):
-            valid_log = generator_step(batch, lstm_inputs, model, lstm, linear, q_model, student_params_h_bar_static, student_params_h_hat_mu, 
-                                       student_params_h_hat_sigma, student_params_h_hat_discrete, configs=configs, train=False, device=device)
+            valid_log = generator_step(batch, model, criterion, optimizer, scheduler, configs, device=device)
             valid_logs.append(valid_log)
             
         ## testing
         for idx, batch in enumerate(tqdm(test_loader, desc="testing", leave=False)):
-            test_log = generator_step(batch, lstm_inputs, model, lstm, linear, q_model, student_params_h_bar_static, student_params_h_hat_mu, 
-                                      student_params_h_hat_sigma, student_params_h_hat_discrete, configs=configs, train=False, device=device)
+            test_log = generator_step(batch, model, criterion, optimizer, scheduler, configs, device=device)
             test_logs.append(test_log)
         
         ## logging
@@ -243,8 +228,8 @@ def main(configs):
                 run["metrics/test/best_"+key+"_with_valid"].log(best_metrics_with_valid[key])
             run["epoch"].log(ep)
     
-    # Evaluation post training for code generation on test set and CodeBleu
-    evaluate(configs, now, test_set, lstm_inputs, tokenizer, run, student_id_to_index, device)
+    # # Evaluation post training for code generation on test set and CodeBleu
+    # evaluate(configs, now, test_set, lstm_inputs, tokenizer, run, student_id_to_index, device)
 
 
 if __name__ == "__main__":

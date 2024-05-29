@@ -117,7 +117,7 @@ def make_pytorch_dataset(dataset):
             'A2': row['code_i_2'],
             'B1': row['code_j_1'],
             'B2': row['code_j_2'],
-            'label': row['is_similar'],
+            'label': 1 if row['is_similar'] == True else 0,
         }) 
     return cer_dataset
 #     okt_dataset = []
