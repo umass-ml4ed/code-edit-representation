@@ -32,22 +32,23 @@ def main(configs):
     
     # Set device
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')    
-    if configs.use_cuda: 
-        if torch.cuda.is_available():
-            device = torch.device('cuda')
-        assert device.type == 'cuda', 'No GPU found'
-    # Apple metal acceleration: don't enable for now since some operations are not implemented in MPS and torch.gather has an issue (https://github.com/pytorch/pytorch/issues/94765)
-    #elif( torch.backends.mps.is_available() ):
-    #    device = torch.device("mps")
-    else:
-        device = torch.device('cpu')    
+    # if configs.use_cuda: 
+    #     if torch.cuda.is_available():
+    #         device = torch.device('cuda')
+    #     # assert device.type == 'cuda', 'No GPU found'
+    # # Apple metal acceleration: don't enable for now since some operations are not implemented in MPS and torch.gather has an issue (https://github.com/pytorch/pytorch/issues/94765)
+    # #elif( torch.backends.mps.is_available() ):
+    # #    device = torch.device("mps")
+    # else:
+    #     device = torch.device('cpu')    
     
     print(device)
 
     # Test on smaller fraction of dataset
     if configs.testing:
-        # configs.use_neptune = False
+        configs.use_neptune = False
         configs.epochs = 2
+        configs.save_model = False
     
     # Use neptune.ai to track experiments
     run = None
@@ -74,6 +75,14 @@ def main(configs):
 
     ## load the init dataset
     train_set, valid_set, test_set, dataset = read_data(configs)
+
+    ## save the dataset along with the model
+    if configs.save_model:
+        torch.save(dataset, os.path.join(configs.model_save_dir, now, 'dataset'))
+        torch.save(train_set, os.path.join(configs.model_save_dir, now, 'train_set'))
+        torch.save(valid_set, os.path.join(configs.model_save_dir, now, 'valid_set'))
+        torch.save(test_set, os.path.join(configs.model_save_dir, now, 'test_set'))
+
     # # Create a dictionary that maps student_id to index
     # student_id_to_index = {k: v for v, k in enumerate(students)}
 
@@ -85,12 +94,8 @@ def main(configs):
     ## load data
     collate_fn = CollateForCER(tokenizer=tokenizer, configs=configs, device=device)
     train_loader = make_dataloader(train_set, collate_fn=collate_fn, configs=configs)
-    valid_loader = make_dataloader(valid_set,  
-                                      collate_fn=collate_fn, configs=configs, 
-                                      train=False)
-    test_loader  = make_dataloader(test_set ,  
-                                      collate_fn=collate_fn, configs=configs, 
-                                      train=False)
+    valid_loader = make_dataloader(valid_set, collate_fn=collate_fn, configs=configs)
+    test_loader  = make_dataloader(test_set , collate_fn=collate_fn, configs=configs)
 
     # ## optimizers and loss function
     # optimizers_generator = []

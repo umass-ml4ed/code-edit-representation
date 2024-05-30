@@ -10,7 +10,7 @@ class ContrastiveLoss(nn.Module):
         self.margin = margin
         self.device = device
 
-    def forward(self, output, label):
+    def forward(self, output: torch.tensor, label: torch.tensor) -> torch.tensor:
         output = output.to(self.device)
         label = label.to(self.device)
         # Assuming label is 1 for similar pairs and 0 for dissimilar pairs
@@ -24,7 +24,7 @@ def normal_nll(mu, sigma, x):
     
     return nll
 
-def generator_step(batch, model, criterion, optimizer, scheduler, configs, device):
+def generator_step(batch: dict, model: nn.modules, criterion: nn.modules, optimizer: torch.optim, scheduler, configs: dict, device: torch.device) -> dict:
     A1 = batch['A1']
     A2 = batch['A2']
     B1 = batch['B1']

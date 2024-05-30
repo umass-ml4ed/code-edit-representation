@@ -7,7 +7,7 @@ import os
 from transformers import T5Tokenizer, T5Model
 
 from pdb import set_trace
-
+from datatypes import *
 
 # def create_lstm_model(configs, device):
 #     lstm = nn.LSTM(configs.lstm_inp_dim, configs.lstm_hid_dim)
@@ -16,7 +16,7 @@ from pdb import set_trace
 #     return lstm
 
 
-def create_tokenizer(configs):
+def create_tokenizer(configs: dict) -> tokenizer:
     # tokenizer = AutoTokenizer.from_pretrained("gpt2")
     # tokenizer.pad_token = tokenizer.eos_token
     tokenizer = T5Tokenizer.from_pretrained(configs.model_name)
@@ -24,7 +24,7 @@ def create_tokenizer(configs):
     return tokenizer
 
 
-def create_cer_model(configs, device):
+def create_cer_model(configs: dict, device: torch.device) -> nn.Module:
     # ## load the code generator model
     tokenizer = create_tokenizer(configs)
     
@@ -81,7 +81,7 @@ def create_cer_model(configs, device):
 
 
 class CustomCERModel(nn.Module):
-    def __init__(self, configs,device):
+    def __init__(self, configs: dict, device: torch.device):
         super(CustomCERModel, self).__init__()
         self.tokenizer = T5Tokenizer.from_pretrained(configs.model_name)
         self.model = T5Model.from_pretrained(configs.model_name)
@@ -93,28 +93,19 @@ class CustomCERModel(nn.Module):
 
         self.device = device
 
-    def forward(self, A1, A2, B1, B2):
-        # Tokenize and get embeddings
-        # def get_embeddings(text):
-        #     inputs = self.tokenizer(text, return_tensors="pt", padding=True, truncation=True)
-        #     outputs = self.model(inputs, decoder_input_ids=inputs)
-        #     embeddings = outputs.last_hidden_state
-        #     # Average pooling
-        #     embeddings = torch.mean(embeddings, dim=1)
-        #     return embeddings
-        def get_embeddings(texts):
-            inputs = self.tokenizer(texts, return_tensors="pt", padding=True, truncation=True).to(self.device)
+    def get_embeddings(self, code: str) -> torch.Tensor:
+            inputs = self.tokenizer(code, return_tensors="pt", padding=True, truncation=True).to(self.device)
             outputs = self.model.encoder(**inputs)
             embeddings = outputs.last_hidden_state
             # Average pooling
             embeddings = torch.mean(embeddings, dim=1)
             return embeddings
 
-
-        A1_emb = get_embeddings(A1).to(self.device)
-        A2_emb = get_embeddings(A2).to(self.device)
-        B1_emb = get_embeddings(B1).to(self.device)
-        B2_emb = get_embeddings(B2).to(self.device)
+    def forward(self, A1: str, A2: str, B1: str, B2: str) -> torch.Tensor:
+        A1_emb = self.get_embeddings(A1).to(self.device)
+        A2_emb = self.get_embeddings(A2).to(self.device)
+        B1_emb = self.get_embeddings(B1).to(self.device)
+        B2_emb = self.get_embeddings(B2).to(self.device)
 
         # Compute differences
         Da = A2_emb - A1_emb

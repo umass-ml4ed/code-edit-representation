@@ -6,9 +6,10 @@ from sklearn.model_selection import train_test_split
 from pdb import set_trace
 import sys
 from torch.nn.utils.rnn import pad_sequence
+from datatypes import *
 
 
-def read_data(configs):
+def read_data(configs: dict) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     '''
     @param configs.label_type: whether to use binarized label, raw label, or ternery label
     @param configs.max_len: maximum allowed length for each student's answer sequence. longer
@@ -110,7 +111,7 @@ def read_data(configs):
 
 
 # def make_pytorch_dataset(dataset_split, dataset_full, do_lstm_dataset=True):
-def make_pytorch_dataset(dataset):
+def make_pytorch_dataset(dataset: pd.DataFrame) -> List[Dict[str, Union[str, int]]]:
     '''
     convert the pandas dataframe into dataset format that pytorch dataloader takes
     the resulting format is a list of dictionaries
@@ -159,7 +160,7 @@ def make_pytorch_dataset(dataset):
 
 
 # def make_dataloader(dataset_split, dataset_full, collate_fn, configs, n_workers=0, do_lstm_dataset=True, train=True):
-def make_dataloader(dataset, collate_fn, configs, n_workers=0, train=True):
+def make_dataloader(dataset: pd.DataFrame, collate_fn: Callable, configs: dict, n_workers: int = 0, train: bool = True) -> torch.utils.data.DataLoader:
     # Make two datasets: one with a list of dict (for GPT), and another a dict with student_id as key (for LSTM to compute knowledge states)
     shuffle = True if train else False
     # if do_lstm_dataset:
@@ -211,7 +212,7 @@ def make_dataloader(dataset, collate_fn, configs, n_workers=0, train=True):
 
 
 class CollateForCER(object):
-    def __init__(self, tokenizer, configs, device):
+    def __init__(self, tokenizer: tokenizer, configs: dict, device: torch.device):
         self.tokenizer = tokenizer
         # # Pad if required with <|endoftext|> tokens on the right of input since GPT2 uses absolute position embeddings
         # assert self.tokenizer.padding_side == "right"
@@ -222,7 +223,7 @@ class CollateForCER(object):
         # self.delimiter_token_id = 25
         
 
-    def __call__(self, batch):
+    def __call__(self, batch: List[Dict[str, Union[str, int]]]) -> Dict[str, torch.Tensor]:
         input_ids_list = []
         attention_mask_list = []
         
