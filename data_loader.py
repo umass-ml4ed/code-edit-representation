@@ -17,7 +17,17 @@ def read_data(configs):
     '''
     # load dataset
     dataset = pd.read_pickle(configs.data_path + '/dataset.pkl')
-    
+
+    #split the dataset into two, one for is_similar = True and the other for is_similar = False
+    dataset_true = dataset[dataset['is_similar'] == True]
+    dataset_false = dataset[dataset['is_similar'] == False]
+
+    #sample the dataset_false to have the same number of rows as dataset_true
+    dataset_false = dataset_false.sample(n=dataset_true.shape[0])
+
+    #concatenate the two datasets
+    dataset = pd.concat([dataset_true, dataset_false])
+        
     ## if only testing, subsample part of dataset
     if configs.testing:
         dataset = dataset.sample(n=120)

@@ -5,14 +5,17 @@ import torch.nn.functional as F
 from sklearn.metrics import jaccard_score
 
 class ContrastiveLoss(nn.Module):
-    def __init__(self, margin=1.0):
+    def __init__(self, device, margin=1.0):
         super(ContrastiveLoss, self).__init__()
         self.margin = margin
+        self.device = device
 
     def forward(self, output, label):
+        output = output.to(self.device)
+        label = label.to(self.device)
         # Assuming label is 1 for similar pairs and 0 for dissimilar pairs
         loss = 0.5 * (label * output**2 + (1 - label) * F.relu(self.margin - output).pow(2))
-        return loss.mean()
+        return loss.mean().to(self.device)
 
 
 

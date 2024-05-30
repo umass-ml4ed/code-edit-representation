@@ -4,8 +4,8 @@
 seed: 0
 exp_name: 'cer' 
 use_neptune: true
-save_model: false
-testing: true # only use a very small portion of the dataset for testing purposes
+save_model: true
+testing: false # only use a very small portion of the dataset for testing purposes
 neptune_project: 'hhjami/Code-Edit-Representation' # change to your own "username/projectname"
 log_train_every_itr: 100
 model_save_dir: 'checkpoints'
@@ -40,8 +40,8 @@ train_okt: true
 ##################################################
 # train_generator_opts
 ##################################################
-epochs: 50
-batch_size: 8
+epochs: 10
+batch_size: 2
 lr: 0.00001
 lr_linear: 0.001
 lr_weight: 0.001

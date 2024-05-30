@@ -13,3 +13,6 @@ scripts/
 test.py
 test_model.ipynb
 .neptune/
+slurm_out/
+checkpoints/
+sbatch.run.sh

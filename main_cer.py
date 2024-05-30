@@ -136,7 +136,7 @@ def main(configs):
     best_test_metrics =  {'loss': float('inf')} 
     best_metrics_with_valid =  {'loss': float('inf')}
     
-    criterion = ContrastiveLoss()
+    criterion = ContrastiveLoss(device=device)
     model.train()
     # for ep in tqdm(range(configs.epochs), desc="epochs"):
     #     for idx, batch in enumerate(tqdm(train_loader, desc="training", leave=False)):
@@ -194,18 +194,6 @@ def main(configs):
                         if configs.use_neptune:
                             run["best_model_at_epoch"].log(ep)
                         torch.save(model, os.path.join(configs.model_save_dir, now, 'model'))
-                        torch.save(linear, os.path.join(configs.model_save_dir, now, 'linear'))
-                        if configs.use_lstm:
-                            torch.save(lstm, os.path.join(configs.model_save_dir, now, 'lstm'))
-                        if( configs.use_h_bar_static ):
-                            torch.save(student_params_h_bar_static, os.path.join(configs.model_save_dir, now, 'student_params_h_bar_static'))
-                        if( configs.use_q_model ):
-                            torch.save(q_model, os.path.join(configs.model_save_dir, now, 'q_model'))
-                            if( configs.dim_normal > 0 ):
-                                torch.save(student_params_h_hat_mu, os.path.join(configs.model_save_dir, now, 'student_params_h_hat_mu'))
-                                torch.save(student_params_h_hat_sigma, os.path.join(configs.model_save_dir, now, 'student_params_h_hat_sigma'))
-                            if( configs.dim_categorical > 0 ):
-                                torch.save(student_params_h_hat_discrete, os.path.join(configs.model_save_dir, now, 'student_params_h_hat_discrete'))
                             
         for key in test_logs:
             if key == 'loss':

@@ -76,12 +76,12 @@ def create_cer_model(configs, device):
     #         student_params_h_hat_discrete_copy = student_params_h_hat_discrete.data.clone()
 
     # return lstm, tokenizer, model, linear, q_model, student_params_h_bar_static, student_params_h_hat_mu, student_params_h_hat_sigma, student_params_h_hat_discrete, student_params_h_hat_discrete_copy
-    return CustomCERModel(configs),tokenizer
+    return CustomCERModel(configs,device).to(device),tokenizer
 
 
 
 class CustomCERModel(nn.Module):
-    def __init__(self, configs):
+    def __init__(self, configs,device):
         super(CustomCERModel, self).__init__()
         self.tokenizer = T5Tokenizer.from_pretrained(configs.model_name)
         self.model = T5Model.from_pretrained(configs.model_name)
@@ -90,6 +90,8 @@ class CustomCERModel(nn.Module):
         # Fully connected layers
         self.fc1 = nn.Linear(self.embedding_size, self.embedding_size)
         self.fc2 = nn.Linear(2 * self.embedding_size, 1)
+
+        self.device = device
 
     def forward(self, A1, A2, B1, B2):
         # Tokenize and get embeddings
@@ -101,7 +103,7 @@ class CustomCERModel(nn.Module):
         #     embeddings = torch.mean(embeddings, dim=1)
         #     return embeddings
         def get_embeddings(texts):
-            inputs = self.tokenizer(texts, return_tensors="pt", padding=True, truncation=True)
+            inputs = self.tokenizer(texts, return_tensors="pt", padding=True, truncation=True).to(self.device)
             outputs = self.model.encoder(**inputs)
             embeddings = outputs.last_hidden_state
             # Average pooling
@@ -109,10 +111,10 @@ class CustomCERModel(nn.Module):
             return embeddings
 
 
-        A1_emb = get_embeddings(A1)
-        A2_emb = get_embeddings(A2)
-        B1_emb = get_embeddings(B1)
-        B2_emb = get_embeddings(B2)
+        A1_emb = get_embeddings(A1).to(self.device)
+        A2_emb = get_embeddings(A2).to(self.device)
+        B1_emb = get_embeddings(B1).to(self.device)
+        B2_emb = get_embeddings(B2).to(self.device)
 
         # Compute differences
         Da = A2_emb - A1_emb
