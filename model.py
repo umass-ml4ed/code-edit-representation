@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import numpy as np
 import os
 # from transformers import AutoTokenizer, AutoModelWithLMHead
-from transformers import T5Tokenizer, T5Model
+from transformers import T5Tokenizer, T5Model, RobertaTokenizer
 
 from pdb import set_trace
 from datatypes import *
@@ -17,9 +17,10 @@ from datatypes import *
 
 
 def create_tokenizer(configs: dict) -> tokenizer:
-    # tokenizer = AutoTokenizer.from_pretrained("gpt2")
-    # tokenizer.pad_token = tokenizer.eos_token
-    tokenizer = T5Tokenizer.from_pretrained(configs.model_name)
+    if configs.model_name == 't5-base' or configs.model_name == 't5-large':
+        tokenizer = T5Tokenizer.from_pretrained(configs.model_name)
+    else :
+        tokenizer = RobertaTokenizer.from_pretrained(configs.model_name)
     
     return tokenizer
 
@@ -83,7 +84,10 @@ def create_cer_model(configs: dict, device: torch.device) -> nn.Module:
 class CustomCERModel(nn.Module):
     def __init__(self, configs: dict, device: torch.device):
         super(CustomCERModel, self).__init__()
-        self.tokenizer = T5Tokenizer.from_pretrained(configs.model_name)
+        if configs.model_name == 't5-base' or configs.model_name == 't5-large':
+            self.tokenizer = T5Tokenizer.from_pretrained(configs.model_name)
+        else :
+            self.tokenizer = RobertaTokenizer.from_pretrained(configs.model_name)
         self.model = T5Model.from_pretrained(configs.model_name)
         self.embedding_size = self.model.config.d_model
 
@@ -119,6 +123,6 @@ class CustomCERModel(nn.Module):
         combined = torch.cat((Da_fc, Db_fc), dim=1)
 
         # Pass through the second FC layer
-        output = self.fc2(combined)
+        output = torch.sigmoid(self.fc2(combined))
 
         return output

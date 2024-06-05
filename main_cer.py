@@ -15,11 +15,11 @@ from utils import *
 # from eval import *
 
 
-def sanitize_configs(configs):
-    assert ( not (configs.use_lstm and configs.use_h_bar_static) ), "Enable either LSTM for time varying h bar or enable static h bar"
-    assert ( (configs.use_lstm == False and configs.lstm_hid_dim == 0) or (configs.use_lstm == True and configs.lstm_hid_dim > 0) ), "Invalid combination of configs use_lstm and lstm_hid_dim"
-    assert ( (configs.use_h_bar_static == False and configs.h_bar_static_dim == 0) or (configs.use_h_bar_static == True and configs.h_bar_static_dim > 0) ), "Invalid combination of configs use_h_bar_static and h_bar_static_dim"
-    assert ( (configs.use_q_model == False and ((configs.dim_normal + configs.dim_categorical) == 0)) or (configs.use_q_model == True and ((configs.dim_normal + configs.dim_categorical) > 0)) ), "Invalid combination of configs use_q_model and dim_normal and dim_categorical"
+# def sanitize_configs(configs):
+    # assert ( not (configs.use_lstm and configs.use_h_bar_static) ), "Enable either LSTM for time varying h bar or enable static h bar"
+    # assert ( (configs.use_lstm == False and configs.lstm_hid_dim == 0) or (configs.use_lstm == True and configs.lstm_hid_dim > 0) ), "Invalid combination of configs use_lstm and lstm_hid_dim"
+    # assert ( (configs.use_h_bar_static == False and configs.h_bar_static_dim == 0) or (configs.use_h_bar_static == True and configs.h_bar_static_dim > 0) ), "Invalid combination of configs use_h_bar_static and h_bar_static_dim"
+    # assert ( (configs.use_q_model == False and ((configs.dim_normal + configs.dim_categorical) == 0)) or (configs.use_q_model == True and ((configs.dim_normal + configs.dim_categorical) > 0)) ), "Invalid combination of configs use_q_model and dim_normal and dim_categorical"
 
 
 @hydra.main(version_base=None, config_path=".", config_name="configs_cer")
@@ -28,7 +28,7 @@ def main(configs):
     # Make reproducible
     set_random_seed(configs.seed)
     # Sanity checks on config
-    sanitize_configs(configs)
+    # sanitize_configs(configs)
     
     # Set device
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')    

@@ -21,8 +21,11 @@ first_ast_convertible: true # whether to use student first submission to each qu
 ##################################################
 # model_opts
 ##################################################
-model_name: 't5-base'
-model_inp_dim: 768 # Fixed at 768 as it's the output dimension of flan-t5
+# model_name: 't5-base'
+model_inp_dim: 768 # Fixed at 768 as it's the output dimension of t5-base, codet5-base
+# model_name: 't5-large'
+# model_inp_dim: 1024 # Fixed at 1024 as it's the output dimension of t5-large
+model_name: 'Salesforce/codet5-base'
 ##################################################
 # model_lstm_opts
 ##################################################
@@ -53,21 +56,6 @@ warmup_ratio: 0.1
 nsamples: 1
 k: 1
 p: 0
-##################################################
-# q model configs
-##################################################
-use_q_model: true
-lr_q: 0.001
-weight_q_loss_continuous: 1.0
-weight_q_loss_discrete: 1.0
-learn_sigma: false
-dim_normal: 1
-dim_categorical: 1
-num_classes_categorical: 10
-sample_h_hat_train: true # Disable sampling for performance comparison with equivalent non stochastic model
-use_h_bar_static: false # Enable static h bar instead of time varying h bar from LSTM
-h_bar_static_dim: 0
-compare_without_info_reg: false # Compare change in Q model loss without mutual information-regularization (Q loss) in loss
 ##################################################
 # interpret configs
 ##################################################
