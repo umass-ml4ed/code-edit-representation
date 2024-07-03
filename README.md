@@ -1,6 +1,7 @@
 # High-level TO DO
-* Prepare the data
-* Prepare the model
+* Prepare the data to include boundary cases for negative examples 
+* Prepare the model (first version ready)
+* Do the gradient accumulation 
 * Train
 * Test
 * What is omegaConf?
