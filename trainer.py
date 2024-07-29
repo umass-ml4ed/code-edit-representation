@@ -10,11 +10,17 @@ class ContrastiveLoss(nn.Module):
         self.margin = margin
         self.device = device
 
-    def forward(self, output: torch.tensor, label: torch.tensor) -> torch.tensor:
-        output = output.to(self.device)
+    def forward(self, outputs: tuple[torch.tensor, torch.tensor], label: torch.tensor) -> torch.tensor:
+        output1, output2 = outputs
+        output1 = output1.to(self.device)
+        output2 = output2.to(self.device)
         label = label.to(self.device)
+        euclidean_distance = F.pairwise_distance(output1, output2)
+        
         # Assuming label is 1 for similar pairs and 0 for dissimilar pairs
-        loss = 0.5 * (label * output**2 + (1 - label) * F.relu(self.margin - output).pow(2))
+        loss = (label) * torch.pow(euclidean_distance, 2) + (1-label) * torch.pow(torch.clamp(self.margin - euclidean_distance, min=0.0), 2)
+        # loss = torch.mean(loss)
+        # loss = 0.5 * (label * output**2 + (1 - label) * F.relu(self.margin - output).pow(2))
         return loss.mean().to(self.device)
 
 
@@ -34,6 +40,12 @@ def generator_step(batch: dict, model: nn.modules, criterion: nn.modules, optimi
     optimizer.zero_grad()
     
     outputs = model(A1, A2, B1, B2)
+    if configs.loss_fn == 'BCEWithLogitsLoss': 
+        outputs = outputs.flatten() #.to(torch.long)
+        outputs = outputs.to(device)
+    label = label.to(device).to(torch.float32)
+    # print(outputs.shape, label.shape)
+    # print(outputs.dtype, label.dtype)
     loss = criterion(outputs, label)
     loss.backward()
     optimizer.step()

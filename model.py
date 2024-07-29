@@ -28,56 +28,7 @@ def create_tokenizer(configs: dict) -> tokenizer:
 def create_cer_model(configs: dict, device: torch.device) -> nn.Module:
     # ## load the code generator model
     tokenizer = create_tokenizer(configs)
-    
-    # if configs.okt_model == 'student':
-    #     model = AutoModelWithLMHead.from_pretrained("model/gpt_code_v1_student")
-    # elif configs.okt_model == 'funcom':
-    #     model = AutoModelWithLMHead.from_pretrained("model/gpt_code_v1")
-    # else:
-    #     model = AutoModelWithLMHead.from_pretrained('gpt2')
-    # model.to(device)
-    
-    # linear = nn.Linear(configs.lstm_hid_dim + configs.h_bar_static_dim + configs.dim_normal + (configs.dim_categorical * configs.num_classes_categorical), 768).to(device)
-    
-    # # Create LSTM to compute knowledge states of students over time
-    # lstm = None
-    # if configs.use_lstm:
-    #     lstm = create_lstm_model(configs, device)
-    
-    # # Create Q model
-    # q_model = None
-    # # Create per student h hat distribution parameters
-    # student_params_h_bar_static = None
-    # student_params_h_hat_mu = None
-    # student_params_h_hat_sigma = None
-    # student_params_h_hat_discrete = None
-    # student_params_h_hat_discrete_copy = None
-
-    # if( configs.use_h_bar_static ):
-    #     student_params_h_bar_static = torch.nn.Parameter(torch.empty((len(students), configs.h_bar_static_dim)).to(device), requires_grad=True)
-    #     nn.init.normal_(student_params_h_bar_static.data, mean=0.0, std=0.1)
-
-    # if configs.use_q_model:
-    #     q_model = QModel(configs).to(device)
-
-    #     if( configs.dim_normal > 0 ):
-    #         student_params_h_hat_mu = torch.nn.Parameter(torch.empty((len(students), configs.dim_normal)).to(device), requires_grad=True)
-    #         if( configs.learn_sigma ):
-    #             student_params_h_hat_sigma = torch.nn.Parameter(torch.empty((len(students), configs.dim_normal)).to(device), requires_grad=True)
-    #         else:
-    #             student_params_h_hat_sigma = torch.nn.Parameter(torch.empty((len(students), configs.dim_normal)).to(device), requires_grad=False)
-    #         nn.init.normal_(student_params_h_hat_mu.data, mean=0.0, std=0.1)
-    #         # Initialize log sigma as zeros (i.e., sigma as ones since exp(0) = 1)
-    #         nn.init.zeros_(student_params_h_hat_sigma.data)
-
-    #     if( configs.dim_categorical > 0 ):
-    #         student_params_h_hat_discrete = torch.nn.Parameter(torch.empty((len(students), configs.dim_categorical, configs.num_classes_categorical)).to(device), requires_grad=True)
-    #         # Initialize logits (categorical defines logits as log probabilities) to parameterize close to uniform categorical distribution
-    #         nn.init.normal_(student_params_h_hat_discrete.data, mean=torch.log(torch.tensor(1.0 / configs.num_classes_categorical)), std=0.1)
-    #         student_params_h_hat_discrete_copy = student_params_h_hat_discrete.data.clone()
-
-    # return lstm, tokenizer, model, linear, q_model, student_params_h_bar_static, student_params_h_hat_mu, student_params_h_hat_sigma, student_params_h_hat_discrete, student_params_h_hat_discrete_copy
-    return CustomCERModel(configs,device).to(device),tokenizer
+    return CustomCERModel(configs,device).to(device), tokenizer
 
 
 
@@ -90,6 +41,7 @@ class CustomCERModel(nn.Module):
             self.tokenizer = RobertaTokenizer.from_pretrained(configs.model_name)
         self.model = T5Model.from_pretrained(configs.model_name)
         self.embedding_size = self.model.config.d_model
+        self.configfile = configs
 
         # Fully connected layers
         self.fc1 = nn.Linear(self.embedding_size, self.embedding_size)
@@ -119,10 +71,14 @@ class CustomCERModel(nn.Module):
         Da_fc = self.fc1(Da)
         Db_fc = self.fc1(Db)
 
-        # Concatenate Da and Db
-        combined = torch.cat((Da_fc, Db_fc), dim=1)
 
-        # Pass through the second FC layer
-        output = torch.sigmoid(self.fc2(combined))
+        if self.configfile.loss_fn == 'ContrastiveLoss':
+            return (Da_fc, Db_fc)
+        elif self.configfile.loss_fn == 'BCEWithLogitsLoss':
+            # Concatenate Da and Db
+            combined = torch.cat((Da_fc, Db_fc), dim=1)
 
-        return output
+            # Pass through the second FC layer
+            output = torch.sigmoid(self.fc2(combined))
+
+            return output
