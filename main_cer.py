@@ -76,8 +76,14 @@ def main(configs):
     valid_loader = make_dataloader(valid_set, collate_fn=collate_fn, configs=configs)
     test_loader  = make_dataloader(test_set , collate_fn=collate_fn, configs=configs)
 
+    ## optimizer. Adam is used as the optimizer. we are using different learning rates for different parts of the model
+    optimizer = optim.Adam([
+                                {'params': model.pretrained_encoder.parameters(),   'lr': configs.lr_pretrained_encoder},
+                                {'params': model.fc_edit_encoder.parameters(),      'lr': configs.lr_fc_edit_encoder},
+                                {'params': model.fc_classifier.parameters(),        'lr': configs.lr_fc_classifier}
+                            ])
     
-    optimizer = optim.Adam(model.parameters(), lr=configs.lr)
+    # optimizer = optim.Adam(model.parameters(), lr=configs.lr)
 
     # LR scheduler
     num_training_steps = len(train_loader) * configs.epochs

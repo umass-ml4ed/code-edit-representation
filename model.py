@@ -39,19 +39,21 @@ class CustomCERModel(nn.Module):
             self.tokenizer = T5Tokenizer.from_pretrained(configs.model_name)
         else :
             self.tokenizer = RobertaTokenizer.from_pretrained(configs.model_name)
-        self.model = T5Model.from_pretrained(configs.model_name)
-        self.embedding_size = self.model.config.d_model
+        self.pretrained_encoder = T5Model.from_pretrained(configs.model_name)
+        self.embedding_size = self.pretrained_encoder.config.d_model
         self.configfile = configs
 
-        # Fully connected layers
-        self.fc1 = nn.Linear(self.embedding_size, self.embedding_size)
-        self.fc2 = nn.Linear(2 * self.embedding_size, 1)
+        # Fully connected layer for encoding the edits between two corresponding code snippets
+        self.fc_edit_encoder = nn.Linear(self.embedding_size, self.embedding_size)
+
+        # Fully connected layer for the to take to two edit encodings and output a single value. This is only needed for the BCEWithLogitsLoss
+        self.fc_classifier = nn.Linear(2 * self.embedding_size, 1)
 
         self.device = device
 
     def get_embeddings(self, code: str) -> torch.Tensor:
             inputs = self.tokenizer(code, return_tensors="pt", padding=True, truncation=True).to(self.device)
-            outputs = self.model.encoder(**inputs)
+            outputs = self.pretrained_encoder.encoder(**inputs)
             embeddings = outputs.last_hidden_state
             # Average pooling
             embeddings = torch.mean(embeddings, dim=1)
@@ -68,8 +70,8 @@ class CustomCERModel(nn.Module):
         Db = B2_emb - B1_emb
 
         # Pass through the first FC layer
-        Da_fc = self.fc1(Da)
-        Db_fc = self.fc1(Db)
+        Da_fc = self.fc_edit_encoder(Da)
+        Db_fc = self.fc_edit_encoder(Db)
 
 
         if self.configfile.loss_fn == 'ContrastiveLoss':
@@ -79,6 +81,6 @@ class CustomCERModel(nn.Module):
             combined = torch.cat((Da_fc, Db_fc), dim=1)
 
             # Pass through the second FC layer
-            output = torch.sigmoid(self.fc2(combined))
+            output = torch.sigmoid(self.fc_classifier(combined))
 
             return output
