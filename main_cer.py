@@ -106,7 +106,7 @@ def main(configs):
         
         ## training
         for idx, batch in enumerate(tqdm(train_loader, desc="training", leave=False)):
-            train_log = generator_step(batch, model, criterion, optimizer, scheduler, configs, device=device)
+            train_log = generator_step(batch, idx, len(train_loader), model, criterion, optimizer, scheduler, configs, device=device)
             train_logs.append(train_log)
             ## save results to neptune.ai
             # if configs.log_train_every_itr and configs.use_neptune:
@@ -117,12 +117,12 @@ def main(configs):
 
         ## validation
         for idx, batch in enumerate(tqdm(valid_loader, desc="validation", leave=False)):
-            valid_log = generator_step(batch, model, criterion, optimizer, scheduler, configs, device=device)
+            valid_log = generator_step(batch, idx, len(valid_loader), model, criterion, optimizer, scheduler, configs, device=device)
             valid_logs.append(valid_log)
             
         ## testing
         for idx, batch in enumerate(tqdm(test_loader, desc="testing", leave=False)):
-            test_log = generator_step(batch, model, criterion, optimizer, scheduler, configs, device=device)
+            test_log = generator_step(batch, idx, len(test_loader), model, criterion, optimizer, scheduler, configs, device=device)
             test_logs.append(test_log)
         
         ## logging

@@ -30,14 +30,12 @@ def normal_nll(mu, sigma, x):
     
     return nll
 
-def generator_step(batch: dict, model: nn.modules, criterion: nn.modules, optimizer: torch.optim, scheduler, configs: dict, device: torch.device) -> dict:
+def generator_step(batch: dict, batch_idx: int, len_data: int, model: nn.modules, criterion: nn.modules, optimizer: torch.optim, scheduler, configs: dict, device: torch.device) -> dict:
     A1 = batch['A1']
     A2 = batch['A2']
     B1 = batch['B1']
     B2 = batch['B2']
     label = batch['label']
-
-    optimizer.zero_grad()
     
     outputs = model(A1, A2, B1, B2)
     if configs.loss_fn == 'BCEWithLogitsLoss': 
@@ -46,9 +44,14 @@ def generator_step(batch: dict, model: nn.modules, criterion: nn.modules, optimi
     label = label.to(device).to(torch.float32)
     # print(outputs.shape, label.shape)
     # print(outputs.dtype, label.dtype)
-    loss = criterion(outputs, label)
+    loss = criterion(outputs, label) / configs.accumulation_steps
     loss.backward()
-    optimizer.step()
+    
+    # Gradient accumulation step for efficiency
+    if ((batch_idx + 1) % configs.accumulation_steps == 0) or (batch_idx + 1 == len_data):
+        optimizer.step()
+        optimizer.zero_grad()
+
     log = {'loss': loss.cpu().detach()}
     return log
 
