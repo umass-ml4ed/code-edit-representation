@@ -10,6 +10,7 @@ neptune_project: 'hhjami/Code-Edit-Representation' # change to your own "usernam
 log_train_every_itr: 100
 model_save_dir: 'checkpoints'
 use_cuda: true
+verbose: true
 ##################################################
 # data_opts
 ##################################################
@@ -28,14 +29,14 @@ model_name: 'Salesforce/codet5-base'
 ##################################################
 # train_generator_opts
 ##################################################
-epochs: 100
+epochs: 20
 batch_size: 12
-lr: 0.0001
+lr: 1e-5
 lr_pretrained_encoder: 1e-8
 lr_fc_edit_encoder: 1e-5
 lr_fc_classifier: 1e-5
 use_scheduler: true
 warmup_ratio: 0.1
 loss_fn: 'ContrastiveLoss' # 'BCEWithLogitsLoss' or 'ContrastiveLoss'
-margin: 1.0
-accumulation_steps: 4
+margin: .25
+accumulation_steps: 1

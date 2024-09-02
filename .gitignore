@@ -13,3 +13,5 @@ test.py
 slurm_out/
 checkpoints/
 sbatch.run.sh
+out.txt
+.vscode/launch.json

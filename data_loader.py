@@ -31,7 +31,7 @@ def read_data(configs: dict) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, 
         
     ## if only testing, subsample part of dataset
     if configs.testing:
-        dataset = dataset.sample(n=120)
+        dataset = dataset.sample(n=16)
         
     trainset, testset = train_test_split(dataset, test_size=configs.test_size, random_state=configs.seed)
     validset, testset = train_test_split(testset, test_size=0.5, random_state=configs.seed)

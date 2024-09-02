@@ -12,10 +12,13 @@ class ContrastiveLoss(nn.Module):
 
     def forward(self, outputs: tuple[torch.tensor, torch.tensor], label: torch.tensor) -> torch.tensor:
         output1, output2 = outputs
+        # print(output1, output2)
         output1 = output1.to(self.device)
         output2 = output2.to(self.device)
         label = label.to(self.device)
         euclidean_distance = F.pairwise_distance(output1, output2)
+        # print('Distance: ' + str(euclidean_distance))
+        # print('Label: ' + str(label))
         
         # Assuming label is 1 for similar pairs and 0 for dissimilar pairs
         loss = (label) * torch.pow(euclidean_distance, 2) + (1-label) * torch.pow(torch.clamp(self.margin - euclidean_distance, min=0.0), 2)
@@ -49,6 +52,7 @@ def generator_step(batch: dict, batch_idx: int, len_data: int, model: nn.modules
     
     # Gradient accumulation step for efficiency
     if ((batch_idx + 1) % configs.accumulation_steps == 0) or (batch_idx + 1 == len_data):
+        # print('inside optimizer')
         optimizer.step()
         optimizer.zero_grad()
 

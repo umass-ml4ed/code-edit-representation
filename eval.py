@@ -22,10 +22,13 @@ import hydra
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
 def get_accuracy(model, input_set, configs):
-    model.eval()
+    # model.eval()
     correct = 0
     total = 0
     i = 0
+    target_list = []
+    predicted_list = []
+    dist_list = []
     with torch.no_grad():
         for index, row in input_set.iterrows():
             A1 = row['code_i_1']
@@ -36,16 +39,24 @@ def get_accuracy(model, input_set, configs):
             outputs = model.forward(A1, A2, B1, B2)
             # output = torch.round(torch.sigmoid(output))
             output1, output2 = outputs
-
-            if F.pairwise_distance(output1, output2) < configs.margin:
+            # print(output1, output2)
+            dist = F.pairwise_distance(output1, output2)
+            if dist < configs.margin:
                 predicted = 1
             else:
                 predicted = 0
+            target_list.append(target)
+            predicted_list.append(predicted)
+            dist_list.append(dist.cpu().item())
             total += 1
             if (target == True and predicted == 1) or (target == False and predicted == 0):
                 correct += 1
-            if i % 500 == 0: print(correct, total, predicted, target)
+            # if i % 500 == 0: print(correct, total, predicted, target)
             i += 1
+    print(target_list)
+    print(predicted_list)
+    dist_list = [f"{dist:.3f}" for dist in dist_list]
+    print(dist_list)
     return correct / total
 
 

@@ -30,8 +30,8 @@ def main(configs):
 
     # Test on smaller fraction of dataset
     if configs.testing:
-        configs.use_neptune = False
-        configs.epochs = 5
+        # configs.use_neptune = False
+        # configs.epochs = 5
         configs.save_model = False
     
     # Use neptune.ai to track experiments
@@ -77,13 +77,14 @@ def main(configs):
     test_loader  = make_dataloader(test_set , collate_fn=collate_fn, configs=configs)
 
     ## optimizer. Adam is used as the optimizer. we are using different learning rates for different parts of the model
-    optimizer = optim.Adam([
-                                {'params': model.pretrained_encoder.parameters(),   'lr': configs.lr_pretrained_encoder},
-                                {'params': model.fc_edit_encoder.parameters(),      'lr': configs.lr_fc_edit_encoder},
-                                {'params': model.fc_classifier.parameters(),        'lr': configs.lr_fc_classifier}
-                            ])
+    # optimizer = optim.Adam([
+    #                             {'params': model.pretrained_encoder.parameters(),   'lr': configs.lr_pretrained_encoder},
+    #                             {'params': model.fc_edit_encoder.parameters(),      'lr': configs.lr_fc_edit_encoder},
+    #                             {'params': model.fc_classifier.parameters(),        'lr': configs.lr_fc_classifier}
+    #                         ])
     
-    # optimizer = optim.Adam(model.parameters(), lr=configs.lr)
+    optimizer = optim.Adam(model.parameters(), lr=configs.lr)
+    print(optimizer)
 
     # LR scheduler
     num_training_steps = len(train_loader) * configs.epochs
@@ -99,9 +100,9 @@ def main(configs):
         criterion = ContrastiveLoss(device=device, margin=configs.margin)
     elif configs.loss_fn == 'BCEWithLogitsLoss':
         criterion = nn.BCEWithLogitsLoss()
-    model.train()
     
     for ep in tqdm(range(configs.epochs), desc="epochs"):
+        model.train()
         train_logs, test_logs, valid_logs = [], [], []
         
         ## training
@@ -114,7 +115,9 @@ def main(configs):
             #         itr_train_logs = aggregate_metrics(train_logs)
             #         for key in itr_train_logs:
             #             run["metrics/train_every_{}_itr/{}".format(configs.log_train_every_itr,key)].log(itr_train_logs[key])
-
+        if configs.verbose == True:
+            print("Epoch: ", ep)
+            print("Train Loss: ", train_log['loss'])
         ## validation
         for idx, batch in enumerate(tqdm(valid_loader, desc="validation", leave=False)):
             valid_log = generator_step(batch, idx, len(valid_loader), model, criterion, optimizer, scheduler, configs, device=device)
@@ -124,6 +127,12 @@ def main(configs):
         for idx, batch in enumerate(tqdm(test_loader, desc="testing", leave=False)):
             test_log = generator_step(batch, idx, len(test_loader), model, criterion, optimizer, scheduler, configs, device=device)
             test_logs.append(test_log)
+        
+        if configs.verbose == True:
+            train_accuracy, test_accuracy, valid_accuracy = get_model_accuracy(configs, model, train_set, test_set, valid_set)
+            print("Train Accuracy: ", train_accuracy)
+            print("Test Accuracy: ", test_accuracy)
+            print("Valid Accuracy: ", valid_accuracy)
         
         ## logging
         train_logs = aggregate_metrics(train_logs)
@@ -163,7 +172,10 @@ def main(configs):
             for key in best_metrics_with_valid:
                 run["metrics/test/best_"+key+"_with_valid"].log(best_metrics_with_valid[key])
             run["epoch"].log(ep)
-    
+        
+            run["metrics/train_accuracy"].log(train_accuracy)
+            run["metrics/test_accuracy"].log(test_accuracy)
+            run["metrics/valid_accuracy"].log(valid_accuracy)
     # Evaluation post training for accuracy
     train_accuracy, test_accuracy, valid_accuracy = get_model_accuracy(configs, model, train_set, test_set, valid_set)
     print("Train Accuracy: ", train_accuracy)
