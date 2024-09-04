@@ -11,10 +11,7 @@ from datatypes import *
 
 def read_data(configs: dict) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     '''
-    @param configs.label_type: whether to use binarized label, raw label, or ternery label
-    @param configs.max_len: maximum allowed length for each student's answer sequence. longer
-                    than this number will be truncated and set as new student(s)
-    @param configs.seed: reproducibility
+    In the test_case_verdict_x_y field 0 means correct, 1 means wa, 2 means RTE, 3 means TLE
     '''
     # load dataset
     dataset = pd.read_pickle(configs.data_path + '/dataset.pkl')
@@ -24,7 +21,10 @@ def read_data(configs: dict) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, 
     dataset_false = dataset[dataset['is_similar'] == False]
 
     #sample the dataset_false to have the same number of rows as dataset_true
-    dataset_false = dataset_false.sample(n=configs.true_false_ratio * dataset_true.shape[0])
+    # dataset_false = dataset_false.sample(n=configs.true_false_ratio * dataset_true.shape[0])
+
+    #sample the dataset_false to select good negative samples
+    dataset_false = sample_good_negatives(dataset_true, dataset_false, n = configs.true_false_ratio * dataset_true.shape[0])
 
     #concatenate the two datasets
     dataset = pd.concat([dataset_true, dataset_false])
@@ -38,6 +38,28 @@ def read_data(configs: dict) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, 
 
     return trainset, validset, testset, dataset#, students
 
+
+def sample_good_negatives(dataset_true: pd.DataFrame, dataset_false: pd.DataFrame, n: int) -> pd.DataFrame:
+    # Convert the relevant columns of dataset_true to sets of tuples
+    set_AB = set(dataset_true[['problemID', 'test_case_verdict_i_1']].itertuples(index=False, name=None))
+    set_AC = set(dataset_true[['problemID', 'test_case_verdict_j_1']].itertuples(index=False, name=None))
+
+    # Filter dataset_false using sets for problemID and test_case_verdict_i_1
+    filtered_dataset_false_AB = dataset_false[dataset_false[['problemID', 'test_case_verdict_i_1']].apply(tuple, axis=1).isin(set_AB)]
+
+    # Filter dataset_false using sets for problemID and test_case_verdict_j_1
+    filtered_dataset_false_AC = dataset_false[dataset_false[['problemID', 'test_case_verdict_j_1']].apply(tuple, axis=1).isin(set_AC)]
+
+    # Combine the two filtered datasets
+    merged_dataset = pd.concat([filtered_dataset_false_AB, filtered_dataset_false_AC])
+
+    # Remove duplicates
+    unique_merged_dataset = merged_dataset.drop_duplicates()
+
+    #sample to match the ratio of dataset_true
+    dataset_false = unique_merged_dataset.sample(n=n)
+
+    return dataset_false
 
 # def make_pytorch_dataset(dataset_split, dataset_full, do_lstm_dataset=True):
 def make_pytorch_dataset(dataset: pd.DataFrame) -> List[Dict[str, Union[str, int]]]:

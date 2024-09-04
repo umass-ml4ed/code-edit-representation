@@ -27,7 +27,52 @@ class ContrastiveLoss(nn.Module):
         return loss.mean().to(self.device)
 
 
+class NTXentLoss(nn.Module):
+    def __init__(self, device, batch_size, temperature=0.5):
+        super(NTXentLoss, self).__init__()
+        self.batch_size = batch_size
+        self.temperature = temperature
+        self.mask = self._get_mask(batch_size)
+        self.criterion = nn.CrossEntropyLoss(reduction="sum")
+        self.device = device
 
+    def _get_mask(self, batch_size):
+        # Create a mask to exclude diagonal elements
+        mask = torch.ones((batch_size * 2, batch_size * 2), dtype=torch.bool)
+        mask = mask.fill_diagonal_(0)
+        for i in range(batch_size):
+            mask[i, i + batch_size] = 0
+            mask[i + batch_size, i] = 0
+        return mask
+
+    def forward(self, z_i, z_j):
+        """
+        Args:
+            z_i: Projection of first batch of samples (batch_size x dim)
+            z_j: Projection of second batch of samples (batch_size x dim)
+        """
+        print(z_i)
+        print(z_j)
+        # Concatenate the projections from both augmented views
+        z = torch.cat((z_i, z_j), dim=0)  # (2*batch_size, dim)
+
+        # Compute similarity matrix
+        sim = torch.mm(z, z.t())  # (2*batch_size, 2*batch_size)
+        sim = sim / self.temperature  # Scale with temperature
+
+        # Mask out the diagonal elements
+        sim = sim[self.mask].view(2 * self.batch_size, -1)  # Remove diagonals
+
+        # Create labels (0 to batch_size for z_i matches with batch_size to 2*batch_size for z_j)
+        positive_samples = torch.cat([torch.arange(self.batch_size) + self.batch_size, torch.arange(self.batch_size)])
+        positive_samples = positive_samples.to(sim.device)
+
+        # Compute loss
+        loss = self.criterion(sim, positive_samples)
+        loss /= (2 * self.batch_size)  # Normalize by the number of samples
+
+        return loss.to(self.device)
+    
 def normal_nll(mu, sigma, x):
     nll =  torch.sum( torch.log(sigma) ) + torch.mul( torch.div( x.size(0), 2.0 ), torch.log( torch.mul(2, np.pi) ) ) + torch.sum( torch.div( torch.square( torch.sub(x, mu) ), torch.mul( 2, torch.square(sigma) ) ) )
     

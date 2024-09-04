@@ -91,6 +91,8 @@ class CustomCERModel(nn.Module):
 
         if self.configfile.loss_fn == 'ContrastiveLoss':
             return Da_fc, Db_fc
+        elif self.configfile.loss_fn == 'NTXentLoss' :
+            return Da_fc, Db_fc
         elif self.configfile.loss_fn == 'BCEWithLogitsLoss':
             # Concatenate Da and Db
             combined = torch.cat((Da_fc, Db_fc), dim=1)

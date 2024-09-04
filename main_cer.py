@@ -100,6 +100,8 @@ def main(configs):
         criterion = ContrastiveLoss(device=device, margin=configs.margin)
     elif configs.loss_fn == 'BCEWithLogitsLoss':
         criterion = nn.BCEWithLogitsLoss()
+    elif configs.loss_fn == 'NTXentLoss' :
+        criterion = NTXentLoss(device=device, batch_size=configs.batch_size)
     
     for ep in tqdm(range(configs.epochs), desc="epochs"):
         model.train()

@@ -3,9 +3,9 @@
 ##################################################
 seed: 0
 exp_name: 'cer' 
-use_neptune: true
+use_neptune: false
 save_model: false
-testing: false # only use a very small portion of the dataset for testing purposes
+testing: true # only use a very small portion of the dataset for testing purposes
 neptune_project: 'hhjami/Code-Edit-Representation' # change to your own "username/projectname"
 log_train_every_itr: 100
 model_save_dir: 'checkpoints'
@@ -29,7 +29,7 @@ model_name: 'Salesforce/codet5-base'
 ##################################################
 # train_generator_opts
 ##################################################
-epochs: 20
+epochs: 5
 batch_size: 12
 lr: 1e-5
 lr_pretrained_encoder: 1e-8
@@ -37,6 +37,6 @@ lr_fc_edit_encoder: 1e-5
 lr_fc_classifier: 1e-5
 use_scheduler: true
 warmup_ratio: 0.1
-loss_fn: 'ContrastiveLoss' # 'BCEWithLogitsLoss' or 'ContrastiveLoss'
-margin: .25
+loss_fn: 'ContrastiveLoss' # 'BCEWithLogitsLoss' or 'ContrastiveLoss' or 'NTXentLoss'
+margin: .27
 accumulation_steps: 1
