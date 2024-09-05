@@ -1,6 +1,5 @@
 CSEDMPairData.pkl
 __pycache__/
-data/
 dataset.csv
 evaluator/
 interpret.py
