@@ -96,14 +96,8 @@ def make_dataloader(dataset: pd.DataFrame, collate_fn: Callable, configs: dict, 
 class CollateForCER(object):
     def __init__(self, tokenizer: tokenizer, configs: dict, device: torch.device):
         self.tokenizer = tokenizer
-        # # Pad if required with <|endoftext|> tokens on the right of input since GPT2 uses absolute position embeddings
-        # assert self.tokenizer.padding_side == "right"
         self.configs = configs
-        # self.student_id_to_index = student_id_to_index
         self.device = device
-        # # Token id 25 corresponds to ":" in vocab https://huggingface.co/gpt2/raw/main/vocab.json
-        # self.delimiter_token_id = 25
-        
 
     def __call__(self, batch: List[Dict[str, Union[str, int]]]) -> Dict[str, torch.Tensor]:
         input_ids_list = []

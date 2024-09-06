@@ -9,11 +9,6 @@ from transformers import T5Tokenizer, T5Model, RobertaTokenizer
 from pdb import set_trace
 from datatypes import *
 
-# def create_lstm_model(configs, device):
-#     lstm = nn.LSTM(configs.lstm_inp_dim, configs.lstm_hid_dim)
-#     lstm.to(device)
-        
-#     return lstm
 
 
 def create_tokenizer(configs: dict) -> tokenizer:
@@ -26,7 +21,6 @@ def create_tokenizer(configs: dict) -> tokenizer:
 
 
 def create_cer_model(configs: dict, device: torch.device) -> nn.Module:
-    # ## load the code generator model
     tokenizer = create_tokenizer(configs)
     return CustomCERModel(configs,device).to(device), tokenizer
 

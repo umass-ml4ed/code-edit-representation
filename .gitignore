@@ -11,6 +11,6 @@ test.py
 .neptune/
 slurm_out/
 checkpoints/
-sbatch.run.sh
 out.txt
 .vscode/launch.json
+.gitignore
