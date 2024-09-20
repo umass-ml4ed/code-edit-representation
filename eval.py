@@ -28,8 +28,10 @@ def get_accuracy(model, input_set, configs):
             A2 = row['code_i_2']
             B1 = row['code_j_1']
             B2 = row['code_j_2']
+            inputs = [A1, A2, B1, B2]
             target = row['is_similar']
-            outputs = model.forward(A1, A2, B1, B2)
+            outputs = model.forward(inputs)
+            # outputs = model.forward(A1, A2, B1, B2)
             # output = torch.round(torch.sigmoid(output))
             output1, output2 = outputs
             # print(output1, output2)
@@ -46,8 +48,8 @@ def get_accuracy(model, input_set, configs):
                 correct += 1
             # if i % 500 == 0: print(correct, total, predicted, target)
             i += 1
-    print(target_list)
-    print(predicted_list)
+    # print(target_list)
+    # print(predicted_list)
     dist_list = [f"{dist:.3f}" for dist in dist_list]
     print(dist_list)
     return correct / total

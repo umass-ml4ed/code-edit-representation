@@ -13,12 +13,13 @@ from model import *
 from trainer import *
 from utils import *
 from eval import *
+# from sentence_transformers import losses
 
 
 @hydra.main(version_base=None, config_path=".", config_name="configs_cer")
 def main(configs):
     now = datetime.now().strftime("%Y%m%d_%H%M%S")
-    print(now)
+
     # Make reproducible
     set_random_seed(configs.seed)
     
@@ -26,12 +27,13 @@ def main(configs):
     # sanitize_configs(configs)
     
     # Set device
-    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')    
+    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')  
+    print('Current Device: ' + str(device))
 
     # Test on smaller fraction of dataset
     if configs.testing:
-        # configs.use_neptune = False
-        # configs.epochs = 5
+        configs.use_neptune = False
+        configs.epochs = 5
         configs.save_model = False
     
     # Use neptune.ai to track experiments
@@ -40,7 +42,7 @@ def main(configs):
         if 'NEPTUNE_API_TOKEN' not in os.environ:
             print("Please set the NEPTUNE_API_TOKEN environment variable")
             sys.exit(1)
-        print(os.environ['NEPTUNE_API_TOKEN'])
+        # print(os.environ['NEPTUNE_API_TOKEN'])
         run = neptune.init_run(
             project=configs.neptune_project,
             
@@ -58,7 +60,7 @@ def main(configs):
         os.makedirs(os.path.join(configs.model_save_dir, now))
 
     ## load the init dataset
-    train_set, valid_set, test_set, dataset = read_data(configs)
+    train_set, valid_set, test_set = read_data(configs)
 
     ## save the dataset along with the model
     if configs.save_model:
@@ -84,7 +86,7 @@ def main(configs):
     #                         ])
     
     optimizer = optim.Adam(model.parameters(), lr=configs.lr)
-    print(optimizer)
+    if configs.verbose == True: print(optimizer)
 
     # LR scheduler
     num_training_steps = len(train_loader) * configs.epochs
@@ -98,9 +100,8 @@ def main(configs):
     
     if configs.loss_fn == 'ContrastiveLoss':
         criterion = ContrastiveLoss(device=device, margin=configs.margin)
-    elif configs.loss_fn == 'BCEWithLogitsLoss':
-        criterion = nn.BCEWithLogitsLoss()
-    elif configs.loss_fn == 'NTXentLoss' :
+        # criterion = losses.CosineSimilarityLoss(model=model)
+    elif configs.loss_fn == 'NTXentLoss' : # not relevant right now
         criterion = NTXentLoss(device=device, batch_size=configs.batch_size)
     
     for ep in tqdm(range(configs.epochs), desc="epochs"):
@@ -109,29 +110,26 @@ def main(configs):
         
         ## training
         for idx, batch in enumerate(tqdm(train_loader, desc="training", leave=False)):
-            train_log = generator_step(batch, idx, len(train_loader), model, criterion, optimizer, scheduler, configs, device=device)
+            train_log = training_step(batch, idx, len(train_loader), model, criterion, optimizer, scheduler, configs, device=device)
             train_logs.append(train_log)
-            ## save results to neptune.ai
-            # if configs.log_train_every_itr and configs.use_neptune:
-            #     if (idx+1) % configs.log_train_every_itr == 0:
-            #         itr_train_logs = aggregate_metrics(train_logs)
-            #         for key in itr_train_logs:
-            #             run["metrics/train_every_{}_itr/{}".format(configs.log_train_every_itr,key)].log(itr_train_logs[key])
-        if configs.verbose == True:
-            print("Epoch: ", ep)
-            print("Train Loss: ", train_log['loss'])
+
+        if configs.verbose == True and configs.show_loss_at_every_epoch == True:
+            print("Epoch: " + str(ep) + "Train Loss: " + str (train_log['loss']))
+
         ## validation
         for idx, batch in enumerate(tqdm(valid_loader, desc="validation", leave=False)):
-            valid_log = generator_step(batch, idx, len(valid_loader), model, criterion, optimizer, scheduler, configs, device=device)
+            valid_log = training_step(batch, idx, len(valid_loader), model, criterion, optimizer, scheduler, configs, device=device)
             valid_logs.append(valid_log)
             
         ## testing
         for idx, batch in enumerate(tqdm(test_loader, desc="testing", leave=False)):
-            test_log = generator_step(batch, idx, len(test_loader), model, criterion, optimizer, scheduler, configs, device=device)
+            test_log = training_step(batch, idx, len(test_loader), model, criterion, optimizer, scheduler, configs, device=device)
             test_logs.append(test_log)
         
-        if configs.verbose == True:
+        if configs.show_accuracy_at_every_epoch == True or configs.use_neptune == True:
             train_accuracy, test_accuracy, valid_accuracy = get_model_accuracy(configs, model, train_set, test_set, valid_set)
+        
+        if configs.verbose == True and configs.show_accuracy_at_every_epoch == True:
             print("Train Accuracy: ", train_accuracy)
             print("Test Accuracy: ", test_accuracy)
             print("Valid Accuracy: ", valid_accuracy)
@@ -143,7 +141,6 @@ def main(configs):
         
         ## log the results and save models
         for key in valid_logs:
-            ## only one key (loss) available for OKT
             if key == 'loss':
                 if( float(valid_logs[key]) < best_valid_metrics[key] ):
                     best_valid_metrics[key] = float(valid_logs[key])
@@ -174,10 +171,10 @@ def main(configs):
             for key in best_metrics_with_valid:
                 run["metrics/test/best_"+key+"_with_valid"].log(best_metrics_with_valid[key])
             run["epoch"].log(ep)
-        
             run["metrics/train_accuracy"].log(train_accuracy)
             run["metrics/test_accuracy"].log(test_accuracy)
             run["metrics/valid_accuracy"].log(valid_accuracy)
+
     # Evaluation post training for accuracy
     train_accuracy, test_accuracy, valid_accuracy = get_model_accuracy(configs, model, train_set, test_set, valid_set)
     print("Train Accuracy: ", train_accuracy)

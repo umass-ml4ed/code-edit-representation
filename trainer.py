@@ -16,16 +16,24 @@ class ContrastiveLoss(nn.Module):
         output1 = output1.to(self.device)
         output2 = output2.to(self.device)
         label = label.to(self.device)
-        euclidean_distance = F.pairwise_distance(output1, output2)
+        distance = F.pairwise_distance(output1, output2)
         # print('Distance: ' + str(euclidean_distance))
         # print('Label: ' + str(label))
         
         # Assuming label is 1 for similar pairs and 0 for dissimilar pairs
-        loss = (label) * torch.pow(euclidean_distance, 2) + (1-label) * torch.pow(torch.clamp(self.margin - euclidean_distance, min=0.0), 2)
+        loss = (label) * torch.pow(distance, 2) + (1-label) * torch.pow(torch.clamp(self.margin - distance, min=0.0), 2)
         # loss = torch.mean(loss)
         # loss = 0.5 * (label * output**2 + (1 - label) * F.relu(self.margin - output).pow(2))
         return loss.mean().to(self.device)
 
+class TripletLoss(nn.Module):
+    def __init__(self, device, margin=1.0):
+        super(TripletLoss, self).__init__()
+        self.device = device
+        self.triplet_loss = nn.TripletMarginLoss(margin=margin)
+    
+    def forward(self, anchor_emb: torch.tensor, positive_emb: torch.tensor, negative_emb: torch.tensor) -> torch.tensor:
+        return self.triplet_loss(anchor_emb, positive_emb, negative_emb).to(self.device)
 
 class NTXentLoss(nn.Module):
     def __init__(self, device, batch_size, temperature=0.5):
@@ -78,17 +86,17 @@ def normal_nll(mu, sigma, x):
     
     return nll
 
-def generator_step(batch: dict, batch_idx: int, len_data: int, model: nn.modules, criterion: nn.modules, optimizer: torch.optim, scheduler, configs: dict, device: torch.device) -> dict:
-    A1 = batch['A1']
-    A2 = batch['A2']
-    B1 = batch['B1']
-    B2 = batch['B2']
-    label = batch['label']
+def training_step(batch: dict, batch_idx: int, len_data: int, model: nn.modules, criterion: nn.modules, optimizer: torch.optim, scheduler, configs: dict, device: torch.device) -> dict:
+    # A1 = batch['A1']
+    # A2 = batch['A2']
+    # B1 = batch['B1']
+    # B2 = batch['B2']
+    inputs = batch['inputs']
+    label = batch['labels']
+    print('Label: ' + str(label))
     
-    outputs = model(A1, A2, B1, B2)
-    if configs.loss_fn == 'BCEWithLogitsLoss': 
-        outputs = outputs.flatten() #.to(torch.long)
-        outputs = outputs.to(device)
+    # outputs = model(A1, A2, B1, B2)
+    outputs = model(inputs)
     label = label.to(device).to(torch.float32)
     # print(outputs.shape, label.shape)
     # print(outputs.dtype, label.dtype)
