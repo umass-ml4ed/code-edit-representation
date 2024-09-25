@@ -10,18 +10,18 @@ class ContrastiveLoss(nn.Module):
         self.margin = margin
         self.device = device
 
-    def forward(self, outputs: tuple[torch.tensor, torch.tensor], label: torch.tensor) -> torch.tensor:
+    def forward(self, outputs: tuple[torch.tensor, torch.tensor], labels: torch.tensor) -> torch.tensor:
         output1, output2 = outputs
         # print(output1, output2)
         output1 = output1.to(self.device)
         output2 = output2.to(self.device)
-        label = label.to(self.device)
+        labels = labels.to(self.device)
         distance = F.pairwise_distance(output1, output2)
         # print('Distance: ' + str(euclidean_distance))
         # print('Label: ' + str(label))
         
         # Assuming label is 1 for similar pairs and 0 for dissimilar pairs
-        loss = (label) * torch.pow(distance, 2) + (1-label) * torch.pow(torch.clamp(self.margin - distance, min=0.0), 2)
+        loss = (labels) * torch.pow(distance, 2) + (1-labels) * torch.pow(torch.clamp(self.margin - distance, min=0.0), 2)
         # loss = torch.mean(loss)
         # loss = 0.5 * (label * output**2 + (1 - label) * F.relu(self.margin - output).pow(2))
         return loss.mean().to(self.device)
@@ -80,7 +80,19 @@ class NTXentLoss(nn.Module):
         loss /= (2 * self.batch_size)  # Normalize by the number of samples
 
         return loss.to(self.device)
-    
+
+class CosineSimilarityLoss(nn.Module):
+    def __init__(self, device, loss_fct: nn.Module = nn.BCEWithLogitsLoss(), cos_score_transformation: nn.Module = nn.Sigmoid(),) -> None:
+        super(CosineSimilarityLoss, self).__init__()
+        self.device = device
+        self.loss_fct = loss_fct
+        self.cos_score_transformation = cos_score_transformation
+
+    def forward(self, outputs: tuple[torch.tensor, torch.tensor], labels: torch.tensor) -> torch.tensor:
+        output = self.cos_score_transformation(torch.cosine_similarity(outputs[0], outputs[1]))
+        return self.loss_fct(output, labels.float().view(-1)) 
+
+
 def normal_nll(mu, sigma, x):
     nll =  torch.sum( torch.log(sigma) ) + torch.mul( torch.div( x.size(0), 2.0 ), torch.log( torch.mul(2, np.pi) ) ) + torch.sum( torch.div( torch.square( torch.sub(x, mu) ), torch.mul( 2, torch.square(sigma) ) ) )
     
@@ -92,15 +104,16 @@ def training_step(batch: dict, batch_idx: int, len_data: int, model: nn.modules,
     # B1 = batch['B1']
     # B2 = batch['B2']
     inputs = batch['inputs']
-    label = batch['labels']
-    print('Label: ' + str(label))
+    labels = batch['labels']
+    print('Label: ' + str(labels))
     
     # outputs = model(A1, A2, B1, B2)
     outputs = model(inputs)
-    label = label.to(device).to(torch.float32)
+    labels = labels.to(device).to(torch.float32)
     # print(outputs.shape, label.shape)
     # print(outputs.dtype, label.dtype)
-    loss = criterion(outputs, label) / configs.accumulation_steps
+    loss = criterion(outputs, labels) / configs.accumulation_steps
+
     loss.backward()
     
     # Gradient accumulation step for efficiency
@@ -109,5 +122,5 @@ def training_step(batch: dict, batch_idx: int, len_data: int, model: nn.modules,
         optimizer.step()
         optimizer.zero_grad()
 
-    log = {'loss': loss.cpu().detach()}
+    log = {'loss': loss.cpu().detach(), 'output1': outputs[0].cpu().detach()}
     return log

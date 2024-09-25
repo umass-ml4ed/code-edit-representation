@@ -48,8 +48,8 @@ def get_accuracy(model, input_set, configs):
                 correct += 1
             # if i % 500 == 0: print(correct, total, predicted, target)
             i += 1
-    # print(target_list)
-    # print(predicted_list)
+    print(target_list)
+    print(predicted_list)
     dist_list = [f"{dist:.3f}" for dist in dist_list]
     print(dist_list)
     return correct / total

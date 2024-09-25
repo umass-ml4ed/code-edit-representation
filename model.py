@@ -38,8 +38,9 @@ class CustomCERModel(nn.Module):
 
         # Single fully connected layer for edit encoding (merged for both A and B)
         self.fc_edit_encoder = nn.Sequential(
-            nn.Linear(2 * self.embedding_size, self.configs.code_change_vector_size),
-            nn.Sigmoid()
+            nn.Linear(2 * self.embedding_size, self.embedding_size),
+            nn.ReLU(),
+            nn.Linear(self.embedding_size, self.configs.code_change_vector_size),
         )
 
         self.device = device
@@ -82,12 +83,12 @@ class CustomCERModel(nn.Module):
         # Pass the concatenated edit encodings through the single edit encoder
         all_edit_fc = self.fc_edit_encoder(all_edit_encodings)
 
-        # Split the results back into Da_fc and Db_fc
+        # Split the results back into Da_fc and Db_fcamb
         Da_fc = all_edit_fc[:batch_size]
         Db_fc = all_edit_fc[batch_size:]
 
         # Handle different loss functions
-        if self.configs.loss_fn in ['ContrastiveLoss', 'NTXentLoss']:
+        if self.configs.loss_fn in ['ContrastiveLoss', 'NTXentLoss','CosineSimilarityLoss']:
             return Da_fc, Db_fc
 
 # class CustomCERModel(nn.Module):

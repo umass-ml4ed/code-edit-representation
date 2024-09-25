@@ -31,7 +31,7 @@ def read_data(configs: dict) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     dataset_false = sample_good_negatives(dataset_true, dataset_false, n = configs.true_false_ratio * dataset_true.shape[0])
 
     #prepare the dataset
-    if configs.loss_fn == 'ContrastiveLoss':
+    if configs.loss_fn in ['ContrastiveLoss', 'CosineSimilarityLoss']:
         dataset = pd.concat([dataset_true, dataset_false])
     else:
         print('No dataset for this loss function')

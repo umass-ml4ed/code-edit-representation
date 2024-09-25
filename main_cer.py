@@ -29,11 +29,12 @@ def main(configs):
     # Set device
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')  
     print('Current Device: ' + str(device))
+    print('Loss Function: ' + str(configs.loss_fn))
 
     # Test on smaller fraction of dataset
     if configs.testing:
         configs.use_neptune = False
-        configs.epochs = 5
+        # configs.epochs = 5
         configs.save_model = False
     
     # Use neptune.ai to track experiments
@@ -78,11 +79,10 @@ def main(configs):
     valid_loader = make_dataloader(valid_set, collate_fn=collate_fn, configs=configs)
     test_loader  = make_dataloader(test_set , collate_fn=collate_fn, configs=configs)
 
-    ## optimizer. Adam is used as the optimizer. we are using different learning rates for different parts of the model
+    # using different learning rates for different parts of the model
     # optimizer = optim.Adam([
     #                             {'params': model.pretrained_encoder.parameters(),   'lr': configs.lr_pretrained_encoder},
     #                             {'params': model.fc_edit_encoder.parameters(),      'lr': configs.lr_fc_edit_encoder},
-    #                             {'params': model.fc_classifier.parameters(),        'lr': configs.lr_fc_classifier}
     #                         ])
     
     optimizer = optim.Adam(model.parameters(), lr=configs.lr)
@@ -100,7 +100,9 @@ def main(configs):
     
     if configs.loss_fn == 'ContrastiveLoss':
         criterion = ContrastiveLoss(device=device, margin=configs.margin)
-        # criterion = losses.CosineSimilarityLoss(model=model)
+        # criterion = losses.ContrastiveLoss(model=None, margin=configs.margin)
+    elif configs.loss_fn == 'CosineSimilarityLoss':
+        criterion = CosineSimilarityLoss(device=device)
     elif configs.loss_fn == 'NTXentLoss' : # not relevant right now
         criterion = NTXentLoss(device=device, batch_size=configs.batch_size)
     
@@ -113,8 +115,9 @@ def main(configs):
             train_log = training_step(batch, idx, len(train_loader), model, criterion, optimizer, scheduler, configs, device=device)
             train_logs.append(train_log)
 
-        if configs.verbose == True and configs.show_loss_at_every_epoch == True:
-            print("Epoch: " + str(ep) + "Train Loss: " + str (train_log['loss']))
+            if configs.verbose == True and configs.show_loss_at_every_epoch == True:
+                print("Epoch: " + str(ep) + " Train Loss: " + str (train_log['loss']))
+                # print(train_log["output1"])
 
         ## validation
         for idx, batch in enumerate(tqdm(valid_loader, desc="validation", leave=False)):
