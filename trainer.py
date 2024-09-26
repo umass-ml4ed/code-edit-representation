@@ -12,7 +12,6 @@ class ContrastiveLoss(nn.Module):
 
     def forward(self, outputs: tuple[torch.tensor, torch.tensor], labels: torch.tensor) -> torch.tensor:
         output1, output2 = outputs
-        # print(output1, output2)
         output1 = output1.to(self.device)
         output2 = output2.to(self.device)
         labels = labels.to(self.device)
@@ -25,6 +24,25 @@ class ContrastiveLoss(nn.Module):
         # loss = torch.mean(loss)
         # loss = 0.5 * (label * output**2 + (1 - label) * F.relu(self.margin - output).pow(2))
         return loss.mean().to(self.device)
+
+class MultipleNegativesRankingLoss(nn.Module):
+    def __init__(self, device, scale: float = 1.0):
+        super(MultipleNegativesRankingLoss, self).__init__()
+        self.device = device
+        self.scale = scale
+        self.cross_entropy_loss = nn.CrossEntropyLoss()
+    
+    def forward(self, outputs: tuple[torch.tensor, torch.tensor], labels: torch.tensor) -> torch.tensor:
+        output1, output2 = outputs
+        output1 = output1.to(self.device)
+        output2 = output2.to(self.device)
+        labels = labels.to(self.device)
+        scores = torch.cosine_similarity(output1, output2) * self.scale
+        scores = scores.to(self.device)
+        # Example a[i] should match with b[i]
+        range_labels = torch.arange(0, scores.size(0), device=scores.device)
+        return self.cross_entropy_loss(scores, labels.to(float))
+
 
 class TripletLoss(nn.Module):
     def __init__(self, device, margin=1.0):

@@ -105,6 +105,8 @@ def main(configs):
         criterion = CosineSimilarityLoss(device=device)
     elif configs.loss_fn == 'NTXentLoss' : # not relevant right now
         criterion = NTXentLoss(device=device, batch_size=configs.batch_size)
+    elif configs.loss_fn == 'MultipleNegativesRankingLoss':
+        criterion = MultipleNegativesRankingLoss(device=device)
     
     for ep in tqdm(range(configs.epochs), desc="epochs"):
         model.train()

@@ -35,8 +35,10 @@ def get_accuracy(model, input_set, configs):
             # output = torch.round(torch.sigmoid(output))
             output1, output2 = outputs
             # print(output1, output2)
-            dist = F.pairwise_distance(output1, output2)
-            if dist < configs.margin:
+            # dist = F.pairwise_distance(output1, output2)
+            dist = torch.cosine_similarity(output1, output2)
+            # if dist < configs.margin:
+            if dist > .5:
                 predicted = 1
             else:
                 predicted = 0

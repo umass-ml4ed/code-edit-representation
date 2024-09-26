@@ -17,7 +17,7 @@ def read_data(configs: dict) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     # load dataset
     dataset = pd.read_pickle(configs.data_path + '/dataset.pkl')
 
-    allowed_problemIDs = ['1','20']
+    allowed_problemIDs = ['20']
     dataset = dataset[dataset['problemID'].isin(allowed_problemIDs)]
 
     #split the dataset into two, one for is_similar = True and the other for is_similar = False
@@ -31,7 +31,7 @@ def read_data(configs: dict) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     dataset_false = sample_good_negatives(dataset_true, dataset_false, n = configs.true_false_ratio * dataset_true.shape[0])
 
     #prepare the dataset
-    if configs.loss_fn in ['ContrastiveLoss', 'CosineSimilarityLoss']:
+    if configs.loss_fn in ['ContrastiveLoss', 'CosineSimilarityLoss', 'MultipleNegativesRankingLoss']:
         dataset = pd.concat([dataset_true, dataset_false])
     else:
         print('No dataset for this loss function')

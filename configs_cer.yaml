@@ -16,7 +16,7 @@ use_cuda: true
 ##################################################
 verbose: true # shows debug outputs. individual flags below control which of them you want to show. setting this false, will stop printing all debug outputs
 show_loss_at_every_epoch: true # shows the training loss at every epoch
-show_accuracy_at_every_epoch: false # shows the accuracy for training, validation and testing at every epoch
+show_accuracy_at_every_epoch: true # shows the accuracy for training, validation and testing at every epoch
 ##################################################
 # data_opts
 ##################################################
@@ -36,13 +36,13 @@ code_change_vector_size: 128
 ##################################################
 # train_opts
 ##################################################
-epochs: 200
-batch_size: 8
+epochs: 20
+batch_size: 4
 lr: 1e-5
 lr_pretrained_encoder: 1e3
 lr_fc_edit_encoder: 1e3
 use_scheduler: true
 warmup_ratio: 0.1
-loss_fn: 'ContrastiveLoss' # ContrastiveLoss or NTXentLoss or TripletLoss or CosineSimilarityLoss
+loss_fn: 'MultipleNegativesRankingLoss' # ContrastiveLoss or NTXentLoss or TripletLoss or CosineSimilarityLoss or MultipleNegativesRankingLoss
 margin: .15
 accumulation_steps: 1

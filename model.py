@@ -48,8 +48,11 @@ class CustomCERModel(nn.Module):
     def get_embeddings(self, tokenized_inputs) -> torch.Tensor:
         # Pass inputs through the encoder
         outputs = self.pretrained_encoder(**tokenized_inputs).last_hidden_state
+        seq_lens = tokenized_inputs.attention_mask.sum(dim=1)
+        masked_hidden_states = outputs * tokenized_inputs.attention_mask.unsqueeze(2)
+        embeddings = masked_hidden_states.sum(dim=1) / seq_lens.unsqueeze(1)
         # Calculate mean of the embeddings
-        embeddings = torch.mean(outputs, dim=1)
+        # embeddings = torch.mean(outputs, dim=1)
         return embeddings
 
     def forward(self, concatenated_inputs: List[str]) -> torch.Tensor:
@@ -88,7 +91,7 @@ class CustomCERModel(nn.Module):
         Db_fc = all_edit_fc[batch_size:]
 
         # Handle different loss functions
-        if self.configs.loss_fn in ['ContrastiveLoss', 'NTXentLoss','CosineSimilarityLoss']:
+        if self.configs.loss_fn in ['ContrastiveLoss', 'NTXentLoss','CosineSimilarityLoss', 'MultipleNegativesRankingLoss']:
             return Da_fc, Db_fc
 
 # class CustomCERModel(nn.Module):
