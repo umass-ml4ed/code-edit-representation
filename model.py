@@ -38,8 +38,9 @@ class CustomCERModel(nn.Module):
 
         # Single fully connected layer for edit encoding (merged for both A and B)
         self.fc_edit_encoder = nn.Sequential(
-            nn.Linear(2 * self.embedding_size, self.embedding_size),
-            nn.ReLU(),
+            nn.Linear(self.embedding_size, self.embedding_size),
+            # nn.ReLU(),
+            nn.Tanh(),
             nn.Linear(self.embedding_size, self.configs.code_change_vector_size),
         )
 
@@ -59,12 +60,7 @@ class CustomCERModel(nn.Module):
         # inputs = self.tokenizer(code, return_tensors="pt", padding=True, truncation=True).to(self.device) # need to remove tokenization from here, because it's inefficient
 
         # Tokenize the concatenated inputs in one go
-        tokenized_inputs = self.tokenizer(
-            concatenated_inputs,
-            return_tensors="pt",
-            padding=True,
-            truncation=True
-        ).to(self.device)
+        tokenized_inputs = self.tokenizer( concatenated_inputs, return_tensors="pt",padding=True,truncation=True).to(self.device)
 
         # Get embeddings for all concatenated inputs (A1, A2, B1, B2 in sequence)
         embeddings = self.get_embeddings(tokenized_inputs)
@@ -77,8 +73,10 @@ class CustomCERModel(nn.Module):
         B2_emb = embeddings[3 * batch_size:]
 
         # Compute Da and Db by concatenating corresponding embeddings
-        Da = torch.cat((A1_emb, A2_emb), dim=1)
-        Db = torch.cat((B1_emb, B2_emb), dim=1)
+        # Da = torch.cat((A1_emb, A2_emb), dim=1)
+        # Db = torch.cat((B1_emb, B2_emb), dim=1)
+        Da = A1_emb - A2_emb
+        Db = B1_emb - B2_emb
 
         # Batch the edit encodings together (Da and Db concatenated)
         all_edit_encodings = torch.cat((Da, Db), dim=0)
@@ -90,6 +88,9 @@ class CustomCERModel(nn.Module):
         Da_fc = all_edit_fc[:batch_size]
         Db_fc = all_edit_fc[batch_size:]
 
+        # if self.configs.verbose == True:
+        #     print("Outputs")
+        #     print(Da_fc, Db_fc)
         # Handle different loss functions
         if self.configs.loss_fn in ['ContrastiveLoss', 'NTXentLoss','CosineSimilarityLoss', 'MultipleNegativesRankingLoss']:
             return Da_fc, Db_fc

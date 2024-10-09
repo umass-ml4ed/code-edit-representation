@@ -116,14 +116,14 @@ def normal_nll(mu, sigma, x):
     
     return nll
 
-def training_step(batch: dict, batch_idx: int, len_data: int, model: nn.modules, criterion: nn.modules, optimizer: torch.optim, scheduler, configs: dict, device: torch.device) -> dict:
+def training_step(batch: dict, batch_idx: int, len_data: int, model: nn.modules, criterion: nn.modules, optimizer: torch.optim, configs: dict, device: torch.device) -> dict:
     # A1 = batch['A1']
     # A2 = batch['A2']
     # B1 = batch['B1']
     # B2 = batch['B2']
     inputs = batch['inputs']
     labels = batch['labels']
-    print('Label: ' + str(labels))
+    # print('Label: ' + str(labels))
     
     # outputs = model(A1, A2, B1, B2)
     outputs = model(inputs)

@@ -15,9 +15,9 @@ def read_data(configs: dict) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     In the test_case_verdict_x_y field 0 means correct, 1 means wa, 2 means RTE, 3 means TLE
     '''
     # load dataset
-    dataset = pd.read_pickle(configs.data_path + '/dataset.pkl')
+    dataset = pd.read_pickle(configs.data_path)
 
-    allowed_problemIDs = ['20']
+    allowed_problemIDs = configs.allowed_problem_list
     dataset = dataset[dataset['problemID'].isin(allowed_problemIDs)]
 
     #split the dataset into two, one for is_similar = True and the other for is_similar = False
@@ -25,10 +25,11 @@ def read_data(configs: dict) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     dataset_false = dataset[dataset['is_similar'] == False]
 
     #sample the dataset_false to have the same number of rows as dataset_true
-    # dataset_false = dataset_false.sample(n=configs.true_false_ratio * dataset_true.shape[0])
+    dataset_false = dataset_false.sample(n=configs.true_false_ratio * dataset_true.shape[0])
 
     #sample the dataset_false to select good negative samples
-    dataset_false = sample_good_negatives(dataset_true, dataset_false, n = configs.true_false_ratio * dataset_true.shape[0])
+    # if configs.testing == False:
+    #     dataset_false = sample_good_negatives(dataset_true, dataset_false, n = configs.true_false_ratio * dataset_true.shape[0])
 
     #prepare the dataset
     if configs.loss_fn in ['ContrastiveLoss', 'CosineSimilarityLoss', 'MultipleNegativesRankingLoss']:
@@ -40,11 +41,15 @@ def read_data(configs: dict) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
 
         
     ## if only testing, subsample part of dataset
-    if configs.testing:
-        dataset = dataset.sample(n=configs.testing_size)
-        
-    trainset, testset = train_test_split(dataset, test_size=configs.test_size, random_state=configs.seed)
-    validset, testset = train_test_split(testset, test_size=0.5, random_state=configs.seed)
+    # if configs.testing:
+    #     dataset = dataset.sample(n=configs.testing_size)
+    
+    trainset = dataset 
+    dataset.to_pickle('data/current_dataset.pkl')
+    testset = validset = None
+    if configs.testing == False:
+        trainset, testset = train_test_split(dataset, test_size=configs.test_size, random_state=configs.seed)
+        validset, testset = train_test_split(testset, test_size=0.5, random_state=configs.seed)
 
     return trainset, validset, testset
 
@@ -81,8 +86,8 @@ class CERDataset(torch.utils.data.Dataset):
         row = self.data.iloc[index]
         return {
             'A1': row['code_i_1'],
-            'A2': row['code_i_2'],
-            'B1': row['code_j_1'],
+            'A2': row['code_j_1'],
+            'B1': row['code_i_2'],
             'B2': row['code_j_2'],
             'label': 1 if row['is_similar'] else 0,
         }

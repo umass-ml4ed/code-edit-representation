@@ -89,9 +89,9 @@ def main(configs):
     if configs.verbose == True: print(optimizer)
 
     # LR scheduler
-    num_training_steps = len(train_loader) * configs.epochs
-    num_warmup_steps = configs.warmup_ratio * num_training_steps
-    scheduler = transformers.get_linear_schedule_with_warmup(optimizer, num_warmup_steps, num_training_steps)
+    # num_training_steps = len(train_loader) * configs.epochs
+    # num_warmup_steps = configs.warmup_ratio * num_training_steps
+    # scheduler = transformers.get_linear_schedule_with_warmup(optimizer, num_warmup_steps, num_training_steps)
 
     ## start training
     best_valid_metrics =  {'loss': float('inf')} 
@@ -107,14 +107,17 @@ def main(configs):
         criterion = NTXentLoss(device=device, batch_size=configs.batch_size)
     elif configs.loss_fn == 'MultipleNegativesRankingLoss':
         criterion = MultipleNegativesRankingLoss(device=device)
+
+    print(len(train_set))
     
     for ep in tqdm(range(configs.epochs), desc="epochs"):
+        sys.stdout.flush()  # Manually flush the buffer
         model.train()
         train_logs, test_logs, valid_logs = [], [], []
         
         ## training
         for idx, batch in enumerate(tqdm(train_loader, desc="training", leave=False)):
-            train_log = training_step(batch, idx, len(train_loader), model, criterion, optimizer, scheduler, configs, device=device)
+            train_log = training_step(batch, idx, len(train_loader), model, criterion, optimizer, configs, device=device)
             train_logs.append(train_log)
 
             if configs.verbose == True and configs.show_loss_at_every_epoch == True:
@@ -122,15 +125,17 @@ def main(configs):
                 # print(train_log["output1"])
 
         ## validation
+        # if valid_set:
         for idx, batch in enumerate(tqdm(valid_loader, desc="validation", leave=False)):
-            valid_log = training_step(batch, idx, len(valid_loader), model, criterion, optimizer, scheduler, configs, device=device)
+            valid_log = training_step(batch, idx, len(valid_loader), model, criterion, optimizer, configs, device=device)
             valid_logs.append(valid_log)
             
         ## testing
+        # if test_set:
         for idx, batch in enumerate(tqdm(test_loader, desc="testing", leave=False)):
-            test_log = training_step(batch, idx, len(test_loader), model, criterion, optimizer, scheduler, configs, device=device)
+            test_log = training_step(batch, idx, len(test_loader), model, criterion, optimizer, configs, device=device)
             test_logs.append(test_log)
-        
+            
         if configs.show_accuracy_at_every_epoch == True or configs.use_neptune == True:
             train_accuracy, test_accuracy, valid_accuracy = get_model_accuracy(configs, model, train_set, test_set, valid_set)
         
@@ -145,6 +150,7 @@ def main(configs):
         test_logs  = aggregate_metrics(test_logs )
         
         ## log the results and save models
+        # if valid_set != None:
         for key in valid_logs:
             if key == 'loss':
                 if( float(valid_logs[key]) < best_valid_metrics[key] ):
@@ -156,6 +162,7 @@ def main(configs):
                             run["best_model_at_epoch"].log(ep)
                         torch.save(model, os.path.join(configs.model_save_dir, now, 'model'))
                             
+        # if test_set != None:
         for key in test_logs:
             if key == 'loss':
                 if float(test_logs[key])<best_test_metrics[key]:

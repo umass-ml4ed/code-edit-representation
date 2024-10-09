@@ -35,10 +35,10 @@ def get_accuracy(model, input_set, configs):
             # output = torch.round(torch.sigmoid(output))
             output1, output2 = outputs
             # print(output1, output2)
-            # dist = F.pairwise_distance(output1, output2)
-            dist = torch.cosine_similarity(output1, output2)
-            # if dist < configs.margin:
-            if dist > .5:
+            dist = F.pairwise_distance(output1, output2)
+            # dist = torch.cosine_similarity(output1, output2)
+            if dist < configs.margin:
+            # if dist > .5:
                 predicted = 1
             else:
                 predicted = 0
@@ -50,20 +50,23 @@ def get_accuracy(model, input_set, configs):
                 correct += 1
             # if i % 500 == 0: print(correct, total, predicted, target)
             i += 1
-    print(target_list)
-    print(predicted_list)
+    # print(target_list)
+    # print(predicted_list)
     dist_list = [f"{dist:.3f}" for dist in dist_list]
-    print(dist_list)
+    # print(dist_list)
     return correct / total
 
 
 def get_model_accuracy(configs, model, train_set, test_set, valid_set):
+    train_accuracy = test_accuracy = valid_accuracy = 0
     train_accuracy = get_accuracy(model, train_set, configs)
-    print(f'Train accuracy: {train_accuracy}')
+    # print(f'Train accuracy: {train_accuracy}')
+    # if test_set != None:
     test_accuracy = get_accuracy(model, test_set, configs)
-    print(f'Test accuracy: {test_accuracy}')
+        # print(f'Test accuracy: {test_accuracy}')
+    # if valid_set != None:
     valid_accuracy = get_accuracy(model, valid_set, configs)
-    print(f'Valid accuracy: {valid_accuracy}')
+        # print(f'Valid accuracy: {valid_accuracy}')
 
     return train_accuracy, test_accuracy, valid_accuracy
 

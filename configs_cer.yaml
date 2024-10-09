@@ -3,14 +3,15 @@
 ##################################################
 seed: 0
 exp_name: 'cer' 
-use_neptune: true
+use_neptune: false
 save_model: false
-testing:  true # only use a very small portion of the dataset for testing purposes
-testing_size: 16
+testing: false # only use a very small portion of the dataset for testing purposes
+testing_size: 8
 neptune_project: 'hhjami/Code-Edit-Representation' # change to your own "username/projectname"
 log_train_every_itr: 100
 model_save_dir: 'checkpoints'
 use_cuda: true
+allowed_problem_list: ['12', '17', '21']
 ##################################################
 # debug_opts
 ##################################################
@@ -20,29 +21,29 @@ show_accuracy_at_every_epoch: true # shows the accuracy for training, validation
 ##################################################
 # data_opts
 ##################################################
-data_path: 'data'
+data_path: 'data/dataset.pkl'
 test_size: 0.2 # percentage of test dataset
 max_len: 200 # maximum number of submission per student 
 true_false_ratio: 1 # ratio of false to true samples, multiplier of the number of true
 ##################################################
 # model_opts
 ##################################################
-# model_name: 't5-base'
-#model_inp_dim: 768 # Fixed at 768 as it's the output dimension of t5-base, codet5-base
+model_name: 't5-base'
+model_inp_dim: 768 # Fixed at 768 as it's the output dimension of t5-base, codet5-base
 # model_name: 't5-large'
-model_inp_dim: 1024 # Fixed at 1024 as it's the output dimension of t5-large, codet5-large
-model_name: 'Salesforce/codet5-large'
+# model_inp_dim: 1024 # Fixed at 1024 as it's the output dimension of t5-large, codet5-large
+# model_name: 'Salesforce/codet5-large'
 code_change_vector_size: 128
 ##################################################
 # train_opts
 ##################################################
-epochs: 20
-batch_size: 4
-lr: 1e-5
-lr_pretrained_encoder: 1e3
-lr_fc_edit_encoder: 1e3
+epochs: 100
+batch_size: 8
+lr: 1e-4
+lr_pretrained_encoder: 0
+lr_fc_edit_encoder: 1e-3
 use_scheduler: true
 warmup_ratio: 0.1
-loss_fn: 'MultipleNegativesRankingLoss' # ContrastiveLoss or NTXentLoss or TripletLoss or CosineSimilarityLoss or MultipleNegativesRankingLoss
-margin: .15
+loss_fn: 'ContrastiveLoss' # ContrastiveLoss or NTXentLoss or TripletLoss or CosineSimilarityLoss or MultipleNegativesRankingLoss
+margin: 1.0
 accumulation_steps: 1
