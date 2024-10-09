@@ -15,6 +15,38 @@ from utils import *
 from eval import *
 # from sentence_transformers import losses
 
+from sklearn.manifold import TSNE
+import matplotlib.pyplot as plt
+
+def get_latent_states(dataset, model):
+    model.eval()
+    res = np.empty((0,128))
+    labels = []
+    with torch.no_grad():
+        for index, row in dataset.iterrows():
+            A1 = row['code_i_1']
+            A2 = row['code_j_1']
+            B1 = row['code_i_2']
+            B2 = row['code_j_2']
+            
+            Da, Db = model([A1, A2, B1, B2])
+            Da = Da.cpu().detach().numpy()
+            Db = Db.cpu().detach().numpy()
+            res = np.concatenate((res, Da), axis=0)
+            res = np.concatenate((res, Db), axis=0)
+            labels.append(int(row['problemID']))
+            labels.append(int(row['problemID']))
+    return res, labels
+
+def plot_clusters(dataloader, model, epoch, plotname):
+    # X represents your high-dimensional data
+        X, labels = get_latent_states(dataloader, model)
+        tsne = TSNE(n_components=2, random_state=0)
+        X_2d = tsne.fit_transform(X)
+        plt.close()
+        plt.scatter(X_2d[:, 0], X_2d[:, 1], c=labels)  # 'labels' should be your true or predicted labels
+        plt.title('Epoch ' + str(epoch))
+        plt.savefig(plotname)
 
 @hydra.main(version_base=None, config_path=".", config_name="configs_cer")
 def main(configs):
@@ -123,6 +155,7 @@ def main(configs):
             if configs.verbose == True and configs.show_loss_at_every_epoch == True:
                 print("Epoch: " + str(ep) + " Train Loss: " + str (train_log['loss']))
                 # print(train_log["output1"])
+        
 
         ## validation
         # if valid_set:
@@ -135,14 +168,19 @@ def main(configs):
         for idx, batch in enumerate(tqdm(test_loader, desc="testing", leave=False)):
             test_log = training_step(batch, idx, len(test_loader), model, criterion, optimizer, configs, device=device)
             test_logs.append(test_log)
+
+        if ep % 10 == 0:
+            plot_clusters(train_set, model, ep, 'train_cluster.png')
+            plot_clusters(valid_set, model, ep, 'valid_cluster.png')
+            plot_clusters(test_set, model, ep, 'test_cluster.png')
+                
+            if configs.show_accuracy_at_every_epoch == True or configs.use_neptune == True:
+                train_accuracy, test_accuracy, valid_accuracy = get_model_accuracy(configs, model, train_set, test_set, valid_set)
             
-        if configs.show_accuracy_at_every_epoch == True or configs.use_neptune == True:
-            train_accuracy, test_accuracy, valid_accuracy = get_model_accuracy(configs, model, train_set, test_set, valid_set)
-        
-        if configs.verbose == True and configs.show_accuracy_at_every_epoch == True:
-            print("Train Accuracy: ", train_accuracy)
-            print("Test Accuracy: ", test_accuracy)
-            print("Valid Accuracy: ", valid_accuracy)
+            if configs.verbose == True and configs.show_accuracy_at_every_epoch == True:
+                print("Train Accuracy: ", train_accuracy)
+                print("Test Accuracy: ", test_accuracy)
+                print("Valid Accuracy: ", valid_accuracy)
         
         ## logging
         train_logs = aggregate_metrics(train_logs)
@@ -192,10 +230,14 @@ def main(configs):
     print("Train Accuracy: ", train_accuracy)
     print("Test Accuracy: ", test_accuracy)
     print("Valid Accuracy: ", valid_accuracy)
+    plot_clusters(train_set, model, ep, 'train_cluster.png')
+    plot_clusters(valid_set, model, ep, 'valid_cluster.png')
+    plot_clusters(test_set, model, ep, 'test_cluster.png')
     if configs.use_neptune:
         run["metrics/train_accuracy"].log(train_accuracy)
         run["metrics/test_accuracy"].log(test_accuracy)
         run["metrics/valid_accuracy"].log(valid_accuracy)
+
 
 
 if __name__ == "__main__":
