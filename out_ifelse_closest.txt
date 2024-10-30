@@ -1,0 +1,665 @@
+Current Device: cuda
+public int luckySum(int a, int b, int c)                                                            public int luckySum(int a, int b, int c)                                                            
+{                                                                                                   {                                                                                                   
+    if (a == 13)                                                                                        if (a == 13)                                                                                    
+        return 0;                                                                                           return 0;                                                                                   
+    else if (b == 13)                                                                                   else if (b == 13)                                                                               
+        return a;                                                                                           return a;                                                                                   
+    else                                                                                                else if (c == 13)                                                                               
+        return a + b;                                                                                       return a + b;                                                                               
+}                                                                                                       else                                                                                            
+                                                                                                            return a + b + c;                                                                           
+                                                                                                    }                                                                                                   
+-----------------------------------------------------------------------------------------------------------------------
+public int luckySum(int a, int b, int c)                                                            public int luckySum(int a, int b, int c)                                                            
+{                                                                                                   {                                                                                                   
+    if (a ==13)                                                                                         if (a ==13)                                                                                     
+    {                                                                                                   {                                                                                               
+        return 0;                                                                                           return 0;                                                                                   
+    }                                                                                                   }                                                                                               
+    else if (a != 13 && b == 13)                                                                        else if (b == 13)                                                                               
+    {                                                                                                   {                                                                                               
+        return a;                                                                                           return a;                                                                                   
+    }                                                                                                   }                                                                                               
+    else if (a != 13 && b != 13)                                                                        else if (c == 13)                                                                               
+    {                                                                                                   {                                                                                               
+        return (a + b);                                                                                     return (a + b);                                                                             
+    }                                                                                                   }                                                                                               
+    else                                                                                                else                                                                                            
+    {                                                                                                   {                                                                                               
+        return (a + b + c);                                                                                 return (a + b + c);                                                                         
+    }                                                                                                   }                                                                                               
+}                                                                                                   }                                                                                                   
+***********************************************************************************************************************
+
+
+public int redTicket(int a, int b, int c)                                                           public int redTicket(int a, int b, int c)                                                           
+{                                                                                                   {                                                                                                   
+    if (a == 2 && b == 2 && c == 2)                                                                     if (a == 2 && b == 2 && c == 2)                                                                 
+    {                                                                                                   {                                                                                               
+     	return 10;                                                                                         	return 10;                                                                                    
+    }                                                                                                   }                                                                                               
+    else if (a == 2 && b == 2 && c == 2)                                                                else if (a == b && b == c && c == a)                                                            
+    {                                                                                                   {                                                                                               
+     	return 5;                                                                                          	return 5;                                                                                     
+    }                                                                                                   }                                                                                               
+    else if ( a != b && a != c)                                                                         else if ( a != b && a != c)                                                                     
+    {                                                                                                   {                                                                                               
+     	return 1;                                                                                          	return 1;                                                                                     
+    }                                                                                                   }                                                                                               
+    else                                                                                                else                                                                                            
+    {                                                                                                   {                                                                                               
+     	return 0;                                                                                          	return 0;                                                                                     
+    }                                                                                                   }                                                                                               
+}                                                                                                   }                                                                                                   
+-----------------------------------------------------------------------------------------------------------------------
+public int luckySum(int a, int b, int c)                                                            public int luckySum(int a, int b, int c)                                                            
+{                                                                                                   {                                                                                                   
+    if (a == 13)                                                                                        if (a == 13)                                                                                    
+    {                                                                                                   {                                                                                               
+        return c;                                                                                           return 0;                                                                                   
+    }                                                                                                   }                                                                                               
+    else if (b == 13)                                                                                   else if (b == 13)                                                                               
+    {                                                                                                   {                                                                                               
+        return a;                                                                                           return a;                                                                                   
+    }                                                                                                   }                                                                                               
+    else if (c == 13)                                                                                   else if (c == 13)                                                                               
+    {                                                                                                   {                                                                                               
+        return b;                                                                                           return a + b;                                                                               
+    }                                                                                                   }                                                                                               
+    else                                                                                                else                                                                                            
+    {                                                                                                   {                                                                                               
+        return a + b + c;                                                                                   return a + b + c;                                                                           
+    }                                                                                                   }                                                                                               
+                                                                                                                                                                                                        
+}                                                                                                   }                                                                                                   
+***********************************************************************************************************************
+
+
+public boolean squirrelPlay(int temp, boolean isSummer)                                             public boolean squirrelPlay(int temp, boolean isSummer)                                             
+{                                                                                                   {                                                                                                   
+    if (isSummer)                                                                                       if (isSummer)                                                                                   
+    {                                                                                                   {                                                                                               
+        if (temp >= 60 && temp <= 100)                                                                      if (temp >= 60 && temp <= 100)                                                              
+            return true;                                                                                        return true;                                                                            
+        else                                                                                                else                                                                                        
+            return false;                                                                                       return false;                                                                           
+    }                                                                                                   }                                                                                               
+    else                                                                                                else                                                                                            
+    {                                                                                                   {                                                                                               
+        if (temp >= 60 && temp <= 100)                                                                      if (temp >= 60 && temp <= 90)                                                               
+            return true;                                                                                        return true;                                                                            
+        else                                                                                                else                                                                                        
+            return false;                                                                                       return false;                                                                           
+    }                                                                                                   }                                                                                               
+}                                                                                                   }                                                                                                   
+-----------------------------------------------------------------------------------------------------------------------
+public boolean squirrelPlay(int temp, boolean isSummer)                                             public boolean squirrelPlay(int temp, boolean isSummer)                                             
+{                                                                                                   {                                                                                                   
+    if(isSummer == true)                                                                                if(isSummer == true)                                                                            
+    {                                                                                                   {                                                                                               
+         if((temp >= 60) && (temp <= 100))                                                                   if((temp >= 60) && (temp <= 100))                                                          
+           {                                                                                                   {                                                                                        
+               return true;                                                                                        return true;                                                                         
+           }                                                                                                   }                                                                                        
+         else                                                                                                else                                                                                       
+            return false;                                                                                       return false;                                                                           
+    }                                                                                                   }                                                                                               
+    else                                                                                                else                                                                                            
+            if((temp >= 60) && (temp <= 100))                                                                   if((temp >= 60) && (temp <= 90))                                                        
+            {                                                                                                   {                                                                                       
+               return true;                                                                                        return true;                                                                         
+            }                                                                                                   }                                                                                       
+            else                                                                                                else                                                                                    
+               return false;                                                                                       return false;                                                                        
+        	                                                                                                   	                                                                                           
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+}                                                                                                   }                                                                                                   
+***********************************************************************************************************************
+
+
+public int luckySum(int a, int b, int c)                                                            public int luckySum(int a, int b, int c)                                                            
+{                                                                                                   {                                                                                                   
+    int luckySum = 0;                                                                                   int luckySum = 0;                                                                               
+    if ( a == 13 )                                                                                      if ( a == 13 )                                                                                  
+    {                                                                                                   {                                                                                               
+    	luckySum = c;                                                                                      	luckySum = 0;                                                                                  
+    }                                                                                                   }                                                                                               
+    else if ( b == 13)                                                                                  else if ( b == 13)                                                                              
+    {                                                                                                   {                                                                                               
+    	luckySum = a;                                                                                      	luckySum = a;                                                                                  
+    }                                                                                                   }                                                                                               
+    else if (c == 13)                                                                                   else if (c == 13)                                                                               
+    {                                                                                                   {                                                                                               
+    	luckySum = a + b;                                                                                  	luckySum = a + b;                                                                              
+    }                                                                                                   }                                                                                               
+    else                                                                                                else                                                                                            
+    {                                                                                                   {                                                                                               
+    	luckySum = a + b + c;                                                                              	luckySum = a + b + c;                                                                          
+    }                                                                                                   }                                                                                               
+    return luckySum;                                                                                    return luckySum;                                                                                
+}                                                                                                   }                                                                                                   
+-----------------------------------------------------------------------------------------------------------------------
+public int luckySum(int a, int b, int c)                                                            public int luckySum(int a, int b, int c)                                                            
+{                                                                                                   {                                                                                                   
+    int s1=a+b+c;                                                                                       int s1=a+b+c;                                                                                   
+    int s2=a+b;                                                                                         int s2=a+b;                                                                                     
+    int s3=a;                                                                                           int s3=a;                                                                                       
+    int s=0;                                                                                            int s=0;                                                                                        
+    if ((b==13 && c==13) || b==13)                                                                      if (a==13)                                                                                      
+    {                                                                                                   {                                                                                               
+        s=s3;                                                                                               s=0;                                                                                        
+    }                                                                                                   }                                                                                               
+    else if (c==13)                                                                                     else if ((b==13 && c==13) || b==13)                                                             
+    {                                                                                                   {                                                                                               
+        s=s2;                                                                                               s=s3;                                                                                       
+    }                                                                                                   }                                                                                               
+    else                                                                                                else if (c==13)                                                                                 
+    {                                                                                                   {                                                                                               
+        s=s1;                                                                                               s=s2;                                                                                       
+    }                                                                                                   }                                                                                               
+    return s;                                                                                           else                                                                                            
+}                                                                                                       {                                                                                               
+                                                                                                            s=s1;                                                                                       
+                                                                                                        }                                                                                               
+                                                                                                        return s;                                                                                       
+                                                                                                    }                                                                                                   
+***********************************************************************************************************************
+
+
+public boolean squirrelPlay(int temp, boolean isSummer)                                             public boolean squirrelPlay(int temp, boolean isSummer)                                             
+{                                                                                                   {                                                                                                   
+    if(isSummer == true)                                                                                if(isSummer == true)                                                                            
+    {                                                                                                   {                                                                                               
+         if((temp >= 60) && (temp <= 100))                                                                   if((temp >= 60) && (temp <= 100))                                                          
+           {                                                                                                   {                                                                                        
+               return true;                                                                                        return true;                                                                         
+           }                                                                                                   }                                                                                        
+         else                                                                                                else                                                                                       
+            return false;                                                                                       return false;                                                                           
+    }                                                                                                   }                                                                                               
+    else                                                                                                else                                                                                            
+            if((temp >= 60) && (temp <= 100))                                                                   if((temp >= 60) && (temp <= 90))                                                        
+            {                                                                                                   {                                                                                       
+               return true;                                                                                        return true;                                                                         
+            }                                                                                                   }                                                                                       
+            else                                                                                                else                                                                                    
+               return false;                                                                                       return false;                                                                        
+        	                                                                                                   	                                                                                           
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+}                                                                                                   }                                                                                                   
+-----------------------------------------------------------------------------------------------------------------------
+public boolean squirrelPlay(int temp, boolean isSummer)                                             public boolean squirrelPlay(int temp, boolean isSummer)                                             
+{                                                                                                   {                                                                                                   
+    if (temp>=60 && temp <=90)                                                                          if (temp>=60 && temp <=90)                                                                      
+    {                                                                                                   {                                                                                               
+        return true;                                                                                        return true;                                                                                
+    }                                                                                                   }                                                                                               
+    if (isSummer)                                                                                       if (isSummer)                                                                                   
+    {                                                                                                   {                                                                                               
+        if (temp>=60 && temp <=90)                                                                          if (temp>=60 && temp <=100)                                                                 
+        {                                                                                                   {                                                                                           
+            return true;                                                                                        return true;                                                                            
+        }                                                                                                   }                                                                                           
+        else                                                                                                else                                                                                        
+        {                                                                                                   {                                                                                           
+            return false;                                                                                       return false;                                                                           
+        }                                                                                                   }                                                                                           
+    }                                                                                                   }                                                                                               
+    return false;                                                                                       return false;                                                                                   
+}                                                                                                   }                                                                                                   
+***********************************************************************************************************************
+
+
+public int luckySum(int a, int b, int c)                                                            public int luckySum(int a, int b, int c)                                                            
+{                                                                                                   {                                                                                                   
+    int s1=a+b+c;                                                                                       int s1=a+b+c;                                                                                   
+    int s2=a+b;                                                                                         int s2=a+b;                                                                                     
+    int s3=a;                                                                                           int s3=a;                                                                                       
+    int s=0;                                                                                            int s=0;                                                                                        
+    if ((b==13 && c==13) || b==13)                                                                      if (a==13)                                                                                      
+    {                                                                                                   {                                                                                               
+        s=s3;                                                                                               s=0;                                                                                        
+    }                                                                                                   }                                                                                               
+    else if (c==13)                                                                                     else if ((b==13 && c==13) || b==13)                                                             
+    {                                                                                                   {                                                                                               
+        s=s2;                                                                                               s=s3;                                                                                       
+    }                                                                                                   }                                                                                               
+    else                                                                                                else if (c==13)                                                                                 
+    {                                                                                                   {                                                                                               
+        s=s1;                                                                                               s=s2;                                                                                       
+    }                                                                                                   }                                                                                               
+    return s;                                                                                           else                                                                                            
+}                                                                                                       {                                                                                               
+                                                                                                            s=s1;                                                                                       
+                                                                                                        }                                                                                               
+                                                                                                        return s;                                                                                       
+                                                                                                    }                                                                                                   
+-----------------------------------------------------------------------------------------------------------------------
+public int luckySum(int a, int b, int c)                                                            public int luckySum(int a, int b, int c)                                                            
+{                                                                                                   {                                                                                                   
+    if (a != 13 && b != 13 && c != 13)                                                                  if (a != 13 && b != 13 && c != 13)                                                              
+        return a + b + c;                                                                                   return a + b + c;                                                                           
+    else if (a == 13)                                                                                   else if (a == 13)                                                                               
+        return b + c;                                                                                       return 0;                                                                                   
+    else if (b == 13)                                                                                   else if (b == 13)                                                                               
+        return a;                                                                                           return a;                                                                                   
+    else                                                                                                else                                                                                            
+        return b + a;                                                                                       return b + a;                                                                               
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+}                                                                                                   }                                                                                                   
+***********************************************************************************************************************
+
+
+public int luckySum(int a, int b, int c)                                                            public int luckySum(int a, int b, int c)                                                            
+{                                                                                                   {                                                                                                   
+    if (a == 13)                                                                                        if (a == 13)                                                                                    
+    {                                                                                                   {                                                                                               
+        return c;                                                                                           return 0;                                                                                   
+    }                                                                                                   }                                                                                               
+    else if (b == 13)                                                                                   else if (b == 13)                                                                               
+    {                                                                                                   {                                                                                               
+        return a;                                                                                           return a;                                                                                   
+    }                                                                                                   }                                                                                               
+    else if (c == 13)                                                                                   else if (c == 13)                                                                               
+    {                                                                                                   {                                                                                               
+        return b;                                                                                           return a + b;                                                                               
+    }                                                                                                   }                                                                                               
+    else                                                                                                else                                                                                            
+    {                                                                                                   {                                                                                               
+        return a + b + c;                                                                                   return a + b + c;                                                                           
+    }                                                                                                   }                                                                                               
+                                                                                                                                                                                                        
+}                                                                                                   }                                                                                                   
+-----------------------------------------------------------------------------------------------------------------------
+public int luckySum(int a, int b, int c)                                                            public int luckySum(int a, int b, int c)                                                            
+{                                                                                                   {                                                                                                   
+    if (a != 13 && b!= 13 && c!= 13)                                                                    if (a != 13 && b!= 13 && c!= 13)                                                                
+    {                                                                                                   {                                                                                               
+        return (a+b+c);                                                                                     return (a+b+c);                                                                             
+    }                                                                                                   }                                                                                               
+                                                                                                                                                                                                        
+    else if (a== 13)                                                                                    else if (a== 13)                                                                                
+    {                                                                                                   {                                                                                               
+        return 0;                                                                                           return 0;                                                                                   
+    }                                                                                                   }                                                                                               
+                                                                                                                                                                                                        
+    else if (b== 13)                                                                                    else if (b== 13)                                                                                
+    {                                                                                                   {                                                                                               
+        return a;                                                                                           return a;                                                                                   
+    }                                                                                                   }                                                                                               
+                                                                                                                                                                                                        
+    return 0;                                                                                           else if (c==13)                                                                                 
+}                                                                                                       {                                                                                               
+                                                                                                            return (a+b);                                                                               
+                                                                                                        }                                                                                               
+                                                                                                                                                                                                        
+                                                                                                        return 0;                                                                                       
+                                                                                                    }                                                                                                   
+***********************************************************************************************************************
+
+
+public int luckySum(int a, int b, int c)                                                            public int luckySum(int a, int b, int c)                                                            
+{                                                                                                   {                                                                                                   
+    if ( a == 13)                                                                                       if ( a == 13)                                                                                   
+    {                                                                                                   {                                                                                               
+        return c;                                                                                           return 0;                                                                                   
+    }                                                                                                   }                                                                                               
+    else if ( b == 13)                                                                                  else if ( b == 13)                                                                              
+    {                                                                                                   {                                                                                               
+        return a;                                                                                           return a;                                                                                   
+    }                                                                                                   }                                                                                               
+    else if (c == 13)                                                                                   else if (c == 13)                                                                               
+    {                                                                                                   {                                                                                               
+        return a + b;                                                                                       return a + b;                                                                               
+    }                                                                                                   }                                                                                               
+    else                                                                                                else                                                                                            
+    {                                                                                                   {                                                                                               
+        return a + b + c;                                                                                   return a + b + c;                                                                           
+    }                                                                                                   }                                                                                               
+                                                                                                                                                                                                        
+}                                                                                                   }                                                                                                   
+-----------------------------------------------------------------------------------------------------------------------
+public int luckySum(int a, int b, int c)                                                            public int luckySum(int a, int b, int c)                                                            
+{                                                                                                   {                                                                                                   
+    if (a != 13 && b != 13 && c != 13)                                                                  if (a != 13 && b != 13 && c != 13)                                                              
+        return a + b + c;                                                                                   return a + b + c;                                                                           
+    else if (a == 13)                                                                                   else if (a == 13)                                                                               
+        return b + c;                                                                                       return 0;                                                                                   
+    else if (b == 13)                                                                                   else if (b == 13)                                                                               
+        return a;                                                                                           return a;                                                                                   
+    else                                                                                                else                                                                                            
+        return b + a;                                                                                       return b + a;                                                                               
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+}                                                                                                   }                                                                                                   
+***********************************************************************************************************************
+
+
+public int redTicket(int a, int b, int c)                                                           public int redTicket(int a, int b, int c)                                                           
+{                                                                                                   {                                                                                                   
+    if (a == 2 && (a == b && a==c))                                                                     if (a == 2 && (a == b && a==c))                                                                 
+    {                                                                                                   {                                                                                               
+     	return 10;                                                                                         	return 10;                                                                                    
+    }                                                                                                   }                                                                                               
+    else if (a == b && b == c)                                                                          else if (a == b && b == c)                                                                      
+    {                                                                                                   {                                                                                               
+     	return 5;                                                                                          	return 5;                                                                                     
+    }                                                                                                   }                                                                                               
+    return 0;                                                                                           else if (a != b && a != c)                                                                      
+}                                                                                                       {                                                                                               
+                                                                                                         	return 1;                                                                                     
+                                                                                                        }                                                                                               
+                                                                                                        return 0;                                                                                       
+                                                                                                    }                                                                                                   
+-----------------------------------------------------------------------------------------------------------------------
+public int redTicket(int a, int b, int c)                                                           public int redTicket(int a, int b, int c)                                                           
+{                                                                                                   {                                                                                                   
+                                                                                                                                                                                                        
+    if (a== 2 && b==2 && c==2)                                                                          if (a== 2 && b==2 && c==2)                                                                      
+    {                                                                                                   {                                                                                               
+        return 10;                                                                                          return 10;                                                                                  
+    }                                                                                                   }                                                                                               
+                                                                                                                                                                                                        
+    if (a==b && a==c && b==c)                                                                           if (a==b && a==c && b==c)                                                                       
+    {                                                                                                   {                                                                                               
+        return 5;                                                                                           return 5;                                                                                   
+    }                                                                                                   }                                                                                               
+                                                                                                                                                                                                        
+                                                                                                        if (a!=b && a!=c)                                                                               
+                                                                                                        {                                                                                               
+                                                                                                            return 1;                                                                                   
+    return 0;                                                                                           }                                                                                               
+}                                                                                                                                                                                                       
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+                                                                                                        return 0;                                                                                       
+                                                                                                    }                                                                                                   
+***********************************************************************************************************************
+
+
+public int redTicket(int a, int b, int c)                                                           public int redTicket(int a, int b, int c)                                                           
+{                                                                                                   {                                                                                                   
+    if (a == 2 && b == 2 && c ==2)                                                                      if (a == 2 && b == 2 && c ==2)                                                                  
+    {                                                                                                   {                                                                                               
+        return 10;                                                                                          return 10;                                                                                  
+    }                                                                                                   }                                                                                               
+    else if ( a == b && a == c && b == c)                                                               else if ( a == b && a == c && b == c)                                                           
+    {                                                                                                   {                                                                                               
+        return 5;                                                                                           return 5;                                                                                   
+    }                                                                                                   }                                                                                               
+    return 0;                                                                                           else if ( a != b && a != c)                                                                     
+}                                                                                                       {                                                                                               
+                                                                                                            return 1;                                                                                   
+                                                                                                        }                                                                                               
+                                                                                                        return 0;                                                                                       
+                                                                                                    }                                                                                                   
+-----------------------------------------------------------------------------------------------------------------------
+public int redTicket(int a, int b, int c)                                                           public int redTicket(int a, int b, int c)                                                           
+{                                                                                                   {                                                                                                   
+                                                                                                                                                                                                        
+    if (a== 2 && b==2 && c==2)                                                                          if (a== 2 && b==2 && c==2)                                                                      
+    {                                                                                                   {                                                                                               
+        return 10;                                                                                          return 10;                                                                                  
+    }                                                                                                   }                                                                                               
+                                                                                                                                                                                                        
+    if (a==b && a==c && b==c)                                                                           if (a==b && a==c && b==c)                                                                       
+    {                                                                                                   {                                                                                               
+        return 5;                                                                                           return 5;                                                                                   
+    }                                                                                                   }                                                                                               
+                                                                                                                                                                                                        
+                                                                                                        if (a!=b && a!=c)                                                                               
+                                                                                                        {                                                                                               
+                                                                                                            return 1;                                                                                   
+    return 0;                                                                                           }                                                                                               
+}                                                                                                                                                                                                       
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+                                                                                                        return 0;                                                                                       
+                                                                                                    }                                                                                                   
+***********************************************************************************************************************
+
+
+public int luckySum(int a, int b, int c)                                                            public int luckySum(int a, int b, int c)                                                            
+{                                                                                                   {                                                                                                   
+    if (a != 13 && b != 13 && c != 13)                                                                  if (a != 13 && b != 13 && c != 13)                                                              
+        return a + b + c;                                                                                   return a + b + c;                                                                           
+    else if (a == 13)                                                                                   else if (a == 13)                                                                               
+        return b + c;                                                                                       return 0;                                                                                   
+    else if (b == 13)                                                                                   else if (b == 13)                                                                               
+        return a;                                                                                           return a;                                                                                   
+    else                                                                                                else                                                                                            
+        return b + a;                                                                                       return b + a;                                                                               
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+}                                                                                                   }                                                                                                   
+-----------------------------------------------------------------------------------------------------------------------
+public int luckySum(int a, int b, int c)                                                            public int luckySum(int a, int b, int c)                                                            
+{                                                                                                   {                                                                                                   
+    if (a != 13 && b!= 13 && c!= 13)                                                                    if (a != 13 && b!= 13 && c!= 13)                                                                
+    {                                                                                                   {                                                                                               
+        return (a+b+c);                                                                                     return (a+b+c);                                                                             
+    }                                                                                                   }                                                                                               
+                                                                                                                                                                                                        
+    else if (a== 13)                                                                                    else if (a== 13)                                                                                
+    {                                                                                                   {                                                                                               
+        return 0;                                                                                           return 0;                                                                                   
+    }                                                                                                   }                                                                                               
+                                                                                                                                                                                                        
+    else if (b== 13)                                                                                    else if (b== 13)                                                                                
+    {                                                                                                   {                                                                                               
+        return a;                                                                                           return a;                                                                                   
+    }                                                                                                   }                                                                                               
+                                                                                                                                                                                                        
+    return 0;                                                                                           else if (c==13)                                                                                 
+}                                                                                                       {                                                                                               
+                                                                                                            return (a+b);                                                                               
+                                                                                                        }                                                                                               
+                                                                                                                                                                                                        
+                                                                                                        return 0;                                                                                       
+                                                                                                    }                                                                                                   
+***********************************************************************************************************************
+
+
+public int redTicket(int a, int b, int c)                                                           public int redTicket(int a, int b, int c)                                                           
+{                                                                                                   {                                                                                                   
+	if (a == 2 && b == c && a == c)                                                                    	if (a == 2 && b == 2 && c == 2)                                                                    
+    {                                                                                                   {                                                                                               
+    	return 10;                                                                                         	return 10;                                                                                     
+    }                                                                                                   }                                                                                               
+                                                                                                                                                                                                        
+    else if (a == b && b == c)                                                                          if (a == b && b == c)                                                                           
+    {                                                                                                   {                                                                                               
+    	return 5;                                                                                          	return 5;                                                                                      
+    }                                                                                                   }                                                                                               
+                                                                                                                                                                                                        
+    if(b == a || c == a || b == c)                                                                      if(b != a && c != a)                                                                            
+    {                                                                                                   {                                                                                               
+    	return 0;                                                                                          	return 1;                                                                                      
+    }                                                                                                   }                                                                                               
+                                                                                                                                                                                                        
+    else                                                                                                else                                                                                            
+    {                                                                                                   {                                                                                               
+    	return 0;                                                                                          	return 0;                                                                                      
+    }                                                                                                   }                                                                                               
+}                                                                                                   }                                                                                                   
+-----------------------------------------------------------------------------------------------------------------------
+public int redTicket(int a, int b, int c)                                                           public int redTicket(int a, int b, int c)                                                           
+{                                                                                                   {                                                                                                   
+                                                                                                                                                                                                        
+    if (a== 2 && b==2 && c==2)                                                                          if (a== 2 && b==2 && c==2)                                                                      
+    {                                                                                                   {                                                                                               
+        return 10;                                                                                          return 10;                                                                                  
+    }                                                                                                   }                                                                                               
+                                                                                                                                                                                                        
+    if (a==b && a==c && b==c)                                                                           if (a==b && a==c && b==c)                                                                       
+    {                                                                                                   {                                                                                               
+        return 5;                                                                                           return 5;                                                                                   
+    }                                                                                                   }                                                                                               
+                                                                                                                                                                                                        
+                                                                                                        if (a!=b && a!=c)                                                                               
+                                                                                                        {                                                                                               
+                                                                                                            return 1;                                                                                   
+    return 0;                                                                                           }                                                                                               
+}                                                                                                                                                                                                       
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+                                                                                                        return 0;                                                                                       
+                                                                                                    }                                                                                                   
+***********************************************************************************************************************
+
+
+public int luckySum(int a, int b, int c)                                                            public int luckySum(int a, int b, int c)                                                            
+{                                                                                                   {                                                                                                   
+    if (a != 13 && b!= 13 && c!= 13)                                                                    if (a != 13 && b!= 13 && c!= 13)                                                                
+    {                                                                                                   {                                                                                               
+        return (a+b+c);                                                                                     return (a+b+c);                                                                             
+    }                                                                                                   }                                                                                               
+                                                                                                                                                                                                        
+    else if (a== 13)                                                                                    else if (a== 13)                                                                                
+    {                                                                                                   {                                                                                               
+        return 0;                                                                                           return 0;                                                                                   
+    }                                                                                                   }                                                                                               
+                                                                                                                                                                                                        
+    return 0;                                                                                           else if (b== 13)                                                                                
+}                                                                                                       {                                                                                               
+                                                                                                            return a;                                                                                   
+                                                                                                        }                                                                                               
+                                                                                                                                                                                                        
+                                                                                                        return 0;                                                                                       
+                                                                                                    }                                                                                                   
+-----------------------------------------------------------------------------------------------------------------------
+public int luckySum(int a, int b, int c)                                                            public int luckySum(int a, int b, int c)                                                            
+{                                                                                                   {                                                                                                   
+    if (a == 13)                                                                                        if (a == 13)                                                                                    
+        return 0;                                                                                           return 0;                                                                                   
+    if (b == 13)                                                                                        if (b == 13)                                                                                    
+        return 0;                                                                                           return a;                                                                                   
+    if (c == 13)                                                                                        if (c == 13)                                                                                    
+        return (a + c);                                                                                     return (a + c);                                                                             
+    return (a + b + c);                                                                                 return (a + b + c);                                                                             
+}                                                                                                   }                                                                                                   
+***********************************************************************************************************************
+
+
+public int redTicket(int a, int b, int c)                                                           public int redTicket(int a, int b, int c)                                                           
+{                                                                                                   {                                                                                                   
+    if (a == 2 && b == 2 && c == 2)                                                                     if (a == 2 && b == 2 && c == 2)                                                                 
+    {                                                                                                   {                                                                                               
+        return 10;                                                                                          return 10;                                                                                  
+    }                                                                                                   }                                                                                               
+    else if (a == b && b == c && c == a)                                                                else if (a == b && b == c && c == a)                                                            
+    {                                                                                                   {                                                                                               
+        return 5;                                                                                           return 5;                                                                                   
+    }                                                                                                   }                                                                                               
+    else if (a != b && b != c && c != a)                                                                else if (b != a && c != a)                                                                      
+    {                                                                                                   {                                                                                               
+        return 1;                                                                                           return 1;                                                                                   
+    }                                                                                                   }                                                                                               
+    return 0;                                                                                           return 0;                                                                                       
+}                                                                                                   }                                                                                                   
+-----------------------------------------------------------------------------------------------------------------------
+public int redTicket(int a, int b, int c)                                                           public int redTicket(int a, int b, int c)                                                           
+{                                                                                                   {                                                                                                   
+    if(a==b&&a==c&&a==2)return 10;                                                                      if(a==b&&a==c&&a==2)return 10;                                                                  
+    if(a==b&&a==c)return 5;                                                                             if(a==b&&a==c)return 5;                                                                         
+    if(a==b||a==c||b==c) return 0;                                                                      if(a==b||a==c) return 0;                                                                        
+    return 1;                                                                                           return 1;                                                                                       
+}                                                                                                   }                                                                                                   
+***********************************************************************************************************************
+
+
+public boolean squirrelPlay(int temp, boolean isSummer)                                             public boolean squirrelPlay(int temp, boolean isSummer)                                             
+{                                                                                                   {                                                                                                   
+   if (temp >= 60 && temp<= 90)                                                                        if (temp >= 60 && temp<= 90)                                                                     
+   {                                                                                                   {                                                                                                
+       return true;                                                                                        return true;                                                                                 
+   }                                                                                                   }                                                                                                
+                                                                                                                                                                                                        
+                                                                                                        else if( isSummer && temp>= 90 && temp<= 100)                                                   
+    return false;                                                                                       {                                                                                               
+}                                                                                                           return true;                                                                                
+                                                                                                        }                                                                                               
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+                                                                                                        return false;                                                                                   
+                                                                                                    }                                                                                                   
+-----------------------------------------------------------------------------------------------------------------------
+public int redTicket(int a, int b, int c)                                                           public int redTicket(int a, int b, int c)                                                           
+{                                                                                                   {                                                                                                   
+    if (a == b && c == b && a != 2)                                                                     if (a == b && c == b && a != 2)                                                                 
+    {                                                                                                   {                                                                                               
+        return 5;                                                                                           return 5;                                                                                   
+    }                                                                                                   }                                                                                               
+    else if (a == b && c == b && a == 2)                                                                else if (a == b && c == b && a == 2)                                                            
+    {                                                                                                   {                                                                                               
+        return 10;                                                                                          return 10;                                                                                  
+    }                                                                                                   }                                                                                               
+    else if (a != b && c != b)                                                                          else if (a != b && a != c)                                                                      
+    {                                                                                                   {                                                                                               
+        return 1;                                                                                           return 1;                                                                                   
+    }                                                                                                   }                                                                                               
+    else                                                                                                else                                                                                            
+    {                                                                                                   {                                                                                               
+        return 0;                                                                                           return 0;                                                                                   
+    }                                                                                                   }                                                                                               
+}                                                                                                   }                                                                                                   
+***********************************************************************************************************************
+
+
+public int redTicket(int a, int b, int c)                                                           public int redTicket(int a, int b, int c)                                                           
+{                                                                                                   {                                                                                                   
+    if (a == b && c == b && a != 2)                                                                     if (a == b && c == b && a != 2)                                                                 
+    {                                                                                                   {                                                                                               
+        return 5;                                                                                           return 5;                                                                                   
+    }                                                                                                   }                                                                                               
+    else if (a == b && c == b && a == 2)                                                                else if (a == b && c == b && a == 2)                                                            
+    {                                                                                                   {                                                                                               
+        return 10;                                                                                          return 10;                                                                                  
+    }                                                                                                   }                                                                                               
+    else if (a != b && c != b)                                                                          else if (a != b && a != c)                                                                      
+    {                                                                                                   {                                                                                               
+        return 1;                                                                                           return 1;                                                                                   
+    }                                                                                                   }                                                                                               
+    else                                                                                                else                                                                                            
+    {                                                                                                   {                                                                                               
+        return 0;                                                                                           return 0;                                                                                   
+    }                                                                                                   }                                                                                               
+}                                                                                                   }                                                                                                   
+-----------------------------------------------------------------------------------------------------------------------
+public int redTicket(int a, int b, int c)                                                           public int redTicket(int a, int b, int c)                                                           
+{                                                                                                   {                                                                                                   
+    if (a == b && b == c)                                                                               if (a == b && b == c)                                                                           
+    {                                                                                                   {                                                                                               
+     	if ( a == 2)                                                                                       	if ( a == 2)                                                                                  
+            return 10;                                                                                          return 10;                                                                              
+        return c;                                                                                           return 5;                                                                                   
+    }                                                                                                   }                                                                                               
+    if (a != b && a != c)                                                                               if (a != b && a != c)                                                                           
+        return 1;                                                                                           return 1;                                                                                   
+    return 0;                                                                                           return 0;                                                                                       
+}                                                                                                   }                                                                                                   
+***********************************************************************************************************************
+
+
+54 16

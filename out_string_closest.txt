@@ -1,0 +1,144 @@
+Current Device: cuda
+public String zipZap(String str)                                                                    public String zipZap(String str)                                                                    
+{                                                                                                   {                                                                                                   
+        StringBuilder newStr = new StringBuilder(str);                                                      StringBuilder newStr = new StringBuilder(str);                                              
+    for (int i = 0; i< str.length()-3; i++)                                                             for (int i = 0; i<= str.length()-3; i++)                                                        
+    {                                                                                                   {                                                                                               
+    	if (str.charAt(i) == 'z' && str.charAt(i+2) == 'p')                                                	if (str.charAt(i) == 'z' && str.charAt(i+2) == 'p')                                            
+    	{                                                                                                  	{                                                                                              
+        	newStr.deleteCharAt(i+1);                                                                          	newStr.deleteCharAt(i+1);                                                                  
+    	}                                                                                                  	}                                                                                              
+    }                                                                                                   }                                                                                               
+    return newStr.toString();                                                                           return newStr.toString();                                                                       
+}                                                                                                   }                                                                                                   
+-----------------------------------------------------------------------------------------------------------------------
+public boolean xyBalance(String str)                                                                public boolean xyBalance(String str)                                                                
+{                                                                                                   {                                                                                                   
+    boolean check = false;                                                                              boolean check = false;                                                                          
+                                                                                                                                                                                                        
+    int indexX = str.lastIndexOf("x");                                                                  int indexX = str.lastIndexOf("x");                                                              
+    int indexY = str.lastIndexOf("y");                                                                  int indexY = str.lastIndexOf("y");                                                              
+                                                                                                                                                                                                        
+    if (indexY == -1 && indexX != -1)                                                                   if (indexY == -1 && indexX != -1)                                                               
+    {                                                                                                   {                                                                                               
+        check = false;                                                                                      check = false;                                                                              
+    }                                                                                                   }                                                                                               
+    else                                                                                                else                                                                                            
+    {                                                                                                   {                                                                                               
+        if (indexY > indexX)                                                                                if (indexY >= indexX)                                                                       
+        {                                                                                                   {                                                                                           
+            check = true;                                                                                       check = true;                                                                           
+        }                                                                                                   }                                                                                           
+        else                                                                                                else                                                                                        
+        {                                                                                                   {                                                                                           
+            check = false;                                                                                      check = false;                                                                          
+        }                                                                                                   }                                                                                           
+    }                                                                                                   }                                                                                               
+                                                                                                                                                                                                        
+    return check;                                                                                       return check;                                                                                   
+}                                                                                                   }                                                                                                   
+***********************************************************************************************************************
+
+
+public String zipZap(String str)                                                                    public String zipZap(String str)                                                                    
+{                                                                                                   {                                                                                                   
+    StringBuilder newStr = new StringBuilder(str);                                                      StringBuilder newStr = new StringBuilder(str);                                                  
+    for (int i = 0; i< str.length()-3; i++)                                                             for (int i = 0; i< str.length()-2; i++)                                                         
+    {                                                                                                   {                                                                                               
+    	if (str.charAt(i) == 'z' && str.charAt(i+2) == 'p')                                                	if (str.charAt(i) == 'z' && str.charAt(i+2) == 'p')                                            
+    	{                                                                                                  	{                                                                                              
+        	newStr.deleteCharAt(i+1);                                                                          	newStr.deleteCharAt(i+1);                                                                  
+    	}                                                                                                  	}                                                                                              
+    }                                                                                                   }                                                                                               
+    return newStr.toString();                                                                           return newStr.toString();                                                                       
+}                                                                                                   }                                                                                                   
+-----------------------------------------------------------------------------------------------------------------------
+public String zipZap(String str)                                                                    public String zipZap(String str)                                                                    
+{                                                                                                   {                                                                                                   
+    String word = "";                                                                                   String word = "";                                                                               
+    for (int i = 0; i <str.length(); i++)                                                               for (int i = 0; i <str.length(); i++)                                                           
+    {                                                                                                   {                                                                                               
+     	if ((i < str.length() - 2) && (str.substring(i, i + 1).equals("z") && (str.substring(1 +           	if ((i < str.length() - 2) &&                                                                 
+2, i + 3).equals("p"))))                                                                                        (str.substring(i, i + 1).equals("z") && 		                                              
+        {                                                                                                       (str.substring(i + 2, i + 3).equals("p"))))                                             
+              word += "zp";                                                                                 {                                                                                           
+            i +=2;                                                                                                word += "zp";                                                                         
+        }                                                                                                       i +=2;                                                                                  
+        else                                                                                                }                                                                                           
+        {                                                                                                   else                                                                                        
+         	word += str.substring(i, i + 1);                                                                  {                                                                                           
+        }                                                                                                    	word += str.substring(i, i + 1);                                                          
+    }                                                                                                       }                                                                                           
+    return word;                                                                                        }                                                                                               
+}                                                                                                       return word;                                                                                    
+                                                                                                    }                                                                                                   
+***********************************************************************************************************************
+
+
+public String zipZap(String str)                                                                    public String zipZap(String str)                                                                    
+{                                                                                                   {                                                                                                   
+    String word = "";                                                                                   String word = "";                                                                               
+    for (int i = 0; i <str.length(); i++)                                                               for (int i = 0; i <str.length(); i++)                                                           
+    {                                                                                                   {                                                                                               
+     	if ((i < str.length() - 2) && (str.substring(i, i + 1).equals("z") && (str.substring(1 +           	if ((i < str.length() - 2) &&                                                                 
+2, i + 3).equals("p"))))                                                                                        (str.substring(i, i + 1).equals("z") && 		                                              
+        {                                                                                                       (str.substring(i + 2, i + 3).equals("p"))))                                             
+              word += "zp";                                                                                 {                                                                                           
+            i +=2;                                                                                                word += "zp";                                                                         
+        }                                                                                                       i +=2;                                                                                  
+        else                                                                                                }                                                                                           
+        {                                                                                                   else                                                                                        
+         	word += str.substring(i, i + 1);                                                                  {                                                                                           
+        }                                                                                                    	word += str.substring(i, i + 1);                                                          
+    }                                                                                                       }                                                                                           
+    return word;                                                                                        }                                                                                               
+}                                                                                                       return word;                                                                                    
+                                                                                                    }                                                                                                   
+-----------------------------------------------------------------------------------------------------------------------
+public String getSandwich(String str)                                                               public String getSandwich(String str)                                                               
+{                                                                                                   {                                                                                                   
+    int length = str.length();                                                                          int length = str.length();                                                                      
+    boolean a = false;                                                                                  boolean a = true;                                                                               
+    int first = 0;                                                                                      int first = 0;                                                                                  
+    int last = 0;                                                                                       int last = 0;                                                                                   
+    if	(length <= 10)                                                                                   if	(length <= 10)                                                                               
+    {                                                                                                   {                                                                                               
+        return "";                                                                                          return "";                                                                                  
+    }                                                                                                   }                                                                                               
+    for (int i = 0; i < length - 5; i++)                                                                for (int i = 0; i < length - 5; i++)                                                            
+    {                                                                                                   {                                                                                               
+        if	(str.substring(i, i + 5).equals("bread"))                                                        if	(str.substring(i, i + 5).equals("bread"))                                                
+        {                                                                                                   {                                                                                           
+            first = i;                                                                                          first = i;                                                                              
+            break;                                                                                              break;                                                                                  
+        }                                                                                                   }                                                                                           
+        else                                                                                                else                                                                                        
+        {                                                                                                   {                                                                                           
+        	a = false;                                                                                         	a = false;                                                                                 
+        }                                                                                                   }                                                                                           
+    }                                                                                                   }                                                                                               
+    for	(int i = length - 5; i >= 0; i--)                                                               for	(int i = length - 5; i >= 0; i--)                                                           
+    {                                                                                                   {                                                                                               
+        if (str.substring(i, i + 5).equals("bread"))                                                        if (str.substring(i, i + 5).equals("bread"))                                                
+        {                                                                                                   {                                                                                           
+            last = i;                                                                                           last = i;                                                                               
+            break;                                                                                              break;                                                                                  
+        }                                                                                                   }                                                                                           
+        else                                                                                                else                                                                                        
+        {                                                                                                   {                                                                                           
+            a = false;                                                                                          a = false;                                                                              
+        }                                                                                                   }                                                                                           
+    }                                                                                                   }                                                                                               
+    if	(a == true)                                                                                      if	(a == true)                                                                                  
+    {                                                                                                   {                                                                                               
+        return (str.substring(first + 5, last));                                                            return (str.substring(first + 5, last));                                                    
+    }                                                                                                   }                                                                                               
+    else                                                                                                else                                                                                            
+    {                                                                                                   {                                                                                               
+        return "";                                                                                          return "";                                                                                  
+    }                                                                                                   }                                                                                               
+}                                                                                                   }                                                                                                   
+***********************************************************************************************************************
+
+
+294 3

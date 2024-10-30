@@ -38,7 +38,7 @@ def get_latent_states(dataset, model):
             labels.append(int(row['problemID']))
     return res, labels
 
-def plot_clusters(dataloader, model, epoch, plotname):
+def plot_clusters(dataloader, model, epoch, plotname, run):
     # X represents your high-dimensional data
         X, labels = get_latent_states(dataloader, model)
         tsne = TSNE(n_components=2, random_state=0)
@@ -46,7 +46,8 @@ def plot_clusters(dataloader, model, epoch, plotname):
         plt.close()
         plt.scatter(X_2d[:, 0], X_2d[:, 1], c=labels)  # 'labels' should be your true or predicted labels
         plt.title('Epoch ' + str(epoch))
-        plt.savefig(plotname)
+        plt.savefig(plotname + '.png')
+        run['clusters/'+plotname].upload(plotname + '.png')
 
 @hydra.main(version_base=None, config_path=".", config_name="configs_cer")
 def main(configs):
@@ -65,9 +66,9 @@ def main(configs):
 
     # Test on smaller fraction of dataset
     if configs.testing:
-        configs.use_neptune = False
-        # configs.epochs = 5
-        configs.save_model = False
+        # configs.use_neptune = False
+        configs.epochs = 3
+        # configs.save_model = False
     
     # Use neptune.ai to track experiments
     run = None
@@ -169,11 +170,7 @@ def main(configs):
             test_log = training_step(batch, idx, len(test_loader), model, criterion, optimizer, configs, device=device)
             test_logs.append(test_log)
 
-        if ep % 10 == 0:
-            plot_clusters(train_set, model, ep, 'train_cluster.png')
-            plot_clusters(valid_set, model, ep, 'valid_cluster.png')
-            plot_clusters(test_set, model, ep, 'test_cluster.png')
-                
+        if ep % 1 == 0:
             if configs.show_accuracy_at_every_epoch == True or configs.use_neptune == True:
                 train_accuracy, test_accuracy, valid_accuracy = get_model_accuracy(configs, model, train_set, test_set, valid_set)
             
@@ -199,6 +196,10 @@ def main(configs):
                         if configs.use_neptune:
                             run["best_model_at_epoch"].log(ep)
                         torch.save(model, os.path.join(configs.model_save_dir, now, 'model'))
+                    
+                    plot_clusters(train_set, model, ep, 'train_cluster', run)
+                    plot_clusters(valid_set, model, ep, 'valid_cluster', run)
+                    plot_clusters(test_set, model, ep, 'test_cluster', run)
                             
         # if test_set != None:
         for key in test_logs:
@@ -230,9 +231,10 @@ def main(configs):
     print("Train Accuracy: ", train_accuracy)
     print("Test Accuracy: ", test_accuracy)
     print("Valid Accuracy: ", valid_accuracy)
-    plot_clusters(train_set, model, ep, 'train_cluster.png')
-    plot_clusters(valid_set, model, ep, 'valid_cluster.png')
-    plot_clusters(test_set, model, ep, 'test_cluster.png')
+    # plot_clusters(train_set, model, ep, 'train_cluster', run)
+    # plot_clusters(valid_set, model, ep, 'valid_cluster', run)
+    # plot_clusters(test_set, model, ep, 'test_cluster', run)
+        
     if configs.use_neptune:
         run["metrics/train_accuracy"].log(train_accuracy)
         run["metrics/test_accuracy"].log(test_accuracy)
