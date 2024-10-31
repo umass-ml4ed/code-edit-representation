@@ -90,6 +90,11 @@ class CERDataset(torch.utils.data.Dataset):
             'B1': row['code_i_2'],
             'B2': row['code_j_2'],
             'label': 1 if row['is_similar'] else 0,
+            'A1_mask': row['test_case_verdict_i_1'],
+            'A2_mask': row['test_case_verdict_j_1'],
+            'B1_mask': row['test_case_verdict_i_2'],
+            'B2_mask': row['test_case_verdict_j_2'],
+
         }
     
 class CollateForCER(object):
@@ -116,13 +121,20 @@ class CollateForCER(object):
         labels = [item['label'] for item in batch]
         concatenated_inputs = A1 + A2 + B1 + B2
 
+        A1_mask = [item['A1_mask'] for item in batch]
+        A2_mask = [item['A2_mask'] for item in batch]
+        B1_mask = [item['B1_mask'] for item in batch]
+        B2_mask = [item['B2_mask'] for item in batch]
+        concatenated_inputs_mask = A1_mask + A2_mask + B1_mask + B2_mask
+
         # Need to tokenize here for efficiency
         # inputs = self.tokenizer(code, return_tensors="pt", padding=True, truncation=True).to(self.device)
         # concatenated_inputs = tokenizer(concatenated_inputs, return_tensors='pt', padding=True, truncation=True)
         
         return {
             'inputs': concatenated_inputs,  # This is a single list containing A1, A2, B1, B2 in order
-            'labels': torch.tensor(labels)
+            'labels': torch.tensor(labels),
+            'masks': concatenated_inputs_mask,
         }
    
 
