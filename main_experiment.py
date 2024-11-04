@@ -21,6 +21,7 @@ from itertools import zip_longest
 
 import torch
 from tqdm import tqdm
+import seaborn as sns
 
 def printCode(code1, code2):
     # Split each code snippet by lines
@@ -110,7 +111,6 @@ def removeSpace(text):
     text_no_whitespace = text.replace(" ", "").replace("\n", "").replace("\t", "").replace("\r","")
     return text_no_whitespace
 
-
 def print_clusters(embeddings, sensitivity, printCode = True, printMask = True):
     embedding_vectors = torch.stack([torch.tensor(embed[0]) for embed in embeddings])
     
@@ -168,9 +168,6 @@ def print_clusters(embeddings, sensitivity, printCode = True, printMask = True):
             if clustercount == bothequal: interestingClusters += 1
     print(totalClusters, interestingClusters)
 
-
-
-
 def print_closest(embeddings, configs, sensitivity):
     # Step 1: Extract and convert all embeddings to a tensor for vectorized computation
     embedding_vectors = torch.stack([torch.tensor(embed[0]) for embed in embeddings])
@@ -217,6 +214,125 @@ def print_closest(embeddings, configs, sensitivity):
     print(len(embeddings), clustercount)
 
 
+def calculate_cluster_diameters(embeddings, printCode=True, printMask=True):
+    embedding_vectors = torch.stack([torch.tensor(embed[0]) for embed in embeddings])
+    
+    # Step 1: Calculate pairwise distances using torch.cdist for vectorized distance calculation
+    distance_matrix = torch.cdist(embedding_vectors, embedding_vectors)
+    
+    # Step 2: Create verdict masks and group embeddings by verdict_mask
+    verdict_masks = [embed[3]+embed[4] for embed in embeddings]
+    clusters = {}
+    
+    for idx, verdict_mask in enumerate(verdict_masks):
+        mask_key = verdict_mask#.cpu().numpy().tobytes()  # Hashable key for each unique mask
+        if mask_key not in clusters:
+            clusters[mask_key] = []
+        clusters[mask_key].append(idx)
+    
+    diameters = []
+    # Step 3: Iterate through clusters and calculate the maximum distance (diameter) within each
+    for mask_key, indices in tqdm(clusters.items(), desc='Calculating Cluster Diameters', leave=False):
+        if len(indices) < 2:
+            continue  # Skip clusters with fewer than 2 elements, as they have no diameter
+        
+        # Extract distances for all pairs within the current cluster
+        cluster_distances = distance_matrix[indices][:, indices]
+        
+        # Calculate the maximum distance within the cluster
+        max_distance = cluster_distances.max().item()
+        print(max_distance)
+        diameters.append(max_distance)  # Collect for histogram
+    return diameters
+
+def plot_diameters(diameter_optimal, diameter_random, name):
+    # Plot histogram of cluster diameters with more bins and a log scale for better visibility of smaller bars
+    plt.figure(figsize=(10, 6))
+    
+    # Histogram for optimal diameters with log scale on y-axis
+    plt.hist(diameter_random, bins=30, color='red', edgecolor='black', alpha=0.3, label='Initial')
+    plt.hist(diameter_optimal, bins=30, color='blue', edgecolor='black', alpha=0.5, label='Optimal')
+
+    # Log scale on the y-axis
+    plt.yscale('log')
+    plt.ylim(1, 10000)
+    # Labels, title, and legend
+    plt.xlabel('Cluster Diameter (Max Distance)')
+    plt.ylabel('Frequency (Log Scale)')
+    plt.title('Distribution of Cluster Diameters with Log Scale')
+    plt.legend(loc='upper right')
+    
+    # Save the plot as an image file
+    plt.savefig(name)
+    plt.show()
+
+from tqdm import tqdm
+import torch
+
+def calculate_centroid_distances(embeddings):
+    embedding_vectors = torch.stack([torch.tensor(embed[0]) for embed in embeddings])
+    verdict_masks = [embed[3] + embed[4] for embed in embeddings]
+    
+    # Group indices by verdict masks and calculate centroids
+    clusters = {}
+    centroids = {}
+    
+    for idx, verdict_mask in enumerate(verdict_masks):
+        mask_key = verdict_mask
+        if mask_key not in clusters:
+            clusters[mask_key] = []
+        clusters[mask_key].append(idx)
+    
+    for mask_key, indices in clusters.items():
+        # Calculate centroid as the mean of all embeddings in the cluster
+        centroids[mask_key] = embedding_vectors[indices].mean(dim=0)
+    
+    intra_cluster_distances = []
+    inter_cluster_distances = []
+    
+    # Calculate intra-cluster distances from each point to its cluster centroid
+    for mask_key, indices in tqdm(clusters.items(), desc="Calculating Intra-Cluster Distances"):
+        centroid = centroids[mask_key]
+        for idx in indices:
+            dist = torch.dist(embedding_vectors[idx], centroid)
+            intra_cluster_distances.append(dist.item())
+    
+    # Calculate inter-cluster distances between centroids
+    mask_keys = list(centroids.keys())
+    for i in tqdm(range(len(mask_keys)), desc="Calculating Inter-Cluster Distances"):
+        for j in range(i + 1, len(mask_keys)):
+            dist = torch.dist(centroids[mask_keys[i]], centroids[mask_keys[j]])
+            inter_cluster_distances.append(dist.item())
+    
+    return intra_cluster_distances, inter_cluster_distances
+
+
+def plot_distance_distributions(intra_mask_distances, inter_mask_distances, name):
+    plt.figure(figsize=(12, 6))
+    
+    # Histogram plot for intra and inter-mask distances
+    
+    plt.hist(inter_mask_distances, bins=30, color='salmon', edgecolor='black', alpha=0.5, label='Inter-Mask Distances')
+    plt.hist(intra_mask_distances, bins=30, color='skyblue', edgecolor='black', alpha=0.7, label='Intra-Mask Distances')
+
+    plt.xlabel('Distance')
+    plt.ylabel('Frequency')
+    plt.title('Distribution of Intra-Mask and Inter-Mask Distances')
+    plt.legend(loc='upper right')
+    
+    plt.savefig(name + "_hist.png")
+    plt.show()
+
+    # Boxplot for intra and inter-mask distances
+    plt.figure(figsize=(8, 6))
+    sns.boxplot(data=[intra_mask_distances, inter_mask_distances], palette=["skyblue", "salmon"])
+    plt.xticks([0, 1], ['Intra-Mask Distances', 'Inter-Mask Distances'])
+    plt.ylabel('Distance')
+    plt.title('Boxplot of Intra-Mask and Inter-Mask Distances')
+    
+    plt.savefig(name + "_boxplot.png")
+    plt.show()
+
 
 @hydra.main(version_base=None, config_path=".", config_name="configs_cer")
 def main(configs):
@@ -231,17 +347,18 @@ def main(configs):
 
     # Initialize the model
     # model = CustomCERModel(configs=configs, device=device)
-    _,tokenizer = create_cer_model(configs, device)
+    model0,tokenizer = create_cer_model(configs, device)
 
     # Path to the checkpoint
     # checkpoint_path = 'checkpoints/20241021_174314' # allowed_problem_list: ['12', '17', '21'] # only if else related problems
     # checkpoint_path = 'checkpoints/20241021_200242' #allowed_problem_list: ['34', '39', '40'] # string problems requiring loops
     # checkpoint_path = 'checkpoints/20241028_201125' # allowed_problem_list: ['46', '71'] # array problems requiring loops
-    # checkpoint_path = 'checkpoints/20241029_134451' #all problems
-    checkpoint_path = 'checkpoints/20241030_163548' #random (epoch 2) all problem
+    checkpoint_path = 'checkpoints/20241029_134451' #all problems
+    # checkpoint_path = 'checkpoints/20241030_163548' #random (epoch 2) all problem
+    # checkpoint_path = 'checkpoints/20241031_175148' # epoch 2, with margin .5
+    # checkpoint_path = 'checkpoints/20241031_175058' # all problems, with margin .5
+    # checkpoint_path = 'checkpoints/20241031_190036' #epoch 8, margin 1
 
-    # Load the model's state_dict from the checkpoint
-    # model.load_state_dict(torch.load(checkpoint_path + '/model', map_location=device))
     model = torch.load(checkpoint_path + '/model')
 
     train_set = torch.load(checkpoint_path + '/train_set')
@@ -255,11 +372,27 @@ def main(configs):
     test_loader  = make_dataloader(test_set , collate_fn=collate_fn, configs=configs)
     
 
-    test_embeddings = get_all_embeddings(model, test_loader)
+    data_loader = train_loader
+    embeddings_optimal = get_all_embeddings(model, data_loader)
 
     # print(test_embeddings)
     # print_closest(test_embeddings, configs, configs.margin / 100)
-    print_clusters(embeddings=test_embeddings, sensitivity=configs.margin / 100, printCode=False, printMask=False)
+    # print_clusters(embeddings=test_embeddings, sensitivity=configs.margin / 100, printCode=False, printMask=False)
+    dia_opt = calculate_cluster_diameters(embeddings=embeddings_optimal)
+
+    checkpoint_path = 'checkpoints/20241031_190036' #epoch 8, margin 1
+    model = torch.load(checkpoint_path + '/model')
+    # model = model0
+    embeddings_random = get_all_embeddings(model, data_loader)
+    dia_rand = calculate_cluster_diameters(embeddings=embeddings_random)
+
+    plot_diameters(diameter_optimal=dia_opt, diameter_random=dia_rand, name='Hist_compare_train8.png')
+
+    # embeddings = get_all_embeddings(model=model, dataloader=data_loader)
+    # intra_mask_distances, inter_mask_distances = calculate_centroid_distances(embeddings)
+    # plot_distance_distributions(intra_mask_distances, inter_mask_distances, "mask_distance_comparison")
+
+
 
 if __name__ == "__main__":
     main()

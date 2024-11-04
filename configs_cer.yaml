@@ -40,7 +40,7 @@ code_change_vector_size: 128
 ##################################################
 # train_opts
 ##################################################
-epochs: 2
+epochs: 100
 batch_size: 8
 lr: 1e-4
 lr_pretrained_encoder: 0
@@ -48,5 +48,5 @@ lr_fc_edit_encoder: 1e-3
 use_scheduler: true
 warmup_ratio: 0.1
 loss_fn: 'ContrastiveLoss' # ContrastiveLoss or NTXentLoss or TripletLoss or CosineSimilarityLoss or MultipleNegativesRankingLoss
-margin: 1.0
+margin: 5.0
 accumulation_steps: 1
