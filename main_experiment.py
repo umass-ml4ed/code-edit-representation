@@ -17,35 +17,11 @@ import torch.nn.functional as F
 
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
-from itertools import zip_longest
 
 import torch
 from tqdm import tqdm
 import seaborn as sns
 
-def printCode(code1, code2):
-    # Split each code snippet by lines
-    code1_lines = code1.splitlines()
-    code2_lines = code2.splitlines()
-
-    # Set the column width for each snippet
-    col_width = 100
-
-    # Function to wrap text to fit within the column width
-    def wrap_text(text, width):
-        return [text[i:i+width] for i in range(0, len(text), width)]
-
-    # Wrap each line in both code snippets
-    code1_wrapped = [line_part for line in code1_lines for line_part in wrap_text(line, col_width-5)]
-    code2_wrapped = [line_part for line in code2_lines for line_part in wrap_text(line, col_width-5)]
-
-    # # Print headers
-    # print(f"{'Code Snippet 1':<{col_width}}{'Code Snippet 2':<{col_width}}")
-    # print("=" * (col_width * 2))
-
-    # Print wrapped lines side by side
-    for line1, line2 in zip_longest(code1_wrapped, code2_wrapped, fillvalue=""):
-        print(f"{line1:<{col_width}}{line2:<{col_width}}")
 
 
 def get_latent_states(dataset, model):
@@ -153,7 +129,7 @@ def print_clusters(embeddings, sensitivity, printCode = True, printMask = True):
 
                     if printMask: print(embeddings[pos][3], embeddings[pos][4])
                     if printCode: 
-                        printCode(embeddings[pos][1], embeddings[pos][2])
+                        printCodePairSideBySide(embeddings[pos][1], embeddings[pos][2])
                         print('-' * 119)
         
         # Print the clustercount separator after each primary embedding's clusters are printed
@@ -161,7 +137,7 @@ def print_clusters(embeddings, sensitivity, printCode = True, printMask = True):
             totalClusters += 1
             if A1 != A2:
                 if printMask: print(embeddings[i][3], embeddings[i][4])
-                if printCode: printCode(embeddings[i][1], embeddings[i][2])
+                if printCode: printCodePairSideBySide(embeddings[i][1], embeddings[i][2])
             print(f"{clustercount}, {firstequal}, {secondequal}, {bothequal}{'*' * 119}")
             print()
             print()
@@ -204,9 +180,9 @@ def print_closest(embeddings, configs, sensitivity):
             
             if mindist < sensitivity and A1 != B1 and A2 != B2 and A1 != A2 and B1 != B2:
                 clustercount += 1
-                printCode(embeddings[i][1], embeddings[i][2])
+                printCodePairSideBySide(embeddings[i][1], embeddings[i][2])
                 print('-' * 119)
-                printCode(embeddings[pos][1], embeddings[pos][2])
+                printCodePairSideBySide(embeddings[pos][1], embeddings[pos][2])
                 print('*' * 119)
                 print()
                 print()

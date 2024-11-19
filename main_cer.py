@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 
 def get_latent_states(dataset, model):
     model.eval()
-    res = np.empty((0,128))
+    res = np.empty((0,768))
     labels = []
     with torch.no_grad():
         for index, row in dataset.iterrows():

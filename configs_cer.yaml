@@ -36,7 +36,7 @@ model_inp_dim: 768 # Fixed at 768 as it's the output dimension of t5-base, codet
 # model_name: 't5-large'
 # model_inp_dim: 1024 # Fixed at 1024 as it's the output dimension of t5-large, codet5-large
 # model_name: 'Salesforce/codet5-large'
-code_change_vector_size: 128
+code_change_vector_size: 768
 ##################################################
 # train_opts
 ##################################################
@@ -48,5 +48,5 @@ lr_fc_edit_encoder: 1e-3
 use_scheduler: true
 warmup_ratio: 0.1
 loss_fn: 'ContrastiveLoss' # ContrastiveLoss or NTXentLoss or TripletLoss or CosineSimilarityLoss or MultipleNegativesRankingLoss
-margin: 5.0
+margin: 1.0
 accumulation_steps: 1

@@ -8,6 +8,7 @@ import sys
 from torch.nn.utils.rnn import pad_sequence
 from datatypes import *
 from model import *
+from torch.utils.data import DataLoader, Dataset
 
 
 def read_data(configs: dict) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
@@ -136,76 +137,43 @@ class CollateForCER(object):
             'labels': torch.tensor(labels),
             'masks': concatenated_inputs_mask,
         }
-   
-
-# # def make_pytorch_dataset(dataset_split, dataset_full, do_lstm_dataset=True):
-# def make_pytorch_dataset(dataset: pd.DataFrame) -> List[Dict[str, Union[str, int]]]:
-#     '''
-#     convert the pandas dataframe into dataset format that pytorch dataloader takes
-#     the resulting format is a list of dictionaries
-#     '''
-#     #loop through dataset dataframe and append each row as a dictionary to a list
-#     cer_dataset = []
-#     for index, row in dataset.iterrows():
-#         # print(row)
-#         cer_dataset.append({
-#             'A1': row['code_i_1'],
-#             'A2': row['code_i_2'],
-#             'B1': row['code_j_1'],
-#             'B2': row['code_j_2'],
-#             'label': 1 if row['is_similar'] == True else 0,
-#         }) 
-#     return cer_dataset
-
-
-
-# # def make_dataloader(dataset_split, dataset_full, collate_fn, configs, n_workers=0, do_lstm_dataset=True, train=True):
-# def make_dataloader(dataset: pd.DataFrame, collate_fn: Callable, configs: dict, n_workers: int = 0, train: bool = True) -> torch.utils.data.DataLoader:
-#     shuffle = True if train else False
-#     if configs.testing:
-#         shuffle = False
-#     dataset = make_pytorch_dataset(dataset=dataset)
-#     # data_loader = torch.utils.data.DataLoader(dataset, collate_fn=collate_fn, shuffle=shuffle, batch_size=configs.batch_size, num_workers=n_workers)
-#     data_loader = torch.utils.data.DataLoader(dataset, shuffle=shuffle, batch_size=configs.batch_size, num_workers=n_workers)
-#     return data_loader
     
-# class CollateForCER(object):
-#     def __init__(self, tokenizer: tokenizer, configs: dict, device: torch.device):
-#         self.tokenizer = tokenizer
-#         self.configs = configs
-#         self.device = device
+# import torch
+# from transformers import T5Tokenizer, T5ForConditionalGeneration
 
-#     def __call__(self, batch: List[Dict[str, Union[str, int]]]) -> Dict[str, torch.Tensor]:
-#         input_ids_list = []
-#         attention_mask_list = []
-        
-#         for b in batch:
-#             # Tokenize each input sequence and concatenate them
-#             inputs = self.tokenizer(
-#                 [b['A1'], b['A2'], b['B1'], b['B2']],
-#                 return_tensors='pt',
-#                 padding=True,
-#                 truncation=True
-#             )
-#             input_ids = torch.cat([inputs['input_ids'][i] for i in range(len(inputs['input_ids']))], dim=0)
-#             attention_mask = torch.cat([inputs['attention_mask'][i] for i in range(len(inputs['attention_mask']))], dim=0)
-            
-#             input_ids_list.append(input_ids)
-#             attention_mask_list.append(attention_mask)
+class DecoderFineTuneDataset(Dataset):
+    def __init__(self, dataframe, encoder_model, tokenizer, device):
+        self.data = dataframe
+        self.encoder_model = encoder_model
+        self.tokenizer = tokenizer
+        self.device = device
 
-#         # Find the maximum sequence length in the batch
-#         max_len = max([seq.size(0) for seq in input_ids_list])
-        
-#         # Pad sequences to the maximum length
-#         input_ids_padded = torch.stack([torch.nn.functional.pad(seq, (0, max_len - seq.size(0)), value=self.tokenizer.pad_token_id) for seq in input_ids_list])
-#         attention_mask_padded = torch.stack([torch.nn.functional.pad(seq, (0, max_len - seq.size(0)), value=0) for seq in attention_mask_list])
+    def __len__(self):
+        return len(self.data)
 
-#         # Move tensors to the specified device
-#         input_ids = input_ids_padded.to(self.device)
-#         attention_mask = attention_mask_padded.to(self.device)
+    def __getitem__(self, index):
+        row = self.data.iloc[index]
         
-#         # Stack the labels and move to the specified device
-#         labels = torch.stack([torch.tensor(b['label'], dtype=torch.long) for b in batch]).to(self.device)
+        # Get the four code instances
+        code_instances = [row['code_i_1'], row['code_j_1'], row['code_i_2'], row['code_j_2']]
         
-#         return {'input_ids': input_ids, 'attention_mask': attention_mask, 'labels': labels}
+        # Tokenize each code instance for decoding targets
+        target_ids = [self.tokenizer(code, return_tensors='pt', padding='max_length', max_length=512).input_ids.squeeze(0)
+                      for code in code_instances]
+        
+        # Get embeddings from the encoder for each code instance
+        embeddings = []
+        for code in code_instances:
+            inputs = self.tokenizer(code, return_tensors="pt", padding=True, truncation=True).to(self.device)
+            with torch.no_grad():
+                embedding = self.encoder_model.get_embeddings(inputs)
+            embeddings.append(embedding.squeeze(0))
+        
+        return {
+            'encoder_embeddings': torch.stack(embeddings),  # Shape: [4, embedding_size]
+            'target_ids': torch.stack(target_ids),           # Shape: [4, max_length]
+        }
 
+def create_finetuned_decoder_dataloader(dataframe, encoder_model, tokenizer, device, batch_size=8, shuffle=True):
+    dataset = DecoderFineTuneDataset(dataframe, encoder_model, tokenizer, device)
+    return DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
