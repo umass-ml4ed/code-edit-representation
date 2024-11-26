@@ -158,14 +158,20 @@ def print_closest(embeddings, configs, sensitivity):
     # Step 4: Track clusters
     clustercount = 0
     n = len(embeddings)
-    
+    diffclustercount = 0
     # Step 5: Iterate only over pairs that satisfy the conditions
     for i in tqdm(range(n), desc='Printing Closest', leave=False):
         valid_indices = (mask_margin[i] & mask_sensitivity[i]).nonzero(as_tuple=True)[0]
         mindist, pos = configs.margin, -1
+        A1_mask = embeddings[i][3]
+        A2_mask = embeddings[i][4]
         
         for j in valid_indices:
             if j > i:  # To avoid re-checking pairs and self-pairing
+                B1_mask = embeddings[j][3]
+                B2_mask = embeddings[j][4]
+
+                if A1_mask == B1_mask or A2_mask == B2_mask: continue # only process different problems in the same cluster
                 dist = distance_matrix[i, j].item()
                 if dist < mindist:
                     mindist = dist
@@ -178,6 +184,8 @@ def print_closest(embeddings, configs, sensitivity):
             B1 = removeSpace(embeddings[pos][1])
             B2 = removeSpace(embeddings[pos][2])
             
+            
+            
             if mindist < sensitivity and A1 != B1 and A2 != B2 and A1 != A2 and B1 != B2:
                 clustercount += 1
                 printCodePairSideBySide(embeddings[i][1], embeddings[i][2])
@@ -186,6 +194,7 @@ def print_closest(embeddings, configs, sensitivity):
                 print('*' * 119)
                 print()
                 print()
+
                 
     print(len(embeddings), clustercount)
 
@@ -348,21 +357,21 @@ def main(configs):
     test_loader  = make_dataloader(test_set , collate_fn=collate_fn, configs=configs)
     
 
-    data_loader = train_loader
+    data_loader = test_loader
     embeddings_optimal = get_all_embeddings(model, data_loader)
 
     # print(test_embeddings)
-    # print_closest(test_embeddings, configs, configs.margin / 100)
+    print_closest(embeddings_optimal, configs, configs.margin/100)
     # print_clusters(embeddings=test_embeddings, sensitivity=configs.margin / 100, printCode=False, printMask=False)
-    dia_opt = calculate_cluster_diameters(embeddings=embeddings_optimal)
+    # dia_opt = calculate_cluster_diameters(embeddings=embeddings_optimal)
 
-    checkpoint_path = 'checkpoints/20241031_190036' #epoch 8, margin 1
-    model = torch.load(checkpoint_path + '/model')
-    # model = model0
-    embeddings_random = get_all_embeddings(model, data_loader)
-    dia_rand = calculate_cluster_diameters(embeddings=embeddings_random)
+    # checkpoint_path = 'checkpoints/20241031_190036' #epoch 8, margin 1
+    # model = torch.load(checkpoint_path + '/model')
+    # # model = model0
+    # embeddings_random = get_all_embeddings(model, data_loader)
+    # dia_rand = calculate_cluster_diameters(embeddings=embeddings_random)
 
-    plot_diameters(diameter_optimal=dia_opt, diameter_random=dia_rand, name='Hist_compare_train8.png')
+    # plot_diameters(diameter_optimal=dia_opt, diameter_random=dia_rand, name='Hist_compare_train8.png')
 
     # embeddings = get_all_embeddings(model=model, dataloader=data_loader)
     # intra_mask_distances, inter_mask_distances = calculate_centroid_distances(embeddings)

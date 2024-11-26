@@ -5,31 +5,38 @@ import numpy as np
 import os
 # from transformers import AutoTokenizer, AutoModelWithLMHead
 from transformers import T5Tokenizer, T5Model, RobertaTokenizer
+from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+from transformers.modeling_outputs import BaseModelOutput
 
 from pdb import set_trace
 from datatypes import *
+from utils import *
 
 def create_tokenizer(configs: dict) -> tokenizer:
     if configs.model_name == 't5-base' or configs.model_name == 't5-large':
         tokenizer = T5Tokenizer.from_pretrained(configs.model_name)
+    elif configs.model_name == 'google/flan-t5-base' or configs.model_name == 'google/flan-t5-large':
+        tokenizer = AutoTokenizer.from_pretrained("google/flan-t5-small")
     else :
         tokenizer = RobertaTokenizer.from_pretrained(configs.model_name)
     
     return tokenizer
 
 def create_cer_model(configs: dict, device: torch.device) -> nn.Module:
-    tokenizer = create_tokenizer(configs)
-    return CustomCERModel(configs,device).to(device), tokenizer
+    # tokenizer = create_tokenizer(configs)
+    return CustomCERDModel(configs,device).to(device), tokenizer
 
 class CustomCERModel(nn.Module):
     def __init__(self, configs: dict, device: torch.device):
         super(CustomCERModel, self).__init__()
 
-        # Initialize tokenizer and encoder based on the model name
-        if configs.model_name in ['t5-base', 't5-large']:
-            self.tokenizer = T5Tokenizer.from_pretrained(configs.model_name)
-        else:
-            self.tokenizer = RobertaTokenizer.from_pretrained(configs.model_name)
+        # # Initialize tokenizer and encoder based on the model name
+        # if configs.model_name in ['t5-base', 't5-large']:
+        #     self.tokenizer = T5Tokenizer.from_pretrained(configs.model_name)
+        # else:
+        #     self.tokenizer = RobertaTokenizer.from_pretrained(configs.model_name)
+
+        self.tokenizer = create_tokenizer(configs)
 
         self.pretrained_encoder = T5Model.from_pretrained(configs.model_name).encoder
 
@@ -95,150 +102,146 @@ class CustomCERModel(nn.Module):
         if self.configs.loss_fn in ['ContrastiveLoss', 'NTXentLoss','CosineSimilarityLoss', 'MultipleNegativesRankingLoss']:
             return Da_fc, Db_fc
 
-# class CustomCERModel(nn.Module):
-#     def __init__(self, configs: dict, device: torch.device):
-#         super(CustomCERModel, self).__init__()
-#         if configs.model_name == 't5-base' or configs.model_name == 't5-large':
-#             self.tokenizer = T5Tokenizer.from_pretrained(configs.model_name)
-#         else :
-#             self.tokenizer = RobertaTokenizer.from_pretrained(configs.model_name)
+class CustomCERDModel(nn.Module):
+    def __init__(self, configs: dict, device: torch.device):
+        super(CustomCERDModel, self).__init__()
 
-#         # Initialize separate encoders for each input
-#         self.encoder_A1 = T5Model.from_pretrained(configs.model_name)
-#         self.encoder_A2 = T5Model.from_pretrained(configs.model_name)
-#         self.encoder_B1 = T5Model.from_pretrained(configs.model_name)
-#         self.encoder_B2 = T5Model.from_pretrained(configs.model_name)
+        self.tokenizer = create_tokenizer(configs)    
+        # self.pretrained_encoder = AutoModelForSeq2SeqLM.from_pretrained(configs.model_name).encoder
+        # self.pretrained_decoder = AutoModelForSeq2SeqLM.from_pretrained(configs.model_name).decoder
+
+        self.pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(configs.model_name)
+        self.pretrained_encoder = self.pretrained_model.encoder
+        self.pretrained_decoder = self.pretrained_model.decoder  # This stays as T5Stack
+        self.lm_head = self.pretrained_model.lm_head  # Language modeling head for logits projection
+
+
+        self.embedding_size = self.pretrained_encoder.config.d_model
+        self.configs = configs
+
+        # Fully connected layer for encoding deltas (Da, Db)
+        self.fc_edit_encoder = nn.Sequential(
+            nn.Linear(self.embedding_size, self.embedding_size),
+            nn.Tanh(),
+            nn.Linear(self.embedding_size, self.configs.code_change_vector_size),
+        )
+
+        # Loss functions and weights
+        self.contrastive_margin = configs.margin
+        self.lambda_contrastive = configs.lambda_contrastive    
+        self.lambda_reconstruction = configs.lambda_reconstruction  
+        self.cross_entropy_loss = nn.CrossEntropyLoss()
+
+        self.device = device
+
+    def batch_unpack(self, inputs, batch_size):
+        A1 = inputs[:batch_size]
+        A2 = inputs[batch_size:2 * batch_size]
+        B1 = inputs[2 * batch_size:3 * batch_size]
+        B2 = inputs[3 * batch_size:]
+        return A1, A2, B1, B2
+
+    def compute_contrastive_loss(self, d_a, d_b, is_similar):
+        """Compute contrastive loss between delta embeddings."""
+        distance = torch.norm(d_a - d_b, dim=1)  # Euclidean distance
+        loss = is_similar * distance**2 + (1 - is_similar) * torch.clamp(self.contrastive_margin - distance, min=0)**2
+        return loss.mean()
+
+    def get_embeddings(self, tokenized_inputs):
+        """Get sequence-level embeddings."""
+        outputs = self.pretrained_encoder(**tokenized_inputs).last_hidden_state
+        seq_lens = tokenized_inputs.attention_mask.sum(dim=1)
+        masked_hidden_states = outputs * tokenized_inputs.attention_mask.unsqueeze(2)
+        embeddings = masked_hidden_states.sum(dim=1) / seq_lens.unsqueeze(1)
+        return embeddings
+
+    def get_edit_encodings(self, concatenated_inputs):
+        """Get edit encodings for concatenated inputs."""
+        tokenized_inputs = self.tokenizer(
+            concatenated_inputs, return_tensors="pt", padding=True, truncation=True
+        ).to(self.device)
+        embeddings = self.get_embeddings(tokenized_inputs)
+        batch_size = embeddings.shape[0] // 4
+        A1_emb, A2_emb, B1_emb, B2_emb = self.batch_unpack(embeddings, batch_size)
+        Da = A2_emb - A1_emb
+        Db = B2_emb - B1_emb
+        all_edit_encodings = torch.cat((Da, Db), dim=0)
+        all_edit_fc = self.fc_edit_encoder(all_edit_encodings)
+        # Split back into Da_fc and Db_fc
+        Da_fc = all_edit_fc[:batch_size]
+        Db_fc = all_edit_fc[batch_size:]
+
+        return Da_fc, Db_fc
+    
+    def forward(self, concatenated_inputs, is_similar):
+        """
+        Forward pass for both contrastive and reconstruction objectives.
+        """
+        # Get edit encodings for concatenated inputs
+        Da_fc, Db_fc = self.get_edit_encodings(concatenated_inputs)
+
+        # Compute contrastive loss
+        contrastive_loss = self.compute_contrastive_loss(Da_fc, Db_fc, is_similar)
         
-#         self.embedding_size = self.encoder_A1.config.d_model
-#         self.configfile = configs
+        tokenized_inputs = self.tokenizer(
+            concatenated_inputs, return_tensors="pt", padding=True, truncation=True
+        ).to(self.device)
+        embeddings = self.get_embeddings(tokenized_inputs)
+        batch_size = embeddings.shape[0] // 4
+        A1, A2, B1, B2 = self.batch_unpack(concatenated_inputs, batch_size)
+        A1_emb, A2_emb, B1_emb, B2_emb = self.batch_unpack(embeddings, batch_size)
+        decoder_inputs = torch.cat((A1_emb + Da_fc, B1_emb + Db_fc), dim = 0).unsqueeze(1)
+        decoder_targets = self.tokenizer(A2 + B2, return_tensors="pt", padding=True, truncation=True).to(self.device)
+        # Decoder reconstruction for A2 and B2
+        # decoder_outputs = self.pretrained_decoder(
+        #     # encoder_outputs=BaseModelOutput(last_hidden_state=decoder_inputs),
+        #     # labels=decoder_targets.input_ids
+        #     encoder_hidden_states=decoder_inputs,  # Pass the encoder outputs here
+        #     decoder_start_token_id=self.tokenizer.pad_token_id  # Start decoding from <pad>
 
-#         # Fully connected layer for encoding the edits between two corresponding code snippets
-#         code_change_vector_size = 128
-#         self.fc_edit_encoder_A = nn.Sequential(
-#             nn.Linear(2*self.embedding_size, code_change_vector_size),
-#             nn.Sigmoid()
-#         )
+        # ).logits
+        # Decoder reconstruction for A2 and B2
+        # decoder_outputs = self.pretrained_decoder(
+        #     input_ids=decoder_targets.input_ids,  # Target input IDs for the decoder
+        #     attention_mask=decoder_targets.attention_mask,
+        #     encoder_hidden_states=decoder_inputs,  # Pass the encoder outputs here
+        # ).logits
 
-#         self.fc_edit_encoder_B = nn.Sequential(
-#             nn.Linear(2*self.embedding_size, code_change_vector_size),
-#             nn.Sigmoid()
-#         )
+        # Decoder reconstruction for A2 and B2
+        decoder_outputs = self.pretrained_decoder(
+            input_ids=decoder_targets.input_ids,  # Target input IDs for the decoder
+            attention_mask=decoder_targets.attention_mask,
+            encoder_hidden_states=decoder_inputs,  # Pass the encoder outputs here
+        )
 
-#         # Fully connected layer to take two edit encodings and output a single value. This is only needed for the BCEWithLogitsLoss
-#         self.fc_classifier = nn.Linear(2 * self.embedding_size, 1)
+        # Use the lm_head to project decoder hidden states to logits
+        decoder_logits = self.lm_head(decoder_outputs.last_hidden_state)
 
-#         self.device = device
+        # decoder_outputs_b2 = self.pretrained_decoder(
+        #     input_ids=decoder_inputs_b2.input_ids.to(self.device),
+        #     attention_mask=decoder_inputs_b2.attention_mask.to(self.device),
+        #     encoder_hidden_states=B1_emb.unsqueeze(1),  # Use B1 embeddings for B2 decoding
+        # ).logits
 
-#     def get_embeddings(self, code: str, encoder) -> torch.Tensor:
-#         inputs = self.tokenizer(code, return_tensors="pt", padding=True, truncation=True).to(self.device) # need to remove tokenization from here, because it's inefficient
-#         outputs = encoder.encoder(**inputs)
-#         embeddings = outputs.last_hidden_state
-#         embeddings = torch.mean(embeddings, dim=1)
-        
-#         return embeddings
+        # # Compute reconstruction loss
+        # reconstruction_loss_a2 = self.cross_entropy_loss(
+        #     decoder_outputs_a2.view(-1, decoder_outputs_a2.size(-1)),
+        #     decoder_inputs_a2.labels.view(-1).to(self.device)
+        # )
+        # reconstruction_loss_b2 = self.cross_entropy_loss(
+        #     decoder_outputs_b2.view(-1, decoder_outputs_b2.size(-1)),
+        #     decoder_inputs_b2.labels.view(-1).to(self.device)
+        # )
+        # reconstruction_loss = (reconstruction_loss_a2 + reconstruction_loss_b2) / 2
 
-#     def forward(self, A1: str, A2: str, B1: str, B2: str) -> torch.Tensor:
-#         A1_emb = self.get_embeddings(A1, self.encoder_A1).to(self.device)
-#         A2_emb = self.get_embeddings(A2, self.encoder_A2).to(self.device)
-#         B1_emb = self.get_embeddings(B1, self.encoder_B1).to(self.device)
-#         B2_emb = self.get_embeddings(B2, self.encoder_B2).to(self.device)
-
-#         # print('AB cosine similarity: ' + str(F.cosine_similarity(A1_emb-A2_emb, B1_emb-B2_emb, dim=1)))
-#         # print('A Norm: ' + str(torch.norm(A1_emb-A2_emb, dim=1)))
-#         # print('B Norm: ' + str(torch.norm(B1_emb-B2_emb, dim=1)))
-#         # print('A cosine similarity: ' + str(F.cosine_similarity(A1_emb, A2_emb, dim=1)))
-#         # print('B cosine similarity: ' + str(F.cosine_similarity(B1_emb, B2_emb, dim=1)))
-
-#         # Compute differences
-#         # Da = A2_emb - A1_emb
-#         # Db = B2_emb - B1_emb
-#         Da = torch.cat((A1_emb, A2_emb), dim = 1)
-#         Db = torch.cat((B1_emb, B2_emb), dim = 1)
-
-#         # Pass through the first FC layer
-#         Da_fc = self.fc_edit_encoder_A(Da)
-#         Db_fc = self.fc_edit_encoder_B(Db)
-
-#         if self.configfile.loss_fn == 'ContrastiveLoss':
-#             return Da_fc, Db_fc
-#         elif self.configfile.loss_fn == 'NTXentLoss' :
-#             return Da_fc, Db_fc
-#         elif self.configfile.loss_fn == 'BCEWithLogitsLoss':
-#             # Concatenate Da and Db
-#             combined = torch.cat((Da_fc, Db_fc), dim=1)
-
-#             # Pass through the second FC layer
-#             output = torch.sigmoid(self.fc_classifier(combined))
-
-#             return output
-
-# class CustomCERModel(nn.Module):
-#     def __init__(self, configs: dict, device: torch.device):
-#         super(CustomCERModel, self).__init__()
-#         if configs.model_name == 't5-base' or configs.model_name == 't5-large':
-#             self.tokenizer = T5Tokenizer.from_pretrained(configs.model_name)
-#         else :
-#             self.tokenizer = RobertaTokenizer.from_pretrained(configs.model_name)
-#         self.pretrained_encoder = T5Model.from_pretrained(configs.model_name)
-#         self.embedding_size = self.pretrained_encoder.config.d_model
-#         self.configfile = configs
-
-#         # Fully connected layer for encoding the edits between two corresponding code snippets
-#         self.fc_edit_encoder = nn.Sequential()
-#         self.fc_edit_encoder.add_module('fc_edit_encoder_linear', nn.Linear(self.embedding_size, self.embedding_size))
-#         self.fc_edit_encoder.add_module('fc_edit_encoder_activation', nn.Sigmoid())
-
-#         # Fully connected layer to take to two edit encodings and output a single value. This is only needed for the BCEWithLogitsLoss
-#         self.fc_classifier = nn.Linear(2 * self.embedding_size, 1)
-
-#         self.device = device
-
-#         if configs.verbose == True:
-#             # print(self)
-#             pass
-
-#     def get_embeddings(self, code: str) -> torch.Tensor:
-#             inputs = self.tokenizer(code, return_tensors="pt", padding=True, truncation=True).to(self.device)
-#             outputs = self.pretrained_encoder.encoder(**inputs)
-#             embeddings = outputs.last_hidden_state
-#             # Average pooling
-#             embeddings = torch.mean(embeddings, dim=1)
-#             if self.configfile.verbose == True:
-#                 # print(len(code), embeddings.shape)
-#                 # print(embeddings)
-#                 pass
-#             return embeddings
-
-#     def forward(self, A1: str, A2: str, B1: str, B2: str) -> torch.Tensor:
-#         A1_emb = self.get_embeddings(A1).to(self.device)
-#         A2_emb = self.get_embeddings(A2).to(self.device)
-#         B1_emb = self.get_embeddings(B1).to(self.device)
-#         B2_emb = self.get_embeddings(B2).to(self.device)
-
-#         # Compute differences
-#         Da = A2_emb - A1_emb
-#         Db = B2_emb - B1_emb
-
-#         # Pass through the first FC layer
-#         Da_fc = self.fc_edit_encoder(Da)
-#         if self.configfile.verbose == True:
-#             # print(Da_fc.shape)
-#             # print(Da_fc)
-#             pass
-#         Db_fc = self.fc_edit_encoder(Db)
-#         if self.configfile.verbose == True:
-#             # print(Db_fc.shape)
-#             # print(Db_fc)
-#             pass
+        # reconstruction_loss = self.cross_entropy_loss(decoder_outputs.view(-1, decoder_outputs.size(-1)), decoder_targets.view(-1, decoder_targets.size(-1)))
+        reconstruction_loss = self.cross_entropy_loss(decoder_logits.view(-1, decoder_logits.size(-1)),decoder_targets.input_ids.view(-1).to(self.device),)
 
 
-#         if self.configfile.loss_fn == 'ContrastiveLoss':
-#             return (Da_fc, Db_fc)
-#         elif self.configfile.loss_fn == 'BCEWithLogitsLoss':
-#             # Concatenate Da and Db
-#             combined = torch.cat((Da_fc, Db_fc), dim=1)
+        # Total loss
+        total_loss = (
+            self.lambda_contrastive * contrastive_loss
+            + self.lambda_reconstruction * reconstruction_loss
+        )
 
-#             # Pass through the second FC layer
-#             output = torch.sigmoid(self.fc_classifier(combined))
-
-#             return output
+        return total_loss#, contrastive_loss, reconstruction_loss

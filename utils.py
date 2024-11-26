@@ -58,13 +58,10 @@ def format_java_code(java_code):
     return '\n'.join(formatted_code)
 
 
-def printCodePairSideBySide(code1, code2):
+def printCodePairSideBySide(code1, code2, col_width=100):
     # Split each code snippet by lines
     code1_lines = code1.splitlines()
     code2_lines = code2.splitlines()
-
-    # Set the column width for each snippet
-    col_width = 80
 
     # Function to wrap text to fit within the column width
     def wrap_text(text, width):
@@ -81,3 +78,4 @@ def printCodePairSideBySide(code1, code2):
     # Print wrapped lines side by side
     for line1, line2 in zip_longest(code1_wrapped, code2_wrapped, fillvalue=""):
         print(f"{line1:<{col_width}}{line2:<{col_width}}")
+

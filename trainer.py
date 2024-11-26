@@ -126,11 +126,13 @@ def training_step(batch: dict, batch_idx: int, len_data: int, model: nn.modules,
     # print('Label: ' + str(labels))
     
     # outputs = model(A1, A2, B1, B2)
-    outputs = model(inputs)
+    # outputs = model(inputs)
     labels = labels.to(device).to(torch.float32)
     # print(outputs.shape, label.shape)
     # print(outputs.dtype, label.dtype)
-    loss = criterion(outputs, labels) / configs.accumulation_steps
+    # loss = criterion(outputs, labels) / configs.accumulation_steps
+
+    loss = model(inputs, labels)
 
     loss.backward()
     
@@ -140,5 +142,5 @@ def training_step(batch: dict, batch_idx: int, len_data: int, model: nn.modules,
         optimizer.step()
         optimizer.zero_grad()
 
-    log = {'loss': loss.cpu().detach(), 'output1': outputs[0].cpu().detach()}
+    log = {'loss': loss.cpu().detach()}#, 'output1': outputs[0].cpu().detach()}
     return log

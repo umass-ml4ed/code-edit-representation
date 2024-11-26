@@ -9,6 +9,5 @@
 hostname
 
 source activate /home/hheickal_umass_edu/.conda/envs/NLP_project
-python main_codeGen.py
-
+python main_finetune_decoder.py
 

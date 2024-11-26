@@ -30,10 +30,8 @@ def get_accuracy(model, input_set, configs):
             B2 = row['code_j_2']
             inputs = [A1, A2, B1, B2]
             target = row['is_similar']
-            outputs = model.forward(inputs)
-            # outputs = model.forward(A1, A2, B1, B2)
-            # output = torch.round(torch.sigmoid(output))
-            output1, output2 = outputs
+            output1, output2 = model.get_edit_encodings(inputs)
+    
             # print(output1, output2)
             dist = F.pairwise_distance(output1, output2)
             # dist = torch.cosine_similarity(output1, output2)

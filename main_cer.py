@@ -29,7 +29,7 @@ def get_latent_states(dataset, model):
             B1 = row['code_i_2']
             B2 = row['code_j_2']
             
-            Da, Db = model([A1, A2, B1, B2])
+            Da, Db = model.get_edit_encodings([A1, A2, B1, B2])
             Da = Da.cpu().detach().numpy()
             Db = Db.cpu().detach().numpy()
             res = np.concatenate((res, Da), axis=0)
@@ -197,9 +197,10 @@ def main(configs):
                             run["best_model_at_epoch"].log(ep)
                         torch.save(model, os.path.join(configs.model_save_dir, now, 'model'))
                     
-                    plot_clusters(train_set, model, ep, 'train_cluster', run)
-                    plot_clusters(valid_set, model, ep, 'valid_cluster', run)
-                    plot_clusters(test_set, model, ep, 'test_cluster', run)
+                    if configs.use_neptune:
+                        plot_clusters(train_set, model, ep, 'train_cluster', run)
+                        plot_clusters(valid_set, model, ep, 'valid_cluster', run)
+                        plot_clusters(test_set, model, ep, 'test_cluster', run)
                             
         # if test_set != None:
         for key in test_logs:

@@ -247,12 +247,10 @@ def main(configs):
             optimizer.zero_grad()
 
             # print(f"Loss: {loss.item()}")
+        torch.save(decoder_model, 'checkpoints/decoder_models/decoder_model_all_768_ep' + str(epoch))
     
     # Example usage
     generated_code = generate_code(decoder_model=decoder_model, cer_model= cer_model, dataloader=test_dataloader, tokenizer=tokenizer, device=device)
-    for code in generated_code:
-        print(format_java_code(code))
-        print()
 
 if __name__ == "__main__":
     main()
