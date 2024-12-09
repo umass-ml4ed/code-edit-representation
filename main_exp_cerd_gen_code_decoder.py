@@ -96,11 +96,13 @@ def generate_code(model, dataloader, tokenizer, device):
                 da, db = model.get_edit_encodings([a1, a2, b1, b2])
                 # print(inputs_emb.shape)
                 # Generate code for each embedding
-                code_a2 = generate_code_from_vector(a1_emb + da, model, tokenizer, device)
+                # code_a2 = generate_code_from_vector(a1_emb + da, model, tokenizer, device)
+                code_a2 = generate_code_from_vector(a1_emb, model, tokenizer, device)
                 printCodePairSideBySide(a1, format_java_code(code_a2))
                 printCodePairSideBySide(a2, format_java_code(code_a2))
                 print('------------------------------------------------------------------------------------')
-                code_b2 = generate_code_from_vector(b1_emb + db, model, tokenizer, device)
+                # code_b2 = generate_code_from_vector(b1_emb + db, model, tokenizer, device)
+                code_b2 = generate_code_from_vector(b1_emb, model, tokenizer, device)
                 printCodePairSideBySide(b1, format_java_code(code_b2))
                 printCodePairSideBySide(b2, format_java_code(code_b2))
                 print('------------------------------------------------------------------------------------')
@@ -203,8 +205,9 @@ def main(configs):
     tokenizer = create_tokenizer(configs)
 
     # Path to the checkpoint
-    checkpoint_path = 'checkpoints/20241126_212147' # allowed_problem_list: ['12', '17', '21'] # only if else related problems
-    
+    # checkpoint_path = 'checkpoints/20241126_214208' # allowed_problem_list: ['12', '17', '21'] # only if else related problems; epoch 100
+    # checkpoint_path = 'checkpoints/20241127_140131' # allowed_problem_list: ['12', '17', '21'] # only if else related problems; epoch 200
+    checkpoint_path = 'checkpoints/20241127_161838'    
 
     cerd_model = torch.load(checkpoint_path + '/model')
 

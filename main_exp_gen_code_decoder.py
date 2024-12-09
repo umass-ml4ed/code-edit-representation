@@ -30,6 +30,7 @@ from transformers import T5ForConditionalGeneration, T5Tokenizer
 from transformers.modeling_outputs import BaseModelOutput
 
 from tqdm import tqdm
+from main_finetune_decoder import *
 
 # Function to generate code from a given vector embedding
 def generate_code_from_vector(encoder_embedding, decoder_model, tokenizer, device):
@@ -91,19 +92,26 @@ def generate_code(decoder_model, cer_model, dataloader, tokenizer, device):
                 b1_tokenized = tokenizer(b1, return_tensors="pt", padding=True, truncation=True).to(device)
                 # b2_tokenized = tokenizer(b2, return_tensors="pt", padding=True, truncation=True).to(device)
 
-                a1_emb = cer_model.get_embeddings(a1_tokenized)
-                b1_emb = cer_model.get_embeddings(b1_tokenized)
-                da, db = cer_model([a1, a2, b1, b2])
+                a1_emb = cer_model.get_embeddings_tokenized(a1_tokenized)
+                b1_emb = cer_model.get_embeddings_tokenized(b1_tokenized)
+                da, db = cer_model.get_edit_encodings([a1, a2, b1, b2])
                 # print(inputs_emb.shape)
                 # Generate code for each embedding
                 code_a2 = generate_code_from_vector(a1_emb + da, decoder_model, tokenizer, device)
                 printCodePairSideBySide(a1, format_java_code(code_a2))
+                print('------------------------------------------------------------------------------------')
                 printCodePairSideBySide(a2, format_java_code(code_a2))
                 print('------------------------------------------------------------------------------------')
+                print('------------------------------------------------------------------------------------')
+
                 code_b2 = generate_code_from_vector(b1_emb + db, decoder_model, tokenizer, device)
                 printCodePairSideBySide(b1, format_java_code(code_b2))
+                print('------------------------------------------------------------------------------------')
                 printCodePairSideBySide(b2, format_java_code(code_b2))
                 print('------------------------------------------------------------------------------------')
+                print('------------------------------------------------------------------------------------')
+                print('------------------------------------------------------------------------------------')
+
 
                 sys.stdout.flush()              # Manually flush the output buffer
                 
@@ -117,46 +125,6 @@ from torch.utils.data import DataLoader
 import torch.nn.functional as F
 from datatypes import *
 
-class FinetuneDecoderModel(nn.Module):
-    def __init__(self, encoder_model: nn.Module, decoder_model: T5ForConditionalGeneration, cer_model, tokenizer: T5Tokenizer, configs: dict, device: torch.device):
-        super(FinetuneDecoderModel, self).__init__()
-        self.encoder_model = encoder_model
-        self.decoder_model = decoder_model
-        self.cer_model = cer_model
-        self.tokenizer = tokenizer
-        self.configs = configs
-        self.device = device
-
-    def forward(self, concatenated_inputs: List[str], target_codes: List[str]) -> torch.Tensor:
-        # Tokenize the concatenated inputs (A1, A2, B1, B2)
-        tokenized_inputs = self.tokenizer(concatenated_inputs, return_tensors="pt", padding=True, truncation=True).to(self.device)
-        
-        # Get embeddings from the encoder
-        encoder_embeddings = self.cer_model.get_embeddings(tokenized_inputs).to(self.device)
-
-        # Reshape encoded vectors to simulate last_hidden_state: [batch_size, seq_length=1, hidden_size]
-        encoder_outputs = encoder_embeddings.unsqueeze(1)  # Add a sequence dimension
-        
-
-        # Tokenize the target codes (decoder input)
-        tokenized_targets = self.tokenizer(target_codes, return_tensors="pt", padding=True, truncation=True).to(self.device)
-
-        # Pass through the decoder with encoder outputs
-        decoder_outputs = self.decoder_model(
-            encoder_outputs=BaseModelOutput(last_hidden_state=encoder_outputs),
-            labels=tokenized_targets.input_ids  # Using labels for supervised learning (teacher forcing)
-        )
-
-        # Get the decoder's loss (cross-entropy loss for language generation)
-        loss = decoder_outputs.loss
-        logits = decoder_outputs.logits
-
-        return loss, logits
-
-def make_finetuning_dataloader(dataset: pd.DataFrame, collate_fn: callable, tokenizer: T5Tokenizer, configs: dict, n_workers: int = 0, train: bool = True) -> torch.utils.data.DataLoader:
-    shuffle = train and not configs.testing
-    pytorch_dataset = CERDataset(dataset)
-    return torch.utils.data.DataLoader(pytorch_dataset, collate_fn=collate_fn, shuffle=shuffle, batch_size=4, num_workers=n_workers)
 
 
 class DecoderCollateForEdit(object):
@@ -203,15 +171,16 @@ def main(configs):
     encoder_model0, tokenizer = create_cer_model(configs, device)
 
     # Path to the checkpoint
-    # checkpoint_path = 'checkpoints/20241021_174314' # allowed_problem_list: ['12', '17', '21'] # only if else related problems
+    # cer_checkpoint_path = 'checkpoints/20241021_174314' # allowed_problem_list: ['12', '17', '21'] # only if else related problems
     # checkpoint_path = 'checkpoints/20241021_200242' #allowed_problem_list: ['34', '39', '40'] # string problems requiring loops
     # checkpoint_path = 'checkpoints/20241028_201125' # allowed_problem_list: ['46', '71'] # array problems requiring loops
     # checkpoint_path = 'checkpoints/20241029_134451' #all problems, dim 128
-    cer_checkpoint_path = 'checkpoints/20241118_191604' #all problems, dim 768
+    # cer_checkpoint_path = 'checkpoints/20241118_191604' #all problems, dim 768
     # checkpoint_path = 'checkpoints/20241030_163548' #random (epoch 2) all problem
     # checkpoint_path = 'checkpoints/20241031_175148' # epoch 2, with margin .5
     # checkpoint_path = 'checkpoints/20241031_175058' # all problems, with margin .5
     # checkpoint_path = 'checkpoints/20241031_190036' #epoch 8, margin 1
+    cer_checkpoint_path = 'checkpoints/20241208_204527' # with regularization, allowed_problem_list: ['12', '17', '21'] # only if else related problems
 
     cer_model = torch.load(cer_checkpoint_path + '/model')
     encoder_model = T5ForConditionalGeneration.from_pretrained('t5-base')
@@ -223,7 +192,7 @@ def main(configs):
         param.requires_grad = False
 
     # Create a new decoder (from T5)
-    finetuned_decoder = torch.load('checkpoints/decoder_models/decoder_model_all_768')
+    finetuned_decoder = torch.load('checkpoints/decoder_models/decoder_model_all_768_reg')
     decoder_model = T5ForConditionalGeneration.from_pretrained('t5-base')
     decoder_model.load_state_dict(finetuned_decoder.state_dict(), strict=False)
     decoder_model = decoder_model.to(device)

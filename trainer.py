@@ -16,13 +16,9 @@ class ContrastiveLoss(nn.Module):
         output2 = output2.to(self.device)
         labels = labels.to(self.device)
         distance = F.pairwise_distance(output1, output2)
-        # print('Distance: ' + str(euclidean_distance))
-        # print('Label: ' + str(label))
         
         # Assuming label is 1 for similar pairs and 0 for dissimilar pairs
         loss = (labels) * torch.pow(distance, 2) + (1-labels) * torch.pow(torch.clamp(self.margin - distance, min=0.0), 2)
-        # loss = torch.mean(loss)
-        # loss = 0.5 * (label * output**2 + (1 - label) * F.relu(self.margin - output).pow(2))
         return loss.mean().to(self.device)
 
 class MultipleNegativesRankingLoss(nn.Module):
@@ -116,6 +112,14 @@ def normal_nll(mu, sigma, x):
     
     return nll
 
+class RegularizationLoss(nn.Module):
+    def __init__(self, device):
+        super(RegularizationLoss, self).__init__()
+        self.device = device 
+    
+    def forward(self, outputs, labels):
+        return F.mse_loss(outputs, labels)
+
 def training_step(batch: dict, batch_idx: int, len_data: int, model: nn.modules, criterion: nn.modules, optimizer: torch.optim, configs: dict, device: torch.device) -> dict:
     # A1 = batch['A1']
     # A2 = batch['A2']
@@ -132,7 +136,7 @@ def training_step(batch: dict, batch_idx: int, len_data: int, model: nn.modules,
     # print(outputs.dtype, label.dtype)
     # loss = criterion(outputs, labels) / configs.accumulation_steps
 
-    loss = model(inputs, labels)
+    loss = model(inputs, labels) #cerd model
 
     loss.backward()
     
@@ -144,3 +148,18 @@ def training_step(batch: dict, batch_idx: int, len_data: int, model: nn.modules,
 
     log = {'loss': loss.cpu().detach()}#, 'output1': outputs[0].cpu().detach()}
     return log
+
+def getContrastiveLossObjective(configs: dict, device: torch.device) -> nn.modules:
+    if configs.loss_fn == 'ContrastiveLoss':
+        criterion = ContrastiveLoss(device=device, margin=configs.margin)
+    elif configs.loss_fn == 'CosineSimilarityLoss':
+        criterion = CosineSimilarityLoss(device=device)
+    elif configs.loss_fn == 'NTXentLoss' : # not relevant right now
+        criterion = NTXentLoss(device=device, batch_size=configs.batch_size)
+    elif configs.loss_fn == 'MultipleNegativesRankingLoss':
+        criterion = MultipleNegativesRankingLoss(device=device)
+    return criterion
+
+def getRegularizationLossObjective(configs: dict, device: torch.device) -> nn.modules:
+    criterion = RegularizationLoss(device=device)
+    return criterion

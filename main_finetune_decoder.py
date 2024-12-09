@@ -121,7 +121,7 @@ class FinetuneDecoderModel(nn.Module):
         tokenized_inputs = self.tokenizer(concatenated_inputs, return_tensors="pt", padding=True, truncation=True).to(self.device)
         
         # Get embeddings from the encoder
-        encoder_embeddings = self.cer_model.get_embeddings(tokenized_inputs).to(self.device)
+        encoder_embeddings = self.cer_model.get_embeddings_tokenized(tokenized_inputs).to(self.device)
 
         # Reshape encoded vectors to simulate last_hidden_state: [batch_size, seq_length=1, hidden_size]
         encoder_outputs = encoder_embeddings.unsqueeze(1)  # Add a sequence dimension
@@ -194,11 +194,13 @@ def main(configs):
     # checkpoint_path = 'checkpoints/20241021_200242' #allowed_problem_list: ['34', '39', '40'] # string problems requiring loops
     # checkpoint_path = 'checkpoints/20241028_201125' # allowed_problem_list: ['46', '71'] # array problems requiring loops
     # checkpoint_path = 'checkpoints/20241029_134451' #all problems, dim 128
-    checkpoint_path = 'checkpoints/20241118_191604' #all problems, dim 768
+    # checkpoint_path = 'checkpoints/20241118_191604' #all problems, dim 768
     # checkpoint_path = 'checkpoints/20241030_163548' #random (epoch 2) all problem
     # checkpoint_path = 'checkpoints/20241031_175148' # epoch 2, with margin .5
     # checkpoint_path = 'checkpoints/20241031_175058' # all problems, with margin .5
     # checkpoint_path = 'checkpoints/20241031_190036' #epoch 8, margin 1
+
+    checkpoint_path = 'checkpoints/20241208_204527' # with regularization, allowed_problem_list: ['12', '17', '21'] # only if else related problems
 
     cer_model = torch.load(checkpoint_path + '/model')
     encoder_model = T5ForConditionalGeneration.from_pretrained('t5-base')
@@ -231,7 +233,7 @@ def main(configs):
 
     # Training loop
     decoder_model.train()
-    num_epochs = 30
+    num_epochs = 100
 
     for epoch in tqdm(range(num_epochs)):
         for batch in tqdm(train_dataloader, desc='Training'):
@@ -247,7 +249,7 @@ def main(configs):
             optimizer.zero_grad()
 
             # print(f"Loss: {loss.item()}")
-        torch.save(decoder_model, 'checkpoints/decoder_models/decoder_model_all_768_ep' + str(epoch))
+        torch.save(decoder_model, 'checkpoints/decoder_models/decoder_model_all_768_reg')
     
     # Example usage
     generated_code = generate_code(decoder_model=decoder_model, cer_model= cer_model, dataloader=test_dataloader, tokenizer=tokenizer, device=device)

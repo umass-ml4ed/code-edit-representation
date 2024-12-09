@@ -11,6 +11,7 @@ from transformers.modeling_outputs import BaseModelOutput
 from pdb import set_trace
 from datatypes import *
 from utils import *
+from trainer import *
 
 def create_tokenizer(configs: dict) -> tokenizer:
     if configs.model_name == 't5-base' or configs.model_name == 't5-large':
@@ -23,18 +24,92 @@ def create_tokenizer(configs: dict) -> tokenizer:
     return tokenizer
 
 def create_cer_model(configs: dict, device: torch.device) -> nn.Module:
-    # tokenizer = create_tokenizer(configs)
-    return CustomCERDModel(configs,device).to(device), tokenizer
+    tokenizer = create_tokenizer(configs)
+    return ExtendedCERModel(configs,device).to(device), tokenizer
+
+class BaseCERModel(nn.Module):
+    def __init__(self, configs: dict, device: torch.device):
+        super(BaseCERModel, self).__init__()
+
+        self.tokenizer = create_tokenizer(configs)
+        self.configs = configs
+        self.device = device
+
+    def batch_unpack(self, inputs, batch_size):
+        A1 = inputs[:batch_size]
+        A2 = inputs[batch_size:2 * batch_size]
+        B1 = inputs[2 * batch_size:3 * batch_size]
+        B2 = inputs[3 * batch_size:]
+        return A1, A2, B1, B2
+    
+    def get_embeddings_tokenized(self, tokenized_inputs) -> torch.Tensor:
+        # Pass inputs through the encoder
+        outputs = self.pretrained_encoder(**tokenized_inputs).last_hidden_state
+        seq_lens = tokenized_inputs.attention_mask.sum(dim=1)
+        masked_hidden_states = outputs * tokenized_inputs.attention_mask.unsqueeze(2)
+        embeddings = masked_hidden_states.sum(dim=1) / seq_lens.unsqueeze(1)
+        return embeddings
+
+    def get_embeddings(self, text_inputs) -> torch.tensor:
+        tokenized_inputs = self.tokenizer(text_inputs, return_tensors="pt",padding=True,truncation=True).to(self.device)
+        return self.get_embeddings_tokenized(tokenized_inputs)
+    
+    def get_edit_encodings_tokenized(self, tokenized_inputs):
+        """Get edit encodings for tokenized inputs."""
+        embeddings = self.get_embeddings_tokenized(tokenized_inputs)
+        batch_size = embeddings.shape[0] // 4
+        A1_emb, A2_emb, B1_emb, B2_emb = self.batch_unpack(embeddings, batch_size)
+        Da = A2_emb - A1_emb
+        Db = B2_emb - B1_emb
+        all_edit_encodings = torch.cat((Da, Db), dim=0)
+        all_edit_fc = self.fc_edit_encoder(all_edit_encodings)
+        # Split back into Da_fc and Db_fc
+        Da_fc = all_edit_fc[:batch_size]
+        Db_fc = all_edit_fc[batch_size:]
+        return Da_fc, Db_fc
+
+    def get_edit_encodings(self, text_inputs):
+        tokenized_inputs = self.tokenizer(text_inputs, return_tensors="pt",padding=True,truncation=True).to(self.device)
+        return self.get_edit_encodings_tokenized(tokenized_inputs)
+
+
+
+class ExtendedCERModel(BaseCERModel):
+    def __init__(self, configs: dict, device: torch.device):
+        super(ExtendedCERModel, self).__init__(configs, device)
+
+        self.pretrained_encoder = T5Model.from_pretrained(configs.model_name).encoder
+
+        self.embedding_size = self.pretrained_encoder.config.d_model
+
+        # Single fully connected layer for edit encoding (merged for both A and B)
+        self.fc_edit_encoder = nn.Sequential(
+            nn.Linear(self.embedding_size, self.embedding_size),
+            # nn.ReLU(),
+            nn.Tanh(),
+            nn.Linear(self.embedding_size, self.configs.code_change_vector_size),
+        )
+
+    def forward(self, concatenated_inputs: List[str], is_similar: torch.tensor) -> torch.Tensor:
+        # Tokenize the concatenated inputs in one go
+        tokenized_inputs = self.tokenizer(concatenated_inputs, return_tensors="pt",padding=True,truncation=True).to(self.device)
+
+        Da_fc, Db_fc = self.get_edit_encodings_tokenized(tokenized_inputs=tokenized_inputs)
+        contrastiveObjective = getContrastiveLossObjective(self.configs, self.device)
+
+        embeddings = self.get_embeddings_tokenized(tokenized_inputs)
+        batch_size = embeddings.shape[0] // 4
+        A1_emb, A2_emb, B1_emb, B2_emb = self.batch_unpack(embeddings, batch_size)
+        regularizationObjective = getRegularizationLossObjective(self.configs, self.device)
+
+        total_loss = contrastiveObjective((Da_fc, Db_fc), is_similar) * self.configs.lambda_contrastive + (regularizationObjective(A1_emb + Da_fc, A2_emb) + regularizationObjective(B1_emb + Db_fc, B2_emb)/2) * self.configs.lambda_regularization
+
+        return total_loss
+
 
 class CustomCERModel(nn.Module):
     def __init__(self, configs: dict, device: torch.device):
         super(CustomCERModel, self).__init__()
-
-        # # Initialize tokenizer and encoder based on the model name
-        # if configs.model_name in ['t5-base', 't5-large']:
-        #     self.tokenizer = T5Tokenizer.from_pretrained(configs.model_name)
-        # else:
-        #     self.tokenizer = RobertaTokenizer.from_pretrained(configs.model_name)
 
         self.tokenizer = create_tokenizer(configs)
 
@@ -134,12 +209,7 @@ class CustomCERDModel(nn.Module):
 
         self.device = device
 
-    def batch_unpack(self, inputs, batch_size):
-        A1 = inputs[:batch_size]
-        A2 = inputs[batch_size:2 * batch_size]
-        B1 = inputs[2 * batch_size:3 * batch_size]
-        B2 = inputs[3 * batch_size:]
-        return A1, A2, B1, B2
+
 
     def compute_contrastive_loss(self, d_a, d_b, is_similar):
         """Compute contrastive loss between delta embeddings."""
@@ -183,14 +253,13 @@ class CustomCERDModel(nn.Module):
         # Compute contrastive loss
         contrastive_loss = self.compute_contrastive_loss(Da_fc, Db_fc, is_similar)
         
-        tokenized_inputs = self.tokenizer(
-            concatenated_inputs, return_tensors="pt", padding=True, truncation=True
-        ).to(self.device)
+        tokenized_inputs = self.tokenizer(concatenated_inputs, return_tensors="pt", padding=True, truncation=True).to(self.device)
         embeddings = self.get_embeddings(tokenized_inputs)
         batch_size = embeddings.shape[0] // 4
         A1, A2, B1, B2 = self.batch_unpack(concatenated_inputs, batch_size)
         A1_emb, A2_emb, B1_emb, B2_emb = self.batch_unpack(embeddings, batch_size)
-        decoder_inputs = torch.cat((A1_emb + Da_fc, B1_emb + Db_fc), dim = 0).unsqueeze(1)
+        # decoder_inputs = torch.cat((A1_emb + Da_fc, B1_emb + Db_fc), dim = 0).unsqueeze(1)
+        decoder_inputs = torch.cat((A2_emb, B2_emb), dim=0).unsqueeze(1)
         decoder_targets = self.tokenizer(A2 + B2, return_tensors="pt", padding=True, truncation=True).to(self.device)
         # Decoder reconstruction for A2 and B2
         # decoder_outputs = self.pretrained_decoder(
