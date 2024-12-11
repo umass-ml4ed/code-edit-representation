@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import numpy as np
 import os
 # from transformers import AutoTokenizer, AutoModelWithLMHead
-from transformers import T5Tokenizer, T5Model, RobertaTokenizer
+from transformers import T5Tokenizer, T5Model, RobertaTokenizer, T5ForConditionalGeneration
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 from transformers.modeling_outputs import BaseModelOutput
 
@@ -12,6 +12,8 @@ from pdb import set_trace
 from datatypes import *
 from utils import *
 from trainer import *
+from tqdm import tqdm
+import itertools
 
 def create_tokenizer(configs: dict) -> tokenizer:
     if configs.model_name == 't5-base' or configs.model_name == 't5-large':
@@ -25,7 +27,11 @@ def create_tokenizer(configs: dict) -> tokenizer:
 
 def create_cer_model(configs: dict, device: torch.device) -> nn.Module:
     tokenizer = create_tokenizer(configs)
-    return ExtendedCERModel(configs,device).to(device), tokenizer
+    if configs.exp_name == 'cer':
+        model = ExtendedCERModel(configs,device).to(device)
+    elif configs.exp_name == 'cerd':
+        model = ExtendedCERDModel(configs,device).to(device)
+    return model, tokenizer
 
 class BaseCERModel(nn.Module):
     def __init__(self, configs: dict, device: torch.device):
@@ -71,8 +77,24 @@ class BaseCERModel(nn.Module):
     def get_edit_encodings(self, text_inputs):
         tokenized_inputs = self.tokenizer(text_inputs, return_tensors="pt",padding=True,truncation=True).to(self.device)
         return self.get_edit_encodings_tokenized(tokenized_inputs)
-
-
+    
+    def get_latent_states(self, dataloader):
+        self.eval()
+        res = np.empty((0,768))
+        problemIDs = []
+        with torch.no_grad():
+            for idx, batch in enumerate(tqdm(dataloader, desc="Generating Latent States", leave=False)):
+                inputs = batch['inputs']
+                pID = batch['problemIDs']
+                print(pID)
+                Da, Db = self.get_edit_encodings(inputs)
+                Da = Da.cpu().detach().numpy()
+                Db = Db.cpu().detach().numpy()
+                res = np.concatenate((res, Da), axis=0)
+                res = np.concatenate((res, Db), axis=0)
+                problemIDs = problemIDs + pID
+                problemIDs = problemIDs + pID
+        return res, problemIDs
 
 class ExtendedCERModel(BaseCERModel):
     def __init__(self, configs: dict, device: torch.device):
@@ -106,7 +128,67 @@ class ExtendedCERModel(BaseCERModel):
 
         return total_loss
 
+class ExtendedCERDModel(BaseCERModel):
+    def __init__(self, configs: dict, device: torch.device):
+        super(ExtendedCERDModel, self).__init__(configs, device)
 
+        self.pretrained_encoder = T5ForConditionalGeneration.from_pretrained(configs.model_name).encoder
+        self.embedding_size = self.pretrained_encoder.config.d_model
+
+        # Fully connected layer for encoding deltas (Da, Db)
+        self.fc_edit_encoder = nn.Sequential(
+            nn.Linear(self.embedding_size, self.embedding_size),
+            nn.Tanh(),
+            nn.Linear(self.embedding_size, self.configs.code_change_vector_size),
+        )
+
+        self.pretrained_decoder = T5ForConditionalGeneration.from_pretrained(configs.model_name)#.decoder
+
+        # Loss functions and weights
+        self.cross_entropy_loss = nn.CrossEntropyLoss()
+
+    def forward(self, concatenated_inputs, is_similar):
+        """
+        Forward pass for both contrastive and reconstruction objectives.
+        """
+        tokenized_inputs = self.tokenizer(concatenated_inputs, return_tensors="pt", padding=True, truncation=True).to(self.device)
+        # Get edit encodings for concatenated inputs
+        Da_fc, Db_fc = self.get_edit_encodings_tokenized(tokenized_inputs)
+
+        # Compute contrastive loss
+        contrastiveObjective = getContrastiveLossObjective(self.configs, self.device)
+        contrastive_loss = contrastiveObjective((Da_fc, Db_fc), is_similar)
+        
+        embeddings = self.get_embeddings_tokenized(tokenized_inputs)
+        batch_size = embeddings.shape[0] // 4
+        A1, A2, B1, B2 = self.batch_unpack(concatenated_inputs, batch_size)
+        A1_emb, A2_emb, B1_emb, B2_emb = self.batch_unpack(embeddings, batch_size)
+
+        # decoder_inputs = torch.cat((A1_emb + Da_fc, B1_emb + Db_fc), dim = 0).unsqueeze(1)
+        decoder_inputs = torch.cat((A2_emb, B2_emb), dim=0).unsqueeze(1)
+        decoder_targets = self.tokenizer(A2 + B2, return_tensors="pt", padding=True, truncation=True).to(self.device)
+        # Decoder reconstruction for A2 and B2
+        decoder_outputs = self.pretrained_decoder(
+            encoder_outputs=BaseModelOutput(last_hidden_state=decoder_inputs),
+            labels=decoder_targets.input_ids
+        ).logits
+   
+
+
+        reconstruction_loss = self.cross_entropy_loss(decoder_outputs.view(-1, decoder_outputs.size(-1)), decoder_targets.input_ids.view(-1))
+   
+        regularizationObjective = getRegularizationLossObjective(self.configs, self.device)
+        regularization_loss = (regularizationObjective(A1_emb + Da_fc, A2_emb) + regularizationObjective(B1_emb + Db_fc, B2_emb)/2)
+
+        # Total loss
+        total_loss = (
+            self.configs.lambda_contrastive * contrastive_loss
+            + self.configs.lambda_reconstruction * reconstruction_loss
+            + self.configs.lambda_regularization * regularization_loss
+        )
+
+        return total_loss
+    
 class CustomCERModel(nn.Module):
     def __init__(self, configs: dict, device: torch.device):
         super(CustomCERModel, self).__init__()

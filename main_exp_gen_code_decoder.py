@@ -86,7 +86,8 @@ def generate_code(decoder_model, cer_model, dataloader, tokenizer, device):
             A2 = batch['A2']
             B1 = batch['B1']
             B2 = batch['B2']
-            for a1, a2, b1, b2 in zip(A1, A2, B1, B2):
+            labels = batch['labels']
+            for a1, a2, b1, b2, label in zip(A1, A2, B1, B2, labels):
                 a1_tokenized = tokenizer(a1, return_tensors="pt", padding=True, truncation=True).to(device)
                 # a2_tokenized = tokenizer(a2, return_tensors="pt", padding=True, truncation=True).to(device)
                 b1_tokenized = tokenizer(b1, return_tensors="pt", padding=True, truncation=True).to(device)
@@ -98,19 +99,25 @@ def generate_code(decoder_model, cer_model, dataloader, tokenizer, device):
                 # print(inputs_emb.shape)
                 # Generate code for each embedding
                 code_a2 = generate_code_from_vector(a1_emb + da, decoder_model, tokenizer, device)
-                printCodePairSideBySide(a1, format_java_code(code_a2))
-                print('------------------------------------------------------------------------------------')
-                printCodePairSideBySide(a2, format_java_code(code_a2))
-                print('------------------------------------------------------------------------------------')
-                print('------------------------------------------------------------------------------------')
+                code_b2 = generate_code_from_vector(a1_emb + db, decoder_model, tokenizer, device)
 
-                code_b2 = generate_code_from_vector(b1_emb + db, decoder_model, tokenizer, device)
-                printCodePairSideBySide(b1, format_java_code(code_b2))
-                print('------------------------------------------------------------------------------------')
-                printCodePairSideBySide(b2, format_java_code(code_b2))
-                print('------------------------------------------------------------------------------------')
-                print('------------------------------------------------------------------------------------')
-                print('------------------------------------------------------------------------------------')
+                if label == 1:
+                    print('-----------------------------------A1------------------------------------------------------------------------------A2-------------------------------------------------------')
+                    printCodePairSideBySide(a1, a2)
+                    print('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
+                    print('---------------------------------A1+Da----------------------------------------------------------------------------A1+Db-----------------------------------------------------')
+
+                    printCodePairSideBySide(format_java_code(code_a2), format_java_code(code_b2))
+                    print('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
+                    print('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
+
+                # code_b2 = generate_code_from_vector(b1_emb + db, decoder_model, tokenizer, device)
+                # printCodePairSideBySide(b1, format_java_code(code_b2))
+                # print('------------------------------------------------------------------------------------')
+                # printCodePairSideBySide(b2, format_java_code(code_b2))
+                # print('------------------------------------------------------------------------------------')
+                # print('------------------------------------------------------------------------------------')
+                # print('------------------------------------------------------------------------------------')
 
 
                 sys.stdout.flush()              # Manually flush the output buffer
@@ -146,12 +153,13 @@ class DecoderCollateForEdit(object):
         # concatenated_inputs = A1 + B1
 
         # target_codes = A2 + B2  # In this case, the target is the same as the input for finetuning.
-
+        labels = [item['label'] for item in batch]
         return {
             'A1': A1, 
             'A2': A2,
             'B1': B1,
             'B2': B2,
+            'labels': labels,
         }
 
 
@@ -172,7 +180,7 @@ def main(configs):
 
     # Path to the checkpoint
     # cer_checkpoint_path = 'checkpoints/20241021_174314' # allowed_problem_list: ['12', '17', '21'] # only if else related problems
-    # checkpoint_path = 'checkpoints/20241021_200242' #allowed_problem_list: ['34', '39', '40'] # string problems requiring loops
+    checkpoint_path = 'checkpoints/20241021_200242' #allowed_problem_list: ['34', '39', '40'] # string problems requiring loops
     # checkpoint_path = 'checkpoints/20241028_201125' # allowed_problem_list: ['46', '71'] # array problems requiring loops
     # checkpoint_path = 'checkpoints/20241029_134451' #all problems, dim 128
     # cer_checkpoint_path = 'checkpoints/20241118_191604' #all problems, dim 768
@@ -192,15 +200,15 @@ def main(configs):
         param.requires_grad = False
 
     # Create a new decoder (from T5)
-    finetuned_decoder = torch.load('checkpoints/decoder_models/decoder_model_all_768_reg')
+    finetuned_decoder = torch.load('checkpoints/decoder_models/decoder_model_all_768_reg_if_else')
     decoder_model = T5ForConditionalGeneration.from_pretrained('t5-base')
     decoder_model.load_state_dict(finetuned_decoder.state_dict(), strict=False)
     decoder_model = decoder_model.to(device)
 
-    train_set = torch.load(cer_checkpoint_path + '/train_set')
-    test_set = torch.load(cer_checkpoint_path + '/test_set')
-    valid_set = torch.load(cer_checkpoint_path + '/valid_set')
-
+    # train_set = torch.load(cer_checkpoint_path + '/train_set')
+    # test_set = torch.load(cer_checkpoint_path + '/test_set')
+    # valid_set = torch.load(cer_checkpoint_path + '/valid_set')
+    test_set = torch.load(checkpoint_path + '/test_set' ) # different problems than what observed during training
     # Instantiate the finetune model
     # finetune_model = FinetuneDecoderModel(encoder_model, decoder_model, cer_model, tokenizer, configs, device)
 

@@ -201,6 +201,7 @@ def main(configs):
     # checkpoint_path = 'checkpoints/20241031_190036' #epoch 8, margin 1
 
     checkpoint_path = 'checkpoints/20241208_204527' # with regularization, allowed_problem_list: ['12', '17', '21'] # only if else related problems
+    checkpoint_path = 'checkpoints/20241208_214644' # with regularization, all problems
 
     cer_model = torch.load(checkpoint_path + '/model')
     encoder_model = T5ForConditionalGeneration.from_pretrained('t5-base')
@@ -233,7 +234,7 @@ def main(configs):
 
     # Training loop
     decoder_model.train()
-    num_epochs = 100
+    num_epochs = 50
 
     for epoch in tqdm(range(num_epochs)):
         for batch in tqdm(train_dataloader, desc='Training'):
@@ -249,7 +250,7 @@ def main(configs):
             optimizer.zero_grad()
 
             # print(f"Loss: {loss.item()}")
-        torch.save(decoder_model, 'checkpoints/decoder_models/decoder_model_all_768_reg')
+        torch.save(decoder_model, 'checkpoints/decoder_models/decoder_model_all_768_reg_all')
     
     # Example usage
     generated_code = generate_code(decoder_model=decoder_model, cer_model= cer_model, dataloader=test_dataloader, tokenizer=tokenizer, device=device)

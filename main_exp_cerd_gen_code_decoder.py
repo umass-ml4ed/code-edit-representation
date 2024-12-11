@@ -30,7 +30,8 @@ from transformers import T5ForConditionalGeneration, T5Tokenizer
 from transformers.modeling_outputs import BaseModelOutput
 
 from tqdm import tqdm
-
+from evaluator.CodeBLEU import calc_code_bleu
+from main_exp_gen_code_decoder import *
 # Function to generate code from a given vector embedding
 def generate_code_from_vector(encoder_embedding, model, tokenizer, device):
     """
@@ -50,7 +51,7 @@ def generate_code_from_vector(encoder_embedding, model, tokenizer, device):
 
     # Generate code using the decoder
     with torch.no_grad():
-        generated_ids = model.pretrained_model.generate(
+        generated_ids = model.pretrained_decoder.generate(
             encoder_outputs=BaseModelOutput(last_hidden_state=encoder_embedding),
             max_length=128,
             decoder_start_token_id=tokenizer.pad_token_id  # Start decoding from <pad>
@@ -59,6 +60,13 @@ def generate_code_from_vector(encoder_embedding, model, tokenizer, device):
 
     return generated_code
 
+
+# def compute_code_bleu(ground_truth_codes, generated_codes):
+#     params='0.25,0.25,0.25,0.25'
+#     lang='java'
+#     codebleu_score, detailed_codebleu_score = calc_code_bleu.get_codebleu(
+#                         pre_references=[ground_truth_codes], hypothesis=generated_codes, lang=lang, params=params)
+#     return codebleu_score, detailed_codebleu_score
 
 # Function to generate codes for a batch of inputs
 def generate_code(model, dataloader, tokenizer, device):
@@ -77,7 +85,8 @@ def generate_code(model, dataloader, tokenizer, device):
     """
     model.eval()
     generated_codes = []
-
+    total_bleu = 0
+    total = 0
     with torch.no_grad():
         for batch in tqdm(dataloader, desc="Generating Code Embeddings", leave=False):
             # Tokenize inputs
@@ -85,33 +94,44 @@ def generate_code(model, dataloader, tokenizer, device):
             A2 = batch['A2']
             B1 = batch['B1']
             B2 = batch['B2']
-            for a1, a2, b1, b2 in zip(A1, A2, B1, B2):
+            labels = batch['labels']
+            for a1, a2, b1, b2, label in zip(A1, A2, B1, B2, labels):
                 a1_tokenized = tokenizer(a1, return_tensors="pt", padding=True, truncation=True).to(device)
                 # a2_tokenized = tokenizer(a2, return_tensors="pt", padding=True, truncation=True).to(device)
                 b1_tokenized = tokenizer(b1, return_tensors="pt", padding=True, truncation=True).to(device)
                 # b2_tokenized = tokenizer(b2, return_tensors="pt", padding=True, truncation=True).to(device)
 
-                a1_emb = model.get_embeddings(a1_tokenized)
-                b1_emb = model.get_embeddings(b1_tokenized)
+                a1_emb = model.get_embeddings_tokenized(a1_tokenized)
+                b1_emb = model.get_embeddings_tokenized(b1_tokenized)
                 da, db = model.get_edit_encodings([a1, a2, b1, b2])
                 # print(inputs_emb.shape)
                 # Generate code for each embedding
-                # code_a2 = generate_code_from_vector(a1_emb + da, model, tokenizer, device)
-                code_a2 = generate_code_from_vector(a1_emb, model, tokenizer, device)
-                printCodePairSideBySide(a1, format_java_code(code_a2))
-                printCodePairSideBySide(a2, format_java_code(code_a2))
-                print('------------------------------------------------------------------------------------')
-                # code_b2 = generate_code_from_vector(b1_emb + db, model, tokenizer, device)
-                code_b2 = generate_code_from_vector(b1_emb, model, tokenizer, device)
-                printCodePairSideBySide(b1, format_java_code(code_b2))
-                printCodePairSideBySide(b2, format_java_code(code_b2))
-                print('------------------------------------------------------------------------------------')
+                code_a2 = generate_code_from_vector(a1_emb + da, model, tokenizer, device)
+                code_b2 = generate_code_from_vector(a1_emb + db, model, tokenizer, device)
+
+                if label == 1:
+                    print('-----------------------------------A1------------------------------------------------------------------------------A2-------------------------------------------------------')
+                    printCodePairSideBySide(a1, a2)
+                    print('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
+                    print('---------------------------------A1+Da----------------------------------------------------------------------------A1+Db-----------------------------------------------------')
+
+                    printCodePairSideBySide(format_java_code(code_a2), format_java_code(code_b2))
+                    print('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
+                    print('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
+
+                # code_b2 = generate_code_from_vector(b1_emb + db, decoder_model, tokenizer, device)
+                # printCodePairSideBySide(b1, format_java_code(code_b2))
+                # print('------------------------------------------------------------------------------------')
+                # printCodePairSideBySide(b2, format_java_code(code_b2))
+                # print('------------------------------------------------------------------------------------')
+                # print('------------------------------------------------------------------------------------')
+                # print('------------------------------------------------------------------------------------')
+
 
                 sys.stdout.flush()              # Manually flush the output buffer
                 
 
     return generated_codes
-
 
 import torch
 from transformers import T5ForConditionalGeneration, T5Tokenizer
@@ -161,32 +181,32 @@ def make_finetuning_dataloader(dataset: pd.DataFrame, collate_fn: callable, toke
     return torch.utils.data.DataLoader(pytorch_dataset, collate_fn=collate_fn, shuffle=shuffle, batch_size=4, num_workers=n_workers)
 
 
-class DecoderCollateForEdit(object):
-    def __init__(self, tokenizer: T5Tokenizer, configs: dict, device: torch.device):
-        self.tokenizer = tokenizer
-        self.configs = configs
-        self.device = device
+# class DecoderCollateForEdit(object):
+#     def __init__(self, tokenizer: T5Tokenizer, configs: dict, device: torch.device):
+#         self.tokenizer = tokenizer
+#         self.configs = configs
+#         self.device = device
 
-    def __call__(self, batch: List[Dict[str, Union[str, int]]]) -> Dict[str, torch.Tensor]:
-        # Create a single list where each A1, A2, B1, and B2 will be concatenated consecutively
-        concatenated_inputs = []
-        target_codes = []
+#     def __call__(self, batch: List[Dict[str, Union[str, int]]]) -> Dict[str, torch.Tensor]:
+#         # Create a single list where each A1, A2, B1, and B2 will be concatenated consecutively
+#         concatenated_inputs = []
+#         target_codes = []
 
-        # Build input and target code sequences
-        A1 = [item['A1'] for item in batch]
-        A2 = [item['A2'] for item in batch]
-        B1 = [item['B1'] for item in batch]
-        B2 = [item['B2'] for item in batch]
-        # concatenated_inputs = A1 + B1
+#         # Build input and target code sequences
+#         A1 = [item['A1'] for item in batch]
+#         A2 = [item['A2'] for item in batch]
+#         B1 = [item['B1'] for item in batch]
+#         B2 = [item['B2'] for item in batch]
+#         # concatenated_inputs = A1 + B1
 
-        # target_codes = A2 + B2  # In this case, the target is the same as the input for finetuning.
+#         # target_codes = A2 + B2  # In this case, the target is the same as the input for finetuning.
 
-        return {
-            'A1': A1, 
-            'A2': A2,
-            'B1': B1,
-            'B2': B2,
-        }
+#         return {
+#             'A1': A1, 
+#             'A2': A2,
+#             'B1': B1,
+#             'B2': B2,
+#         }
 
 
 
@@ -207,7 +227,9 @@ def main(configs):
     # Path to the checkpoint
     # checkpoint_path = 'checkpoints/20241126_214208' # allowed_problem_list: ['12', '17', '21'] # only if else related problems; epoch 100
     # checkpoint_path = 'checkpoints/20241127_140131' # allowed_problem_list: ['12', '17', '21'] # only if else related problems; epoch 200
-    checkpoint_path = 'checkpoints/20241127_161838'    
+    # checkpoint_path = 'checkpoints/20241127_161838'  
+    # checkpoint_path = 'checkpoints/20241209_165650' # with regularization, if else  
+    checkpoint_path = 'checkpoints/20241209_194800' # with regularization, if else, exclusive problems between train and test
 
     cerd_model = torch.load(checkpoint_path + '/model')
 

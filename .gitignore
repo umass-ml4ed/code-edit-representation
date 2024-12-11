@@ -18,3 +18,5 @@ data/test_dataset.csv
 out1.txt
 plot.png
 t5example.py
+data/current_dataset.pkl
+data/test_dataset.pkl

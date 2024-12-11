@@ -10,11 +10,131 @@ from datatypes import *
 from model import *
 from torch.utils.data import DataLoader, Dataset
 
+from sklearn.model_selection import train_test_split
+import pandas as pd
+from typing import Tuple
+
+def read_data_split_by_student_ID(configs: dict) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """
+    Reads and splits the dataset ensuring no students are reused across train, test, and valid sets.
+
+    Parameters:
+    configs (dict): Configuration dictionary with dataset path, allowed problem list, and other options.
+
+    Returns:
+    Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]: Train, validation, and test datasets.
+    """
+    print('Splitting Train/Test/Valid based on Student IDs')
+    # Load dataset
+    dataset = pd.read_pickle(configs['data_path'])
+
+    # Filter allowed problem IDs
+    allowed_problemIDs = configs['allowed_problem_list']
+    dataset = dataset[dataset['problemID'].isin(allowed_problemIDs)]
+
+    #split the dataset into two, one for is_similar = True and the other for is_similar = False
+    dataset_true = dataset[dataset['is_similar'] == True]
+    dataset_false = dataset[dataset['is_similar'] == False]
+
+    #sample the dataset_false to have the same number of rows as dataset_true
+    dataset_false = dataset_false.sample(n=configs.true_false_ratio * dataset_true.shape[0])
+
+    #prepare the dataset
+    if configs.loss_fn in ['ContrastiveLoss', 'CosineSimilarityLoss', 'MultipleNegativesRankingLoss']:
+        dataset = pd.concat([dataset_true, dataset_false])
+    else:
+        print('No dataset for this loss function')
+        return None
+
+    # Extract unique students
+    all_students = pd.unique(
+        dataset[['studentID_1', 'studentID_2']].values.ravel()
+    )
+    for test_size in np.arange(configs['test_size'], .6, .1):
+    # Split the students into train, valid, and test sets
+        train_students, test_valid_students = train_test_split(all_students, test_size=test_size, random_state=configs['seed'])
+        valid_students, test_students = train_test_split(test_valid_students, test_size=0.5, random_state=configs['seed'])
+
+        # Filter the dataset to ensure no overlap
+        def filter_dataset(dataset, allowed_students):
+            return dataset[
+                dataset['studentID_1'].isin(allowed_students) &
+                dataset['studentID_2'].isin(allowed_students)
+            ]
+
+        trainset = filter_dataset(dataset, train_students)
+        validset = filter_dataset(dataset, valid_students)
+        testset = filter_dataset(dataset, test_students)
+
+        print(len(trainset), len(testset), len(validset))
+
+        if len(testset) >= len(trainset) * configs['test_size'] * 0.2 and len(validset) >= len(trainset) * configs['test_size'] * 0.2: break
+
+    # Save the current dataset (optional)
+    dataset.to_pickle('data/current_dataset.pkl')
+
+    return trainset, validset, testset
+
+
+def read_data_problem_exclusive(configs: dict) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """
+    Reads and splits the dataset ensuring no code pairs overlap between train and test/valid sets.
+
+    Parameters:
+    configs (dict): Configuration dictionary with dataset path, allowed problem list, and other options.
+
+    Returns:
+    Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]: Train, validation, and test datasets.
+    """
+    print('Splitting train/test/valid set by unique code IDs')
+    # Load dataset
+    dataset = pd.read_pickle(configs.data_path)
+
+    # Filter allowed problem IDs
+    allowed_problemIDs = configs['allowed_problem_list']
+    dataset = dataset[dataset['problemID'].isin(allowed_problemIDs)]
+
+    # Create unique identifiers for each code pair
+    dataset['pair_id'] = (
+        dataset['codeID_i_1'].astype(str) + "_" + 
+        dataset['codeID_j_1'].astype(str) + "_" +
+        dataset['codeID_i_2'].astype(str) + "_" +
+        dataset['codeID_j_2'].astype(str)
+    )
+
+    # Split the dataset into true and false cases
+    dataset_true = dataset[dataset['is_similar'] == True]
+    dataset_false = dataset[dataset['is_similar'] == False]
+
+    # Balance the dataset
+    dataset_false = dataset_false.sample(n=configs['true_false_ratio'] * len(dataset_true), random_state=configs['seed'])
+    dataset_balanced = pd.concat([dataset_true, dataset_false])
+
+    # Split based on unique pairs
+    unique_pairs = dataset_balanced['pair_id'].unique()
+    train_pairs, test_valid_pairs = train_test_split(unique_pairs, test_size=configs['test_size'], random_state=configs['seed'])
+    valid_pairs, test_pairs = train_test_split(test_valid_pairs, test_size=0.5, random_state=configs['seed'])
+
+    # Filter datasets based on the splits
+    trainset = dataset_balanced[dataset_balanced['pair_id'].isin(train_pairs)]
+    validset = dataset_balanced[dataset_balanced['pair_id'].isin(valid_pairs)]
+    testset = dataset_balanced[dataset_balanced['pair_id'].isin(test_pairs)]
+
+    # Drop pair_id to avoid leaking identifiers
+    trainset = trainset.drop(columns=['pair_id'])
+    validset = validset.drop(columns=['pair_id'])
+    testset = testset.drop(columns=['pair_id'])
+
+    # Save the current dataset (optional)
+    dataset_balanced.to_pickle('data/current_dataset.pkl')
+
+    return trainset, validset, testset
 
 def read_data(configs: dict) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     '''
     In the test_case_verdict_x_y field 0 means correct, 1 means wa, 2 means RTE, 3 means TLE
     '''
+    print('Splitting randomly')
     # load dataset
     dataset = pd.read_pickle(configs.data_path)
 
@@ -95,7 +215,9 @@ class CERDataset(torch.utils.data.Dataset):
             'A2_mask': row['test_case_verdict_j_1'],
             'B1_mask': row['test_case_verdict_i_2'],
             'B2_mask': row['test_case_verdict_j_2'],
-
+            'problemID': row['problemID'],
+            'studentID1': row['studentID_1'],
+            'studentID2': row['studentID_2'],
         }
     
 class CollateForCER(object):
@@ -106,15 +228,8 @@ class CollateForCER(object):
 
     def __call__(self, batch: List[Dict[str, Union[str, int]]]) -> Dict[str, torch.Tensor]:
         # Create a single list where each A1, A2, B1, and B2 will be concatenated consecutively
-        concatenated_inputs = []
-        labels = []
-
-        # for item in batch:
-        #     concatenated_inputs.append(item['A1'])  # Add A1
-        #     concatenated_inputs.append(item['A2'])  # Add A2
-        #     concatenated_inputs.append(item['B1'])  # Add B1
-        #     concatenated_inputs.append(item['B2'])  # Add B2
-        #     labels.append(item['label'])
+        # concatenated_inputs = []
+        # labels = []
         A1 = [item['A1'] for item in batch]
         A2 = [item['A2'] for item in batch]
         B1 = [item['B1'] for item in batch]
@@ -127,19 +242,16 @@ class CollateForCER(object):
         B1_mask = [item['B1_mask'] for item in batch]
         B2_mask = [item['B2_mask'] for item in batch]
         concatenated_inputs_mask = A1_mask + A2_mask + B1_mask + B2_mask
-
-        # Need to tokenize here for efficiency
-        # inputs = self.tokenizer(code, return_tensors="pt", padding=True, truncation=True).to(self.device)
-        # concatenated_inputs = tokenizer(concatenated_inputs, return_tensors='pt', padding=True, truncation=True)
         
+        problemIDs = [int(item['problemID']) for item in batch]
+        studentIDs = [(item['studentID1'], item['studentID2']) for item in batch]
         return {
             'inputs': concatenated_inputs,  # This is a single list containing A1, A2, B1, B2 in order
             'labels': torch.tensor(labels),
             'masks': concatenated_inputs_mask,
+            'problemIDs': problemIDs,
+            'studentIDs': studentIDs,
         }
-    
-# import torch
-# from transformers import T5Tokenizer, T5ForConditionalGeneration
 
 class DecoderFineTuneDataset(Dataset):
     def __init__(self, dataframe, encoder_model, tokenizer, device):

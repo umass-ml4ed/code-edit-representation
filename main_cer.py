@@ -18,37 +18,6 @@ from eval import *
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 
-def get_latent_states(dataset, model):
-    model.eval()
-    res = np.empty((0,768))
-    labels = []
-    with torch.no_grad():
-        for index, row in dataset.iterrows():
-            A1 = row['code_i_1']
-            A2 = row['code_j_1']
-            B1 = row['code_i_2']
-            B2 = row['code_j_2']
-            
-            Da, Db = model.get_edit_encodings([A1, A2, B1, B2])
-            Da = Da.cpu().detach().numpy()
-            Db = Db.cpu().detach().numpy()
-            res = np.concatenate((res, Da), axis=0)
-            res = np.concatenate((res, Db), axis=0)
-            labels.append(int(row['problemID']))
-            labels.append(int(row['problemID']))
-    return res, labels
-
-def plot_clusters(dataloader, model, epoch, plotname, run):
-    # X represents your high-dimensional data
-        X, labels = get_latent_states(dataloader, model)
-        tsne = TSNE(n_components=2, random_state=0)
-        X_2d = tsne.fit_transform(X)
-        plt.close()
-        plt.scatter(X_2d[:, 0], X_2d[:, 1], c=labels)  # 'labels' should be your true or predicted labels
-        plt.title('Epoch ' + str(epoch))
-        plt.savefig(plotname + '.png')
-        run['clusters/'+plotname].upload(plotname + '.png')
-
 @hydra.main(version_base=None, config_path=".", config_name="configs_cer")
 def main(configs):
     now = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -66,9 +35,9 @@ def main(configs):
 
     # Test on smaller fraction of dataset
     if configs.testing:
-        # configs.use_neptune = False
+        configs.use_neptune = False
         configs.epochs = 3
-        # configs.save_model = False
+        configs.save_model = False
     
     # Use neptune.ai to track experiments
     run = None
@@ -94,7 +63,8 @@ def main(configs):
         os.makedirs(os.path.join(configs.model_save_dir, now))
 
     ## load the init dataset
-    train_set, valid_set, test_set = read_data(configs)
+    train_set, valid_set, test_set = read_data_split_by_student_ID(configs)
+    # train_set, valid_set, test_set = read_data(configs)
 
     ## save the dataset along with the model
     if configs.save_model:
@@ -121,11 +91,6 @@ def main(configs):
     optimizer = optim.Adam(model.parameters(), lr=configs.lr)
     if configs.verbose == True: print(optimizer)
 
-    # LR scheduler
-    # num_training_steps = len(train_loader) * configs.epochs
-    # num_warmup_steps = configs.warmup_ratio * num_training_steps
-    # scheduler = transformers.get_linear_schedule_with_warmup(optimizer, num_warmup_steps, num_training_steps)
-
     ## start training
     best_valid_metrics =  {'loss': float('inf')} 
     best_test_metrics =  {'loss': float('inf')} 
@@ -133,7 +98,6 @@ def main(configs):
     
     if configs.loss_fn == 'ContrastiveLoss':
         criterion = ContrastiveLoss(device=device, margin=configs.margin)
-        # criterion = losses.ContrastiveLoss(model=None, margin=configs.margin)
     elif configs.loss_fn == 'CosineSimilarityLoss':
         criterion = CosineSimilarityLoss(device=device)
     elif configs.loss_fn == 'NTXentLoss' : # not relevant right now
@@ -198,9 +162,9 @@ def main(configs):
                         torch.save(model, os.path.join(configs.model_save_dir, now, 'model'))
                     
                     if configs.use_neptune:
-                        plot_clusters(train_set, model, ep, 'train_cluster', run)
-                        plot_clusters(valid_set, model, ep, 'valid_cluster', run)
-                        plot_clusters(test_set, model, ep, 'test_cluster', run)
+                        plot_clusters(train_loader, model, ep, 'train_cluster', run)
+                        plot_clusters(valid_loader, model, ep, 'valid_cluster', run)
+                        plot_clusters(test_loader, model, ep, 'test_cluster', run)
                             
         # if test_set != None:
         for key in test_logs:
@@ -232,9 +196,7 @@ def main(configs):
     print("Train Accuracy: ", train_accuracy)
     print("Test Accuracy: ", test_accuracy)
     print("Valid Accuracy: ", valid_accuracy)
-    # plot_clusters(train_set, model, ep, 'train_cluster', run)
-    # plot_clusters(valid_set, model, ep, 'valid_cluster', run)
-    # plot_clusters(test_set, model, ep, 'test_cluster', run)
+    
         
     if configs.use_neptune:
         run["metrics/train_accuracy"].log(train_accuracy)

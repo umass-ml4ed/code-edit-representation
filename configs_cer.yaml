@@ -2,9 +2,9 @@
 # exp_opts
 ##################################################
 seed: 0
-exp_name: 'cer' 
-use_neptune: true
-save_model: true
+exp_name: 'cerd' 
+use_neptune: false
+save_model: false
 testing: false # only use a very small portion of the dataset for testing purposes
 testing_size: 8
 neptune_project: 'hhjami/Code-Edit-Representation' # change to your own "username/projectname"

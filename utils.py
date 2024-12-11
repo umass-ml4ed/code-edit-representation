@@ -8,6 +8,9 @@ from sklearn.metrics import accuracy_score, roc_auc_score
 from itertools import zip_longest
 import re
 
+from sklearn.manifold import TSNE
+import matplotlib.pyplot as plt
+
 def set_random_seed(seed):
     torch.manual_seed(seed)
     random.seed(seed)
@@ -79,3 +82,15 @@ def printCodePairSideBySide(code1, code2, col_width=100):
     for line1, line2 in zip_longest(code1_wrapped, code2_wrapped, fillvalue=""):
         print(f"{line1:<{col_width}}{line2:<{col_width}}")
 
+
+def plot_clusters(dataloader, model, epoch, plotname, neptune_run):
+    # X represents your high-dimensional data   
+    X, problemIDs = model.get_latent_states(dataloader)
+    tsne = TSNE(n_components=2, random_state=0)
+    X_2d = tsne.fit_transform(X)
+    print(problemIDs)
+    plt.close()
+    plt.scatter(X_2d[:, 0], X_2d[:, 1], c=problemIDs)
+    plt.title('Epoch ' + str(epoch))
+    plt.savefig(plotname + '.png')
+    neptune_run['clusters/'+plotname].upload(plotname + '.png')
