@@ -229,7 +229,8 @@ def main(configs):
     # checkpoint_path = 'checkpoints/20241127_140131' # allowed_problem_list: ['12', '17', '21'] # only if else related problems; epoch 200
     # checkpoint_path = 'checkpoints/20241127_161838'  
     # checkpoint_path = 'checkpoints/20241209_165650' # with regularization, if else  
-    checkpoint_path = 'checkpoints/20241209_194800' # with regularization, if else, exclusive problems between train and test
+    # checkpoint_path = 'checkpoints/20241209_194800' # with regularization, if else, exclusive problems between train and test
+    checkpoint_path = 'checkpoints/20241211_195813' #with reg, student split, all problems.
 
     cerd_model = torch.load(checkpoint_path + '/model')
 

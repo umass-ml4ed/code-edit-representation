@@ -3,8 +3,8 @@
 ##################################################
 seed: 0
 exp_name: 'cerd' 
-use_neptune: false
-save_model: false
+use_neptune: true
+save_model: true
 testing: false # only use a very small portion of the dataset for testing purposes
 testing_size: 8
 neptune_project: 'hhjami/Code-Edit-Representation' # change to your own "username/projectname"
