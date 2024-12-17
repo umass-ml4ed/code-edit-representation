@@ -10,6 +10,7 @@ import re
 
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
+from codebleu import calc_codebleu
 
 def set_random_seed(seed):
     torch.manual_seed(seed)
@@ -94,3 +95,10 @@ def plot_clusters(dataloader, model, epoch, plotname, neptune_run):
     plt.title('Epoch ' + str(epoch))
     plt.savefig(plotname + '.png')
     neptune_run['clusters/'+plotname].upload(plotname + '.png')
+
+def compute_code_bleu(ground_truth_codes, generated_codes):
+    params=(0.25,0.25,0.25,0.25)
+    lang='java'
+    codebleu_score = [calc_codebleu([ground], [generated], lang=lang, weights=params, tokenizer=None)['codebleu'] for ground, generated in zip(ground_truth_codes, generated_codes)]
+    # print(codebleu_score)
+    return codebleu_score#, detailed_codebleu_score

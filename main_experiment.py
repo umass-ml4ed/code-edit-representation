@@ -335,13 +335,8 @@ def main(configs):
     model0,tokenizer = create_cer_model(configs, device)
 
     # Path to the checkpoint
-    # checkpoint_path = 'checkpoints/20241021_174314' # allowed_problem_list: ['12', '17', '21'] # only if else related problems
-    # checkpoint_path = 'checkpoints/20241021_200242' #allowed_problem_list: ['34', '39', '40'] # string problems requiring loops
-    # checkpoint_path = 'checkpoints/20241028_201125' # allowed_problem_list: ['46', '71'] # array problems requiring loops
     checkpoint_path = 'checkpoints/20241029_134451' #all problems
     # checkpoint_path = 'checkpoints/20241030_163548' #random (epoch 2) all problem
-    # checkpoint_path = 'checkpoints/20241031_175148' # epoch 2, with margin .5
-    # checkpoint_path = 'checkpoints/20241031_175058' # all problems, with margin .5
     # checkpoint_path = 'checkpoints/20241031_190036' #epoch 8, margin 1
 
     model = torch.load(checkpoint_path + '/model')

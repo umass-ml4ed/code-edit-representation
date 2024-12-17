@@ -196,6 +196,11 @@ def make_dataloader(dataset: pd.DataFrame, collate_fn: callable, configs: dict, 
     pytorch_dataset = CERDataset(dataset)
     return torch.utils.data.DataLoader(pytorch_dataset, collate_fn=collate_fn, shuffle=shuffle, batch_size=configs.batch_size, num_workers=n_workers)
 
+def make_dataloader_experiment(dataset: pd.DataFrame, collate_fn: callable, configs: dict, n_workers: int = 0, train: bool = True) -> torch.utils.data.DataLoader:
+    shuffle = False
+    pytorch_dataset = CERDataset(dataset)
+    return torch.utils.data.DataLoader(pytorch_dataset, collate_fn=collate_fn, shuffle=shuffle, batch_size=configs.batch_size_exp, num_workers=n_workers)
+
 class CERDataset(torch.utils.data.Dataset):
     def __init__(self, dataframe: pd.DataFrame):
         self.data = dataframe

@@ -28,7 +28,7 @@ from torch.optim import AdamW
 from torch.utils.data import DataLoader, Dataset
 from transformers import T5ForConditionalGeneration, T5Tokenizer
 from transformers.modeling_outputs import BaseModelOutput
-
+from datatypes import *
 from tqdm import tqdm
 from main_finetune_decoder import *
 
@@ -46,20 +46,77 @@ def generate_code_from_vector(encoder_embedding, decoder_model, tokenizer, devic
     Returns:
         str: The generated code.
     """
-    # Reshape encoder_embedding to match decoder input requirements
-    encoder_embedding = encoder_embedding.unsqueeze(1)  # [batch_size, seq_length=1, hidden_size]
+    # # Reshape encoder_embedding to match decoder input requirements
+    # encoder_embedding = encoder_embedding.unsqueeze(1)  # [batch_size, seq_length=1, hidden_size]
 
-    # Generate code using the decoder
+    # # Generate code using the decoder
+    # with torch.no_grad():
+    #     generated_ids = decoder_model.generate(
+    #         encoder_outputs=BaseModelOutput(last_hidden_state=encoder_embedding),
+    #         max_length=128,
+    #         decoder_start_token_id=tokenizer.pad_token_id  # Start decoding from <pad>
+    #     )
+    #     generated_code = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
+
+    # return generated_code
+    encoder_embedding = encoder_embedding.unsqueeze(1)  # [batch_size, seq_length=1, hidden_size]
+    encoder_outputs = BaseModelOutput(last_hidden_state=encoder_embedding)
+
+    # Generate code using the model's generate method
     with torch.no_grad():
         generated_ids = decoder_model.generate(
-            encoder_outputs=BaseModelOutput(last_hidden_state=encoder_embedding),
+            encoder_outputs=encoder_outputs,
             max_length=128,
-            decoder_start_token_id=tokenizer.pad_token_id  # Start decoding from <pad>
+            decoder_start_token_id=tokenizer.pad_token_id  # Ensure correct token ID
         )
-        generated_code = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
+
+    # Decode the generated sequences
+    generated_code = [
+        tokenizer.decode(seq, skip_special_tokens=True) for seq in generated_ids
+    ]
 
     return generated_code
 
+# Function to generate codes for a batch of inputs
+def generate_code_in_batch(decoder_model, cer_model, dataset, tokenizer, configs, device):
+    collate_fn = CollateForCER(tokenizer=tokenizer, configs=configs, device=device)
+    dataloader  = make_dataloader_experiment(dataset , collate_fn=collate_fn, configs=configs)
+
+    decoder_model.eval()
+    generated_codes = []
+    code_bleu = []
+    edit_bleu = []
+    with torch.no_grad():
+        for batch in tqdm(dataloader, desc="Generating Code Embeddings", leave=False):
+            concatenated_inputs = batch['inputs']
+            labels = batch['labels']
+            labels = labels.to(device).to(torch.float32)
+
+            tokenized_inputs = tokenizer(concatenated_inputs, return_tensors="pt", padding=True, truncation=True).to(device)
+            Da, Db = cer_model.get_edit_encodings_tokenized(tokenized_inputs)
+
+            embeddings = cer_model.get_embeddings_tokenized(tokenized_inputs)
+            batch_size = embeddings.shape[0] // 4
+            A1, A2, B1, B2 = cer_model.batch_unpack(concatenated_inputs, batch_size)
+            A1_emb, A2_emb, B1_emb, B2_emb = cer_model.batch_unpack(embeddings, batch_size)
+            
+            code_A1 = generate_code_from_vector(A1_emb, decoder_model, tokenizer, device)
+            bleu = compute_code_bleu(A1, code_A1)
+            code_bleu += bleu
+            code_B1 = generate_code_from_vector(B1_emb, decoder_model, tokenizer, device)
+            bleu = compute_code_bleu(B1, code_B1)
+            code_bleu += bleu
+
+            code_edit_A2 = generate_code_from_vector(A1_emb + Da, decoder_model, tokenizer, device)
+            bleu = compute_code_bleu(A2, code_edit_A2)
+            edit_bleu += bleu
+            code_edit_B2 = generate_code_from_vector(B1_emb + Db, decoder_model, tokenizer, device)
+            bleu = compute_code_bleu(B2, code_edit_B2)
+            edit_bleu += bleu
+    # print(code_bleu)
+    print('Code Bleu: ' + str(np.mean(code_bleu)))
+    print('Edit Bleu: ' + str(np.mean(edit_bleu)))
+    return generated_codes
 
 # Function to generate codes for a batch of inputs
 def generate_code(decoder_model, cer_model, dataloader, tokenizer, device):
@@ -126,14 +183,6 @@ def generate_code(decoder_model, cer_model, dataloader, tokenizer, device):
     return generated_codes
 
 
-import torch
-from transformers import T5ForConditionalGeneration, T5Tokenizer
-from torch.utils.data import DataLoader
-import torch.nn.functional as F
-from datatypes import *
-
-
-
 class DecoderCollateForEdit(object):
     def __init__(self, tokenizer: T5Tokenizer, configs: dict, device: torch.device):
         self.tokenizer = tokenizer
@@ -179,14 +228,9 @@ def main(configs):
     encoder_model0, tokenizer = create_cer_model(configs, device)
 
     # Path to the checkpoint
-    # cer_checkpoint_path = 'checkpoints/20241021_174314' # allowed_problem_list: ['12', '17', '21'] # only if else related problems
-    checkpoint_path = 'checkpoints/20241021_200242' #allowed_problem_list: ['34', '39', '40'] # string problems requiring loops
-    # checkpoint_path = 'checkpoints/20241028_201125' # allowed_problem_list: ['46', '71'] # array problems requiring loops
-    # checkpoint_path = 'checkpoints/20241029_134451' #all problems, dim 128
+    
     # cer_checkpoint_path = 'checkpoints/20241118_191604' #all problems, dim 768
     # checkpoint_path = 'checkpoints/20241030_163548' #random (epoch 2) all problem
-    # checkpoint_path = 'checkpoints/20241031_175148' # epoch 2, with margin .5
-    # checkpoint_path = 'checkpoints/20241031_175058' # all problems, with margin .5
     # checkpoint_path = 'checkpoints/20241031_190036' #epoch 8, margin 1
     cer_checkpoint_path = 'checkpoints/20241208_204527' # with regularization, allowed_problem_list: ['12', '17', '21'] # only if else related problems
 
@@ -208,18 +252,17 @@ def main(configs):
     # train_set = torch.load(cer_checkpoint_path + '/train_set')
     # test_set = torch.load(cer_checkpoint_path + '/test_set')
     # valid_set = torch.load(cer_checkpoint_path + '/valid_set')
-    test_set = torch.load(checkpoint_path + '/test_set' ) # different problems than what observed during training
+    test_set = torch.load(cer_checkpoint_path + '/test_set' ) # different problems than what observed during training
     # Instantiate the finetune model
     # finetune_model = FinetuneDecoderModel(encoder_model, decoder_model, cer_model, tokenizer, configs, device)
 
     # Create a DataLoader for the finetuning task
     # trainset, validset, testset = read_data(configs)
     # train_dataloader = make_finetuning_dataloader(train_set, DecoderCollateForEdit(tokenizer, configs, device), tokenizer, configs)
-    test_dataloader = make_finetuning_dataloader(test_set, DecoderCollateForEdit(tokenizer, configs, device), tokenizer, configs)
+    # test_dataloader = make_finetuning_dataloader(test_set, DecoderCollateForEdit(tokenizer, configs, device), tokenizer, configs)
 
-    
     # Example usage
-    generated_code = generate_code(decoder_model=decoder_model, cer_model= cer_model, dataloader=test_dataloader, tokenizer=tokenizer, device=device)
+    generated_code = generate_code_in_batch(decoder_model=decoder_model, cer_model= cer_model, dataset=test_set, tokenizer=tokenizer, configs=configs, device=device)
 
 if __name__ == "__main__":
     main()

@@ -80,7 +80,7 @@ class BaseCERModel(nn.Module):
     
     def get_latent_states(self, dataloader):
         self.eval()
-        res = np.empty((0,768))
+        res = np.empty((0,self.configs.model_inp_dim))
         problemIDs = []
         with torch.no_grad():
             for idx, batch in enumerate(tqdm(dataloader, desc="Generating Latent States", leave=False)):

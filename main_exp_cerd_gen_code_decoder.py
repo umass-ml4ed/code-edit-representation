@@ -7,6 +7,7 @@ from neptune.utils import stringify_unsupported
 import hydra
 from omegaconf import OmegaConf
 import sys
+import numpy as np
 
 from data_loader import *
 from model import *
@@ -28,10 +29,13 @@ from torch.optim import AdamW
 from torch.utils.data import DataLoader, Dataset
 from transformers import T5ForConditionalGeneration, T5Tokenizer
 from transformers.modeling_outputs import BaseModelOutput
+from datatypes import *
 
 from tqdm import tqdm
-from evaluator.CodeBLEU import calc_code_bleu
+# from evaluator.CodeBLEU import calc_code_bleu
 from main_exp_gen_code_decoder import *
+
+
 # Function to generate code from a given vector embedding
 def generate_code_from_vector(encoder_embedding, model, tokenizer, device):
     """
@@ -46,29 +50,81 @@ def generate_code_from_vector(encoder_embedding, model, tokenizer, device):
     Returns:
         str: The generated code.
     """
-    # Reshape encoder_embedding to match decoder input requirements
-    encoder_embedding = encoder_embedding.unsqueeze(1)  # [batch_size, seq_length=1, hidden_size]
+    # # Reshape encoder_embedding to match decoder input requirements
+    # encoder_embedding = encoder_embedding.unsqueeze(1)  # [batch_size, seq_length=1, hidden_size]
+    # print(encoder_embedding.shape)
 
-    # Generate code using the decoder
+    # # Generate code using the decoder
+    # with torch.no_grad():
+    #     generated_ids = model.pretrained_decoder.generate(
+    #         encoder_outputs=BaseModelOutput(last_hidden_state=encoder_embedding),
+    #         max_length=128,
+    #         decoder_start_token_id=tokenizer.pad_token_id  # Start decoding from <pad>
+    #     )
+    #     generated_code = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
+
+    # return generated_code
+
+        # Prepare encoder outputs for the decoder
+    encoder_embedding = encoder_embedding.unsqueeze(1)  # [batch_size, seq_length=1, hidden_size]
+    encoder_outputs = BaseModelOutput(last_hidden_state=encoder_embedding)
+
+    # Generate code using the model's generate method
     with torch.no_grad():
         generated_ids = model.pretrained_decoder.generate(
-            encoder_outputs=BaseModelOutput(last_hidden_state=encoder_embedding),
+            encoder_outputs=encoder_outputs,
             max_length=128,
-            decoder_start_token_id=tokenizer.pad_token_id  # Start decoding from <pad>
+            decoder_start_token_id=tokenizer.pad_token_id  # Ensure correct token ID
         )
-        generated_code = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
+
+    # Decode the generated sequences
+    generated_code = [
+        tokenizer.decode(seq, skip_special_tokens=True) for seq in generated_ids
+    ]
 
     return generated_code
 
-
-# def compute_code_bleu(ground_truth_codes, generated_codes):
-#     params='0.25,0.25,0.25,0.25'
-#     lang='java'
-#     codebleu_score, detailed_codebleu_score = calc_code_bleu.get_codebleu(
-#                         pre_references=[ground_truth_codes], hypothesis=generated_codes, lang=lang, params=params)
-#     return codebleu_score, detailed_codebleu_score
-
 # Function to generate codes for a batch of inputs
+def generate_code_in_batch(model, dataset, tokenizer, configs, device):
+    collate_fn = CollateForCER(tokenizer=tokenizer, configs=configs, device=device)
+    dataloader  = make_dataloader_experiment(dataset , collate_fn=collate_fn, configs=configs)
+
+    model.eval()
+    generated_codes = []
+    code_bleu = []
+    edit_bleu = []
+    with torch.no_grad():
+        for batch in tqdm(dataloader, desc="Generating Code Embeddings", leave=False):
+            concatenated_inputs = batch['inputs']
+            labels = batch['labels']
+            labels = labels.to(device).to(torch.float32)
+
+            tokenized_inputs = tokenizer(concatenated_inputs, return_tensors="pt", padding=True, truncation=True).to(device)
+            Da, Db = model.get_edit_encodings_tokenized(tokenized_inputs)
+
+            embeddings = model.get_embeddings_tokenized(tokenized_inputs)
+            batch_size = embeddings.shape[0] // 4
+            A1, A2, B1, B2 = model.batch_unpack(concatenated_inputs, batch_size)
+            A1_emb, A2_emb, B1_emb, B2_emb = model.batch_unpack(embeddings, batch_size)
+
+            code_A1 = generate_code_from_vector(A1_emb, model, tokenizer, device)
+            bleu = compute_code_bleu(A1, code_A1)
+            code_bleu += bleu
+            code_B1 = generate_code_from_vector(B1_emb, model, tokenizer, device)
+            bleu = compute_code_bleu(B1, code_B1)
+            code_bleu += bleu
+
+            code_edit_A2 = generate_code_from_vector(A1_emb + Da, model, tokenizer, device)
+            bleu = compute_code_bleu(A2, code_edit_A2)
+            edit_bleu += bleu
+
+            code_edit_B2 = generate_code_from_vector(B1_emb + Db, model, tokenizer, device)
+            bleu = compute_code_bleu(B2, code_edit_B2)
+            edit_bleu += bleu
+    print('Code Bleu: ' + str(np.mean(code_bleu)))
+    print('Edit Bleu: ' + str(np.mean(edit_bleu)))
+    return generated_codes
+
 def generate_code(model, dataloader, tokenizer, device):
     """
     Generate code for inputs from a dataloader using encoder and decoder models.
@@ -85,8 +141,9 @@ def generate_code(model, dataloader, tokenizer, device):
     """
     model.eval()
     generated_codes = []
-    total_bleu = 0
-    total = 0
+    total_bleu = []
+    code_bleu = []
+    edit_bleu = []
     with torch.no_grad():
         for batch in tqdm(dataloader, desc="Generating Code Embeddings", leave=False):
             # Tokenize inputs
@@ -95,49 +152,60 @@ def generate_code(model, dataloader, tokenizer, device):
             B1 = batch['B1']
             B2 = batch['B2']
             labels = batch['labels']
-            for a1, a2, b1, b2, label in zip(A1, A2, B1, B2, labels):
-                a1_tokenized = tokenizer(a1, return_tensors="pt", padding=True, truncation=True).to(device)
-                # a2_tokenized = tokenizer(a2, return_tensors="pt", padding=True, truncation=True).to(device)
-                b1_tokenized = tokenizer(b1, return_tensors="pt", padding=True, truncation=True).to(device)
-                # b2_tokenized = tokenizer(b2, return_tensors="pt", padding=True, truncation=True).to(device)
+            a1, a2, b1, b2 = A1, A2, B1, B2
+            # for a1, a2, b1, b2, label in zip(A1, A2, B1, B2, labels):
+            a1_tokenized = tokenizer(a1, return_tensors="pt", padding=True, truncation=True).to(device)
+            a2_tokenized = tokenizer(a2, return_tensors="pt", padding=True, truncation=True).to(device)
+            b1_tokenized = tokenizer(b1, return_tensors="pt", padding=True, truncation=True).to(device)
+            b2_tokenized = tokenizer(b2, return_tensors="pt", padding=True, truncation=True).to(device)
 
-                a1_emb = model.get_embeddings_tokenized(a1_tokenized)
-                b1_emb = model.get_embeddings_tokenized(b1_tokenized)
-                da, db = model.get_edit_encodings([a1, a2, b1, b2])
-                # print(inputs_emb.shape)
-                # Generate code for each embedding
-                code_a2 = generate_code_from_vector(a1_emb + da, model, tokenizer, device)
-                code_b2 = generate_code_from_vector(a1_emb + db, model, tokenizer, device)
+            a1_emb = model.get_embeddings_tokenized(a1_tokenized)
+            b1_emb = model.get_embeddings_tokenized(b1_tokenized)
+            # da, db = model.get_edit_encodings([a1, a2, b1, b2])
+            da, db = model.get_edit_encodings()
+            # print(inputs_emb.shape)
+            # Generate code for each embedding
+            code_a1 = generate_code_from_vector(a1_emb, model, tokenizer, device)
+            bleu = compute_code_bleu(a1, code_a1)
+            code_bleu.append(bleu)
+            code_b1 = generate_code_from_vector(b1_emb, model, tokenizer, device)
+            bleu = compute_code_bleu(b1, code_b1)
+            code_bleu.append(bleu)
 
-                if label == 1:
-                    print('-----------------------------------A1------------------------------------------------------------------------------A2-------------------------------------------------------')
-                    printCodePairSideBySide(a1, a2)
-                    print('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
-                    print('---------------------------------A1+Da----------------------------------------------------------------------------A1+Db-----------------------------------------------------')
+            code_edit_a2 = generate_code_from_vector(a1_emb + da, model, tokenizer, device)
+            bleu = compute_code_bleu(a2, code_edit_a2)
+            edit_bleu.append(bleu)
 
-                    printCodePairSideBySide(format_java_code(code_a2), format_java_code(code_b2))
-                    print('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
-                    print('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
-
-                # code_b2 = generate_code_from_vector(b1_emb + db, decoder_model, tokenizer, device)
-                # printCodePairSideBySide(b1, format_java_code(code_b2))
-                # print('------------------------------------------------------------------------------------')
-                # printCodePairSideBySide(b2, format_java_code(code_b2))
-                # print('------------------------------------------------------------------------------------')
-                # print('------------------------------------------------------------------------------------')
-                # print('------------------------------------------------------------------------------------')
+            code_edit_b2 = generate_code_from_vector(b1_emb + db, model, tokenizer, device)
+            bleu = compute_code_bleu(b2, code_edit_b2)
+            edit_bleu.append(bleu)
 
 
-                sys.stdout.flush()              # Manually flush the output buffer
-                
+                # if label == 1:
+                #     print('-----------------------------------A1------------------------------------------------------------------------------A2-------------------------------------------------------')
+                #     printCodePairSideBySide(a1, a2)
+                #     print('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
+                #     print('---------------------------------A1+Da----------------------------------------------------------------------------A1+Db-----------------------------------------------------')
+
+                #     printCodePairSideBySide(format_java_code(code_a2), format_java_code(code_b2))
+                #     print('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
+                #     print('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
+                # else:
+                #     print('-----------------------------------A1------------------------------------------------------------------------------A2-------------------------------------------------------')
+                #     printCodePairSideBySide(a1, a2)
+                #     print('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
+                #     print('---------------------------------A1+Da----------------------------------------------------------------------------A1+Db-----------------------------------------------------')
+
+                #     printCodePairSideBySide(format_java_code(code_a2), format_java_code(code_b2))
+                #     print('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
+                #     print('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
+
+
+                # sys.stdout.flush()              # Manually flush the output buffer
+    print('Code Bleu: ' + str(np.mean(code_bleu)))
+    print('Edit Bleu: ' + str(np.mean(edit_bleu)))
 
     return generated_codes
-
-import torch
-from transformers import T5ForConditionalGeneration, T5Tokenizer
-from torch.utils.data import DataLoader
-import torch.nn.functional as F
-from datatypes import *
 
 class FinetuneDecoderModel(nn.Module):
     def __init__(self, encoder_model: nn.Module, decoder_model: T5ForConditionalGeneration, cer_model, tokenizer: T5Tokenizer, configs: dict, device: torch.device):
@@ -178,7 +246,7 @@ class FinetuneDecoderModel(nn.Module):
 def make_finetuning_dataloader(dataset: pd.DataFrame, collate_fn: callable, tokenizer: T5Tokenizer, configs: dict, n_workers: int = 0, train: bool = True) -> torch.utils.data.DataLoader:
     shuffle = train and not configs.testing
     pytorch_dataset = CERDataset(dataset)
-    return torch.utils.data.DataLoader(pytorch_dataset, collate_fn=collate_fn, shuffle=shuffle, batch_size=4, num_workers=n_workers)
+    return torch.utils.data.DataLoader(pytorch_dataset, collate_fn=collate_fn, shuffle=shuffle, batch_size=8, num_workers=n_workers)
 
 
 # class DecoderCollateForEdit(object):
@@ -225,12 +293,12 @@ def main(configs):
     tokenizer = create_tokenizer(configs)
 
     # Path to the checkpoint
-    # checkpoint_path = 'checkpoints/20241126_214208' # allowed_problem_list: ['12', '17', '21'] # only if else related problems; epoch 100
-    # checkpoint_path = 'checkpoints/20241127_140131' # allowed_problem_list: ['12', '17', '21'] # only if else related problems; epoch 200
-    # checkpoint_path = 'checkpoints/20241127_161838'  
     # checkpoint_path = 'checkpoints/20241209_165650' # with regularization, if else  
     # checkpoint_path = 'checkpoints/20241209_194800' # with regularization, if else, exclusive problems between train and test
-    checkpoint_path = 'checkpoints/20241211_195813' #with reg, student split, all problems.
+    # checkpoint_path = 'checkpoints/20241211_195813' #with reg, student split, all problems.
+    # checkpoint_path = 'checkpoints/20241213_224930' #with reg, student split, all problems. higher reconstruction lambda
+    # checkpoint_path = 'checkpoints/20241214_000113' #with reg, student split, all problems. t5-large
+    checkpoint_path = 'checkpoints/20241215_192723' #with reg, student split, all problems. reconstruction lambda = 1.5
 
     cerd_model = torch.load(checkpoint_path + '/model')
 
@@ -244,11 +312,10 @@ def main(configs):
     # Create a DataLoader for the finetuning task
     # trainset, validset, testset = read_data(configs)
     # train_dataloader = make_finetuning_dataloader(train_set, DecoderCollateForEdit(tokenizer, configs, device), tokenizer, configs)
-    test_dataloader = make_finetuning_dataloader(test_set, DecoderCollateForEdit(tokenizer, configs, device), tokenizer, configs)
-
-    
+    # test_dataloader = make_finetuning_dataloader(test_set, DecoderCollateForEdit(tokenizer, configs, device), tokenizer, configs)
+ 
     # Example usage
-    generated_code = generate_code(model= cerd_model, dataloader=test_dataloader, tokenizer=tokenizer, device=device)
+    generated_code = generate_code_in_batch(model= cerd_model, dataset=test_set, tokenizer=tokenizer, configs=configs, device=device)
 
 if __name__ == "__main__":
     main()
