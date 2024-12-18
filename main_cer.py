@@ -68,7 +68,6 @@ def main(configs):
 
     ## save the dataset along with the model
     if configs.save_model:
-        # torch.save(dataset, os.path.join(configs.model_save_dir, now, 'dataset'))
         torch.save(train_set, os.path.join(configs.model_save_dir, now, 'train_set'))
         torch.save(valid_set, os.path.join(configs.model_save_dir, now, 'valid_set'))
         torch.save(test_set, os.path.join(configs.model_save_dir, now, 'test_set'))

@@ -228,11 +228,11 @@ def main(configs):
     encoder_model0, tokenizer = create_cer_model(configs, device)
 
     # Path to the checkpoint
-    
-    # cer_checkpoint_path = 'checkpoints/20241118_191604' #all problems, dim 768
-    # checkpoint_path = 'checkpoints/20241030_163548' #random (epoch 2) all problem
-    # checkpoint_path = 'checkpoints/20241031_190036' #epoch 8, margin 1
-    cer_checkpoint_path = 'checkpoints/20241208_204527' # with regularization, allowed_problem_list: ['12', '17', '21'] # only if else related problems
+    cer_checkpoint_path = configs.model_save_dir
+    # cer_checkpoint_path = '/20241118_191604' #all problems, dim 768
+    # cer_checkpoint_path += '/20241030_163548' #random (epoch 2) all problem
+    # cer_checkpoint_path += '/20241031_190036' #epoch 8, margin 1
+    cer_checkpoint_path += '/20241208_204527' # with regularization, allowed_problem_list: ['12', '17', '21'] # only if else related problems
 
     cer_model = torch.load(cer_checkpoint_path + '/model')
     encoder_model = T5ForConditionalGeneration.from_pretrained('t5-base')
@@ -244,7 +244,7 @@ def main(configs):
         param.requires_grad = False
 
     # Create a new decoder (from T5)
-    finetuned_decoder = torch.load('checkpoints/decoder_models/decoder_model_all_768_reg_if_else')
+    finetuned_decoder = torch.load(configs.model_save_dir + '/decoder_models/decoder_model_all_768_reg_if_else')
     decoder_model = T5ForConditionalGeneration.from_pretrained('t5-base')
     decoder_model.load_state_dict(finetuned_decoder.state_dict(), strict=False)
     decoder_model = decoder_model.to(device)

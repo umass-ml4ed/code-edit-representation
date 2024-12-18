@@ -117,10 +117,22 @@ def generate_code_in_batch(model, dataset, tokenizer, configs, device):
             code_edit_A2 = generate_code_from_vector(A1_emb + Da, model, tokenizer, device)
             bleu = compute_code_bleu(A2, code_edit_A2)
             edit_bleu += bleu
+            #print(code_edit_A2)
 
             code_edit_B2 = generate_code_from_vector(B1_emb + Db, model, tokenizer, device)
             bleu = compute_code_bleu(B2, code_edit_B2)
             edit_bleu += bleu
+            #'''
+            for a1, a2, code_a1, code_a2 in zip(A1, A2, code_A1, code_edit_A2):
+                print('-----------------------------------A1------------------------------------------------------------------------------A2-------------------------------------------------------')
+                printCodePairSideBySide(a1, a2)
+                print('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
+                print('---------------------------------A1+Da----------------------------------------------------------------------------A1+Db-----------------------------------------------------')
+
+                printCodePairSideBySide(format_java_code(code_a1), format_java_code(code_a2))
+                print('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
+                print('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
+             #   '''
     print('Code Bleu: ' + str(np.mean(code_bleu)))
     print('Edit Bleu: ' + str(np.mean(edit_bleu)))
     return generated_codes
@@ -191,14 +203,14 @@ def generate_code(model, dataloader, tokenizer, device):
                 #     print('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
                 #     print('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
                 # else:
-                #     print('-----------------------------------A1------------------------------------------------------------------------------A2-------------------------------------------------------')
-                #     printCodePairSideBySide(a1, a2)
-                #     print('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
-                #     print('---------------------------------A1+Da----------------------------------------------------------------------------A1+Db-----------------------------------------------------')
+            print('-----------------------------------A1------------------------------------------------------------------------------A2-------------------------------------------------------')
+            printCodePairSideBySide(a1, a2)
+            print('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
+            print('---------------------------------A1+Da----------------------------------------------------------------------------A1+Db-----------------------------------------------------')
 
-                #     printCodePairSideBySide(format_java_code(code_a2), format_java_code(code_b2))
-                #     print('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
-                #     print('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
+            printCodePairSideBySide(format_java_code(code_a2), format_java_code(code_b2))
+            print('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
+            print('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
 
 
                 # sys.stdout.flush()              # Manually flush the output buffer
@@ -291,14 +303,17 @@ def main(configs):
 
     # Initialize the model
     tokenizer = create_tokenizer(configs)
+    checkpoint_path = configs.model_save_dir
 
     # Path to the checkpoint
-    # checkpoint_path = 'checkpoints/20241209_165650' # with regularization, if else  
-    # checkpoint_path = 'checkpoints/20241209_194800' # with regularization, if else, exclusive problems between train and test
-    # checkpoint_path = 'checkpoints/20241211_195813' #with reg, student split, all problems.
-    # checkpoint_path = 'checkpoints/20241213_224930' #with reg, student split, all problems. higher reconstruction lambda
-    # checkpoint_path = 'checkpoints/20241214_000113' #with reg, student split, all problems. t5-large
-    checkpoint_path = 'checkpoints/20241215_192723' #with reg, student split, all problems. reconstruction lambda = 1.5
+    # checkpoint_path += '/20241209_165650' # with regularization, if else  
+    # checkpoint_path += '/20241209_194800' # with regularization, if else, exclusive problems between train and test
+    # checkpoint_path += '/20241211_195813' #with reg, student split, all problems.
+    # checkpoint_path += '/20241213_224930' #with reg, student split, all problems. higher reconstruction lambda
+    # checkpoint_path += '/20241214_000113' #with reg, student split, all problems. t5-large
+    # checkpoint_path += '/20241215_192723' #with reg, student split, all problems. reconstruction lambda = 1.5
+    # checkpoint_path += '/20241216_192316' #with reg, student split, all problems. reconstruction lambda = 2. t5-base
+    checkpoint_path += '/20241217_212527' #with reg, student split, all problems. reconstruction lambda = 2. code-t5-base
 
     cerd_model = torch.load(checkpoint_path + '/model')
 
