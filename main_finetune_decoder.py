@@ -107,9 +107,8 @@ import torch.nn.functional as F
 from datatypes import *
 
 class FinetuneDecoderModel(nn.Module):
-    def __init__(self, encoder_model: nn.Module, decoder_model: T5ForConditionalGeneration, cer_model, tokenizer: T5Tokenizer, configs: dict, device: torch.device):
+    def __init__(self, decoder_model: T5ForConditionalGeneration, cer_model, tokenizer: T5Tokenizer, configs: dict, device: torch.device):
         super(FinetuneDecoderModel, self).__init__()
-        self.encoder_model = encoder_model
         self.decoder_model = decoder_model
         self.cer_model = cer_model
         self.tokenizer = tokenizer
@@ -145,7 +144,7 @@ class FinetuneDecoderModel(nn.Module):
 def make_finetuning_dataloader(dataset: pd.DataFrame, collate_fn: callable, tokenizer: T5Tokenizer, configs: dict, n_workers: int = 0, train: bool = True) -> torch.utils.data.DataLoader:
     shuffle = train and not configs.testing
     pytorch_dataset = CERDataset(dataset)
-    return torch.utils.data.DataLoader(pytorch_dataset, collate_fn=collate_fn, shuffle=shuffle, batch_size=4, num_workers=n_workers)
+    return torch.utils.data.DataLoader(pytorch_dataset, collate_fn=collate_fn, shuffle=shuffle, batch_size=6, num_workers=n_workers)
 
 
 class FinetuneCollateForCER(object):
@@ -195,21 +194,14 @@ def main(configs):
     # checkpoint_path += '/20241030_163548' #random (epoch 2) all problem
     # checkpoint_path += '/20241031_190036' #epoch 8, margin 1
 
-    checkpoint_path += '/20241208_204527' # with regularization, allowed_problem_list: ['12', '17', '21'] # only if else related problems
+    # checkpoint_path += '/20241208_204527' # with regularization, allowed_problem_list: ['12', '17', '21'] # only if else related problems
     checkpoint_path += '/20241208_214644' # with regularization, all problems
 
-    cer_model = torch.load(checkpoint_path + '/model')
-    encoder_model = T5ForConditionalGeneration.from_pretrained('t5-base')
-    encoder_model.load_state_dict(cer_model.pretrained_encoder.state_dict(),strict=False)
-    # encoder_model = cer_model.pretrained_encoder
-
-    # Freeze the encoder weights
-    for param in encoder_model.encoder.parameters():
-        param.requires_grad = False
+    # cer_model = torch.load(checkpoint_path + '/model')
+    cer_model = BaselineCERModel(configs, device).to(device) # Baseline
 
     # Create a new decoder (from T5)
-    decoder_model = T5ForConditionalGeneration.from_pretrained('t5-base')
-    # decoder_model = T5ForConditionalGeneration.from_pretrained(configs.model_name)
+    decoder_model = T5ForConditionalGeneration.from_pretrained(configs.model_name)
     decoder_model = decoder_model.to(device)
 
     train_set = torch.load(checkpoint_path + '/train_set')
@@ -217,7 +209,7 @@ def main(configs):
     valid_set = torch.load(checkpoint_path + '/valid_set')
 
     # Instantiate the finetune model
-    finetune_model = FinetuneDecoderModel(encoder_model, decoder_model, cer_model, tokenizer, configs, device)
+    finetune_model = FinetuneDecoderModel( decoder_model, cer_model, tokenizer, configs, device)
 
     # Create a DataLoader for the finetuning task
     # trainset, validset, testset = read_data(configs)
@@ -245,10 +237,10 @@ def main(configs):
             optimizer.zero_grad()
 
             # print(f"Loss: {loss.item()}")
-        torch.save(decoder_model, 'checkpoints/decoder_models/decoder_model_all_768_reg_all')
+        torch.save(decoder_model, configs.model_save_dir + '/decoder_models/decoder_model_all_768_code_t5_base_baseline')
     
     # Example usage
-    generated_code = generate_code(decoder_model=decoder_model, cer_model= cer_model, dataloader=test_dataloader, tokenizer=tokenizer, device=device)
+    # generated_code = generate_code(decoder_model=decoder_model, cer_model= cer_model, dataloader=test_dataloader, tokenizer=tokenizer, device=device)
 
 if __name__ == "__main__":
     main()

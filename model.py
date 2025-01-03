@@ -96,6 +96,14 @@ class BaseCERModel(nn.Module):
                 problemIDs = problemIDs + pID
         return res, problemIDs
 
+
+class BaselineCERModel(BaseCERModel):
+    def __init__(self, configs: dict, device: torch.device):
+        super(BaselineCERModel, self).__init__(configs, device)
+
+        self.pretrained_encoder = T5Model.from_pretrained(configs.model_name).encoder
+        self.embedding_size = self.pretrained_encoder.config.d_model
+
 class ExtendedCERModel(BaseCERModel):
     def __init__(self, configs: dict, device: torch.device):
         super(ExtendedCERModel, self).__init__(configs, device)

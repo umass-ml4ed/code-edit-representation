@@ -78,7 +78,7 @@ def generate_code_from_vector(encoder_embedding, decoder_model, tokenizer, devic
     return generated_code
 
 # Function to generate codes for a batch of inputs
-def generate_code_in_batch(decoder_model, cer_model, dataset, tokenizer, configs, device):
+def generate_code_in_batch(decoder_model, cer_model, dataset, tokenizer, configs, device, isBaseline=False):
     collate_fn = CollateForCER(tokenizer=tokenizer, configs=configs, device=device)
     dataloader  = make_dataloader_experiment(dataset , collate_fn=collate_fn, configs=configs)
 
@@ -93,7 +93,8 @@ def generate_code_in_batch(decoder_model, cer_model, dataset, tokenizer, configs
             labels = labels.to(device).to(torch.float32)
 
             tokenized_inputs = tokenizer(concatenated_inputs, return_tensors="pt", padding=True, truncation=True).to(device)
-            Da, Db = cer_model.get_edit_encodings_tokenized(tokenized_inputs)
+            if isBaseline == False:
+                Da, Db = cer_model.get_edit_encodings_tokenized(tokenized_inputs)
 
             embeddings = cer_model.get_embeddings_tokenized(tokenized_inputs)
             batch_size = embeddings.shape[0] // 4
@@ -107,15 +108,16 @@ def generate_code_in_batch(decoder_model, cer_model, dataset, tokenizer, configs
             bleu = compute_code_bleu(B1, code_B1)
             code_bleu += bleu
 
-            code_edit_A2 = generate_code_from_vector(A1_emb + Da, decoder_model, tokenizer, device)
-            bleu = compute_code_bleu(A2, code_edit_A2)
-            edit_bleu += bleu
-            code_edit_B2 = generate_code_from_vector(B1_emb + Db, decoder_model, tokenizer, device)
-            bleu = compute_code_bleu(B2, code_edit_B2)
-            edit_bleu += bleu
+            if isBaseline == False:
+                code_edit_A2 = generate_code_from_vector(A1_emb + Da, decoder_model, tokenizer, device)
+                bleu = compute_code_bleu(A2, code_edit_A2)
+                edit_bleu += bleu
+                code_edit_B2 = generate_code_from_vector(B1_emb + Db, decoder_model, tokenizer, device)
+                bleu = compute_code_bleu(B2, code_edit_B2)
+                edit_bleu += bleu
     # print(code_bleu)
     print('Code Bleu: ' + str(np.mean(code_bleu)))
-    print('Edit Bleu: ' + str(np.mean(edit_bleu)))
+    if isBaseline == False: print('Edit Bleu: ' + str(np.mean(edit_bleu)))
     return generated_codes
 
 # Function to generate codes for a batch of inputs
@@ -232,20 +234,16 @@ def main(configs):
     # cer_checkpoint_path = '/20241118_191604' #all problems, dim 768
     # cer_checkpoint_path += '/20241030_163548' #random (epoch 2) all problem
     # cer_checkpoint_path += '/20241031_190036' #epoch 8, margin 1
-    cer_checkpoint_path += '/20241208_204527' # with regularization, allowed_problem_list: ['12', '17', '21'] # only if else related problems
+    # cer_checkpoint_path += '/20241208_204527' # with regularization, allowed_problem_list: ['12', '17', '21'] # only if else related problems
+    cer_checkpoint_path += '/20241208_214644' # with regularization, all problems
 
-    cer_model = torch.load(cer_checkpoint_path + '/model')
-    encoder_model = T5ForConditionalGeneration.from_pretrained('t5-base')
-    encoder_model.load_state_dict(cer_model.pretrained_encoder.state_dict(),strict=False)
-    # encoder_model = cer_model.pretrained_encoder
 
-    # Freeze the encoder weights
-    for param in encoder_model.encoder.parameters():
-        param.requires_grad = False
+    # cer_model = torch.load(cer_checkpoint_path + '/model')
+    cer_model = BaselineCERModel(configs, device).to(device) # Baseline
 
     # Create a new decoder (from T5)
-    finetuned_decoder = torch.load(configs.model_save_dir + '/decoder_models/decoder_model_all_768_reg_if_else')
-    decoder_model = T5ForConditionalGeneration.from_pretrained('t5-base')
+    finetuned_decoder = torch.load(configs.model_save_dir + '/decoder_models/decoder_model_all_768_code_t5_base_baseline')
+    decoder_model = T5ForConditionalGeneration.from_pretrained(configs.model_name)
     decoder_model.load_state_dict(finetuned_decoder.state_dict(), strict=False)
     decoder_model = decoder_model.to(device)
 
@@ -262,7 +260,7 @@ def main(configs):
     # test_dataloader = make_finetuning_dataloader(test_set, DecoderCollateForEdit(tokenizer, configs, device), tokenizer, configs)
 
     # Example usage
-    generated_code = generate_code_in_batch(decoder_model=decoder_model, cer_model= cer_model, dataset=test_set, tokenizer=tokenizer, configs=configs, device=device)
+    generated_code = generate_code_in_batch(decoder_model=decoder_model, cer_model= cer_model, dataset=test_set, tokenizer=tokenizer, configs=configs, device=device, isBaseline=True)
 
 if __name__ == "__main__":
     main()
