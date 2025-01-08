@@ -97,8 +97,24 @@ def plot_clusters(dataloader, model, epoch, plotname, neptune_run):
     neptune_run['clusters/'+plotname].upload(plotname + '.png')
 
 def compute_code_bleu(ground_truth_codes, generated_codes):
+    # print(ground_truth_codes)
+    # print(generated_codes)
     params=(0.25,0.25,0.25,0.25)
     lang='java'
+    # for ground, generated in zip(ground_truth_codes, generated_codes):
+    #     print(ground, generated)
+    #     print('**')
     codebleu_score = [calc_codebleu([ground], [generated], lang=lang, weights=params, tokenizer=None)['codebleu'] for ground, generated in zip(ground_truth_codes, generated_codes)]
     # print(codebleu_score)
     return codebleu_score#, detailed_codebleu_score
+
+
+def load_checkpoint_model_and_data(checkpoint_name, configs):
+    checkpoint_path = configs.model_save_dir + '/' + checkpoint_name
+    
+    model = torch.load(checkpoint_path + '/model')
+    train_set = torch.load(checkpoint_path + '/train_set')
+    valid_set = torch.load(checkpoint_path + '/valid_set')
+    test_set = torch.load(checkpoint_path + '/test_set')
+
+    return model, train_set, valid_set, test_set

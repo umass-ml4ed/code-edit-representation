@@ -42,15 +42,15 @@ def main(configs):
     # Use neptune.ai to track experiments
     run = None
     if configs.use_neptune:
-        if 'NEPTUNE_API_TOKEN' not in os.environ:
-            print("Please set the NEPTUNE_API_TOKEN environment variable")
+        if 'NEPTUNE_API_KEY' not in os.environ:
+            print("Please set the NEPTUNE_API_KEY environment variable")
             sys.exit(1)
-        # print(os.environ['NEPTUNE_API_TOKEN'])
+        # print(os.environ['NEPTUNE_API_KEY'])
         run = neptune.init_run(
             project=configs.neptune_project,
             
             #Set Neptune API token as an environment variable. This is a secure way to pass the token. The token can also be saved in the config directly, but it must be removed before pushing to git.
-            api_token=os.environ['NEPTUNE_API_TOKEN'], 
+            api_token=os.environ['NEPTUNE_API_KEY'], 
             capture_hardware_metrics = False,
             name=configs.exp_name + '_{}'.format(now), # mark the experiment using the current date and time
             custom_run_id=configs.exp_name + '_{}'.format(now),
