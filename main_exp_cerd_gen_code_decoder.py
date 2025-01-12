@@ -111,8 +111,14 @@ def generate_code_in_batch(model, dataset, tokenizer, configs, device):
             code_A1 = generate_code_from_vector(A1_emb, model, tokenizer, device)
             bleu = compute_code_bleu(A1, code_A1)
             code_bleu += bleu
+            code_A2 = generate_code_from_vector(A2_emb, model, tokenizer, device)
+            bleu = compute_code_bleu(A2, code_A2)
+            code_bleu += bleu
             code_B1 = generate_code_from_vector(B1_emb, model, tokenizer, device)
             bleu = compute_code_bleu(B1, code_B1)
+            code_bleu += bleu
+            code_B2 = generate_code_from_vector(B2_emb, model, tokenizer, device)
+            bleu = compute_code_bleu(B2, code_B2)
             code_bleu += bleu
 
             code_edit_A2 = generate_code_from_vector(A1_emb + Da, model, tokenizer, device)
@@ -124,9 +130,11 @@ def generate_code_in_batch(model, dataset, tokenizer, configs, device):
 
             code_cross_A2 = generate_code_from_vector(A1_emb + Db, model, tokenizer, device)
             bleu = compute_code_bleu(A2, code_cross_A2)
+            bleu = [value for value, label in zip(bleu, labels) if label == 1]
             cross_bleu += bleu
             code_cross_B2 = generate_code_from_vector(B1_emb + Da, model, tokenizer, device)
             bleu = compute_code_bleu(B2, code_cross_B2)
+            bleu = [value for value, label in zip(bleu, labels) if label == 1]
             cross_bleu += bleu
             '''
             for a1, a2, code_a1, code_a2 in zip(A1, A2, code_A1, code_edit_A2):
@@ -141,6 +149,7 @@ def generate_code_in_batch(model, dataset, tokenizer, configs, device):
                '''
     print('Code Bleu: ' + str(np.mean(code_bleu)))
     print('Edit Bleu: ' + str(np.mean(edit_bleu)))
+    print('Cross Bleu: ' + str(np.mean(cross_bleu)))
     return generated_codes
 
 def generate_code(model, dataloader, tokenizer, device):
@@ -312,20 +321,16 @@ def main(configs):
     checkpoint_path = configs.model_save_dir
 
     # Path to the checkpoint
-    # checkpoint_path += '/20241209_165650' # with regularization, if else  
-    # checkpoint_path += '/20241209_194800' # with regularization, if else, exclusive problems between train and test
-    # checkpoint_path += '/20241211_195813' #with reg, student split, all problems.
-    # checkpoint_path += '/20241213_224930' #with reg, student split, all problems. higher reconstruction lambda
-    # checkpoint_path += '/20241214_000113' #with reg, student split, all problems. t5-large
-    # checkpoint_path += '/20241215_192723' #with reg, student split, all problems. reconstruction lambda = 1.5
-    # checkpoint_path += '/20241216_192316' #with reg, student split, all problems. reconstruction lambda = 2. t5-base
-    checkpoint_path += '/20241217_212527' #with reg, student split, all problems. reconstruction lambda = 2. code-t5-base
+    # checkpoint_name = '20241209_165650' # with regularization, if else  
+    # checkpoint_name = '20241209_194800' # with regularization, if else, exclusive problems between train and test
+    # checkpoint_name = '20241211_195813' #with reg, student split, all problems.
+    # checkpoint_name = '20241213_224930' #with reg, student split, all problems. higher reconstruction lambda
+    # checkpoint_name = '20241214_000113' #with reg, student split, all problems. t5-large
+    # checkpoint_name = '20241215_192723' #with reg, student split, all problems. reconstruction lambda = 1.5
+    # checkpoint_name = '20241216_192316' #with reg, student split, all problems. reconstruction lambda = 2. t5-base
+    checkpoint_name = '20241217_212527' #with reg, student split, all problems. reconstruction lambda = 2. code-t5-base
 
-    cerd_model = torch.load(checkpoint_path + '/model')
-
-    train_set = torch.load(checkpoint_path + '/train_set')
-    test_set = torch.load(checkpoint_path + '/test_set')
-    valid_set = torch.load(checkpoint_path + '/valid_set')
+    cerd_model, train_set, valid_set, test_set = load_checkpoint_model_and_data(checkpoint_name=checkpoint_name, configs=configs)
 
     # Instantiate the finetune model
     # finetune_model = FinetuneDecoderModel(encoder_model, decoder_model, cer_model, tokenizer, configs, device)
