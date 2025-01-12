@@ -1,0 +1,1900 @@
+problemID,problemDescription,studentID_1,test_case_verdict_i_1,codeID_i_1,code_i_1,score_i_1,score_calc_i_1,test_case_verdict_j_1,codeID_j_1,code_j_1,score_j_1,score_calc_j_1,studentID_2,test_case_verdict_i_2,codeID_i_2,code_i_2,score_i_2,score_calc_i_2,test_case_verdict_j_2,codeID_j_2,code_j_2,score_j_2,score_calc_j_2,is_similar,cluster
+17,"Write a function in Java that implements the following logic: You have a red lottery ticket showing ints a, b, and c, each of which is 0, 1, or 2. If they are all the value 2, the result is 10. Otherwise if they are all the same, the result is 5. Otherwise so long as both b and c are different from a, the result is 1. Otherwise the result is 0.",37b1fe960daba91fffadbdb5a3a9db15,01000010001110101111110000,c1f46ce72d309994ff32f46284a15097e22e255e,"public int redTicket(int a, int b, int c)
+{
+    int returnt;
+    int sum = a + b + c;
+    int div = (b+c)/2;
+    if (sum == 6)
+    {
+     	returnt = 10;   
+    }
+    else if (a==b && b==c)
+    {
+     	returnt = 5;   
+    }
+    else if (a!=b || b!=c)
+    {
+     	returnt = 1;   
+    }
+    else
+    {
+     	returnt = 0;   
+    }
+    return returnt;
+}
+",0.538462,0.5384615384615384,00001010111001000011111000,e5c50450c1a97d24223e96998031b1af421d580e,"public int redTicket(int a, int b, int c)
+{
+    int returnt;
+    int sum = a + b + c;
+    int div = (b+c)/2;
+    if (sum == 6)
+    {
+     	returnt = 10;   
+    }
+    else if (a==b && b==c)
+    {
+     	returnt = 5;   
+    }
+    else if (a!=b && b!=c)
+    {
+     	returnt = 1;   
+    }
+    else
+    {
+     	returnt = 0;   
+    }
+    return returnt;
+}
+",0.576923,0.5769230769230769,f683900ca17bd492ad987ecf64e8ace6,01000310003110101131110000,c0931e509037fc1b1d0ec8a14963e0f023735c26,"public int redTicket(int a, int b, int c)
+{
+    if (a == b && b == c)
+    {
+        if (a == 2)
+        {
+            return 10;
+        }
+        
+        else 
+        {
+            return 5;
+        }
+        
+    }
+    
+    if( a != b || a != c)
+    {
+        return 1;
+    }
+    
+    else 
+    {
+        return 0;
+    }
+    
+    
+}
+",0.538462,0.5,00001001110001000000001111,0906e5d28c1986472a8e3ba0ac88f599307d8547,"public int redTicket(int a, int b, int c)
+{
+    if (a == b && b == c)
+    {
+        if (a == 2)
+        {
+            return 10;
+        }
+        
+        else 
+        {
+            return 5;
+        }
+        
+    }
+    
+    if( a != b || a != c)
+    {
+        return 0;
+    }
+    
+    else 
+    {
+        return 1;
+    }
+    
+    
+}
+",0.653846,0.6538461538461539,False,3
+17,"Write a function in Java that implements the following logic: You have a red lottery ticket showing ints a, b, and c, each of which is 0, 1, or 2. If they are all the value 2, the result is 10. Otherwise if they are all the same, the result is 5. Otherwise so long as both b and c are different from a, the result is 1. Otherwise the result is 0.",17737832ac17be5216f187a82c20936e,00001001110001000000001111,2685eddb92291821c954a25328040d9f9408eb9e,"public int redTicket(int a, int b, int c)
+{
+    
+    if (a== 2 && b==2 && c==2)
+    {
+        return 10;
+    }
+    
+    if (a==b && a==c && b==c)
+    {
+        return 5;
+    }
+    
+    
+    
+    
+    return 0;
+}
+",0.653846,0.6538461538461539,00000000000000000000000000,5f137dbfa54f3c15c65ef24630bad52216763faa,"public int redTicket(int a, int b, int c)
+{
+    
+    if (a== 2 && b==2 && c==2)
+    {
+        return 10;
+    }
+    
+    if (a==b && a==c && b==c)
+    {
+        return 5;
+    }
+    
+    if (a!=b && a!=c)
+    {
+        return 1;
+    }
+    
+    
+    
+    
+    return 0;
+}
+",1.0,1.0,f417d05af72b37f956c906aea42d1511,00001001110001000000001111,54d6b44c4a4ddd368ba8e41e4901c8de71af2eef,"public int redTicket(int a, int b, int c)
+{
+    if(a == 2 && b == 2 && c == 2)
+    {
+        return 10;
+    }
+    else if (a == b && b ==c)
+    {
+        return 5;
+    }
+    else if(b!= a && c != a)
+    {
+        return 2;
+    }
+    else
+    {
+        return 0;
+    }
+}
+",0.653846,0.6538461538461539,00000000000000000000000000,f6a96a5f145d7e845293a22b29c3be382a03ddae,"public int redTicket(int a, int b, int c)
+{
+    if(a == 2 && b == 2 && c == 2)
+    {
+        return 10;
+    }
+    else if (a == b && b ==c)
+    {
+        return 5;
+    }
+    else if(b!= a && c != a)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+",1.0,1.0,True,3
+12,"Write a function in Java that implements the following logic: The squirrels in Palo Alto spend most of the day playing. In particular, they play if the temperature is between 60 and 90 (inclusive). Unless it is summer, then the upper limit is 100 instead of 90. Given an int temperature and a boolean isSummer, return true if the squirrels play and false otherwise.",1379719828be9ee6b08ca64edb818e2b,00100000100000000100,8ee1e80f1bafc262c4ff064e1812c82ab0e94271,"public boolean squirrelPlay(int temp, boolean isSummer)
+{
+    if (temp>=60 && temp <=90)
+    {
+        return true;
+    }
+    if (isSummer)
+    {
+        if (temp>=60 && temp <=90)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    return false;
+}
+",0.85,0.85,00000000000000000000,69dcf7ffa871a4135c4fe6aad25b91e6b551d89d,"public boolean squirrelPlay(int temp, boolean isSummer)
+{
+    if (temp>=60 && temp <=90)
+    {
+        return true;
+    }
+    if (isSummer)
+    {
+        if (temp>=60 && temp <=100)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    return false;
+}
+",1.0,1.0,17737832ac17be5216f187a82c20936e,00100000100000000100,3b60630f396abf04699b4d14f4f5e3a24c6294c2,"public boolean squirrelPlay(int temp, boolean isSummer)
+{
+   if (temp >= 60 && temp<= 90)
+   {
+       return true;
+   }
+    
+    
+    return false;
+}
+",0.85,0.85,00000000000000000000,97b7683fd6c88956745dac93ba78efb07e324b04,"public boolean squirrelPlay(int temp, boolean isSummer)
+{
+   if (temp >= 60 && temp<= 90)
+   {
+       return true;
+   }
+    
+    else if( isSummer && temp>= 90 && temp<= 100)
+    {
+        return true;
+    }
+    
+    
+    return false;
+}
+",1.0,1.0,True,2
+17,"Write a function in Java that implements the following logic: You have a red lottery ticket showing ints a, b, and c, each of which is 0, 1, or 2. If they are all the value 2, the result is 10. Otherwise if they are all the same, the result is 5. Otherwise so long as both b and c are different from a, the result is 1. Otherwise the result is 0.",2e09811007f834b96935dc13e91fabbc,00001000110001000000001000,8ca4f9737d8eb34f0a2b9b63e0da3bf36e6d14cd,"public int redTicket(int a, int b, int c)
+{
+    if (a == 2 && b == 2 && c == 2)
+    {
+        return 10;
+    }
+    else if (a == b && b == c && c == a)
+    {
+        return 5;
+    }
+    else if (a != b && b != c && c != a)
+    {
+        return 1;
+    }
+    return 0;
+}
+",0.807692,0.8076923076923077,00000000000000000000000000,c3b6b77f4aa372e01c3f3ccc703326926a54ffe3,"public int redTicket(int a, int b, int c)
+{
+    if (a == 2 && b == 2 && c == 2)
+    {
+        return 10;
+    }
+    else if (a == b && b == c && c == a)
+    {
+        return 5;
+    }
+    else if (b != a && c != a)
+    {
+        return 1;
+    }
+    return 0;
+}
+",1.0,1.0,e3edca0f6e68bfb76eaf26a8eb6dd94b,00001000110001000000001000,41c85a6df2bdbedfc884e2b668da506a35e42622,"public int redTicket(int a, int b, int c)
+{
+    if(a==b&&a==c&&a==2)return 10;
+    if(a==b&&a==c)return 5;
+    if(a==b||a==c||b==c) return 0;
+    return 1;
+}
+",0.807692,0.8076923076923077,00000000000000000000000000,40d5eefe93b6bfc40e766e864b9c0de2bf4ae7ec,"public int redTicket(int a, int b, int c)
+{
+    if(a==b&&a==c&&a==2)return 10;
+    if(a==b&&a==c)return 5;
+    if(a==b||a==c) return 0;
+    return 1;
+}
+",1.0,1.0,True,3
+21,"Write a function in Java that implements the following logic: Given 3 int values, a, b, and c, return their sum. However, if one of the values is 13 then it does not count towards the sum and values to its right do not count. So for example, if b is 13, then both b and c do not count.",907372450aa412b4647b9b8a64967f71,00000111000000111110,dead8d3fb04d04b4c24cb836645f0d868fb59ca7,"public int luckySum(int a, int b, int c)
+{
+    if ( a == 13)
+    {
+        return c;
+    }
+    else if ( b == 13)
+    {
+        return a;
+    }
+    else if (c == 13)
+    {
+        return a + b;
+    }
+    else
+    {
+        return a + b + c;
+    }
+    
+}
+",0.6,0.6,00000000000000000000,02147d9667e7c7351ffb86ca3824dc38f22906f0,"public int luckySum(int a, int b, int c)
+{
+    if ( a == 13)
+    {
+        return 0;
+    }
+    else if ( b == 13)
+    {
+        return a;
+    }
+    else if (c == 13)
+    {
+        return a + b;
+    }
+    else
+    {
+        return a + b + c;
+    }
+    
+}
+",1.0,1.0,c9bd2d5f2fb6cea41198dc6a2f817331,00000111000000111110,98e1fa96ee25e7484cd48208ffec2ff04c520ecb,"public int luckySum(int a, int b, int c)
+{
+    if (a != 13 && b != 13 && c != 13)
+        return a + b + c;
+    else if (a == 13)
+        return b + c;
+    else if (b == 13)
+        return a;
+    else
+        return b + a;
+    
+    
+}
+",0.6,0.6,00000000000000000000,437669b879a0f223a1e502fd4f62ec8d280a520b,"public int luckySum(int a, int b, int c)
+{
+    if (a != 13 && b != 13 && c != 13)
+        return a + b + c;
+    else if (a == 13)
+        return 0;
+    else if (b == 13)
+        return a;
+    else
+        return b + a;
+    
+    
+}
+",1.0,1.0,True,1
+21,"Write a function in Java that implements the following logic: Given 3 int values, a, b, and c, return their sum. However, if one of the values is 13 then it does not count towards the sum and values to its right do not count. So for example, if b is 13, then both b and c do not count.",17737832ac17be5216f187a82c20936e,01000000100100000001,4ce67dfd72514955b9fa47ce60bb8e3e43ad3073,"public int luckySum(int a, int b, int c)
+{
+    if (a != 13 && b!= 13 && c!= 13)
+    {
+        return (a+b+c);
+    }
+    
+    else if (a== 13)
+    {
+        return 0;
+    }
+    
+    else if (b== 13)
+    {
+        return a;
+    }
+    
+    return 0;
+}
+",0.8,0.8,00000000000000000000,78a8e8a64b313ff7d1734612cc884e563d6caea4,"public int luckySum(int a, int b, int c)
+{
+    if (a != 13 && b!= 13 && c!= 13)
+    {
+        return (a+b+c);
+    }
+    
+    else if (a== 13)
+    {
+        return 0;
+    }
+    
+    else if (b== 13)
+    {
+        return a;
+    }
+    
+    else if (c==13)
+    {
+        return (a+b);
+    }
+    
+    return 0;
+}
+",1.0,1.0,907372450aa412b4647b9b8a64967f71,00110111010010111110,ee4502f84ab64a89a3611ec63c2ddf8bb4dfd493,"public int luckySum(int a, int b, int c)
+{
+    if ( a == 13)
+    {
+        return c;
+    }
+    else if ( b == 13)
+    {
+        return 0;
+    }
+    else if (c == 13)
+    {
+        return a + b;
+    }
+    else
+    {
+        return a + b + c;
+    }
+    
+}
+",0.4,0.4,00000111000000111110,dead8d3fb04d04b4c24cb836645f0d868fb59ca7,"public int luckySum(int a, int b, int c)
+{
+    if ( a == 13)
+    {
+        return c;
+    }
+    else if ( b == 13)
+    {
+        return a;
+    }
+    else if (c == 13)
+    {
+        return a + b;
+    }
+    else
+    {
+        return a + b + c;
+    }
+    
+}
+",0.6,0.6,False,1
+17,"Write a function in Java that implements the following logic: You have a red lottery ticket showing ints a, b, and c, each of which is 0, 1, or 2. If they are all the value 2, the result is 10. Otherwise if they are all the same, the result is 5. Otherwise so long as both b and c are different from a, the result is 1. Otherwise the result is 0.",51ef70624ca791283ec434a52da0d4e2,01001011111111101111111111,208b9a2fae1fe7391f3a78bd5d42a19539c12b10,"public int redTicket(int a, int b, int c)
+{
+    if (a==b && b==c && a==c && a != 2)
+    {return 5;}
+    else 
+    {return 10;}
+    
+}
+",0.192308,0.19230769230769232,10110100000000010000000000,94c7af7d1430fb42d56f62d3ae4d81efbb2ab23c,"public int redTicket(int a, int b, int c)
+{
+    if (b != a && c!=a)
+    {return 1;}
+    if (b == a ||c == a)
+    {return 0;}
+    if (a==b && b==c && a==c && a != 2)
+    {return 5;}
+    else 
+    {return 10;}
+    
+}
+",0.807692,0.8076923076923077,9964364bfd2b38643a0b41b981c01f60,00000001000000000000000111,2a35826fbfa6d4b929d8c090ec40e60590d6eafd,"public int redTicket(int a, int b, int c)
+{
+    if(a==2 && b == 2 && c == 2)
+        return 10;
+    else if(a==b && b==c)
+        return 5;
+    else if(b==c)
+        return 1;
+    else
+        return 0;
+}
+",0.8461540000000001,0.8461538461538461,00000000000000000000000000,0ad854703f676a2008c94764cf64ea8265ca39a6,"public int redTicket(int a, int b, int c)
+{
+    if(a==2 && b == 2 && c == 2)
+        return 10;
+    else if(a==b && b==c)
+        return 5;
+    else if(b!=a && c!=a)
+        return 1;
+    else
+        return 0;
+}
+",1.0,1.0,False,0
+12,"Write a function in Java that implements the following logic: The squirrels in Palo Alto spend most of the day playing. In particular, they play if the temperature is between 60 and 90 (inclusive). Unless it is summer, then the upper limit is 100 instead of 90. Given an int temperature and a boolean isSummer, return true if the squirrels play and false otherwise.",279dc09a13b9dc662c574a804d650d95,01000001000000001000,3ab7cd9309c60498ae9a23e86f3cfe206a3e244d,"public boolean squirrelPlay(int temp, boolean isSummer)
+{
+    if (isSummer)
+    {
+        if (temp >= 60 && temp <= 100)
+            return true;
+        else
+            return false;
+    }
+    else
+    {
+        if (temp >= 60 && temp <= 100)
+            return true;
+        else
+            return false;
+    }
+}
+",0.85,0.85,00000000000000000000,8d7d841b54196ab12fbefae5eaf8c9959a76439c,"public boolean squirrelPlay(int temp, boolean isSummer)
+{
+    if (isSummer)
+    {
+        if (temp >= 60 && temp <= 100)
+            return true;
+        else
+            return false;
+    }
+    else
+    {
+        if (temp >= 60 && temp <= 90)
+            return true;
+        else
+            return false;
+    }
+}
+",1.0,1.0,b57532bada44706da665a55d2ce2011e,01000001000000001000,b4895ceb4d4a44833d4e3bfb69a2d1764e4804be,"public boolean squirrelPlay(int temp, boolean isSummer)
+{
+    if(isSummer == true)
+    {
+         if((temp >= 60) && (temp <= 100))
+           {
+               return true;
+           }
+         else 
+            return false;
+    }
+    else
+            if((temp >= 60) && (temp <= 100))
+            {
+               return true;
+            }
+            else 
+               return false;
+        	    
+            
+         
+          
+       
+           
+                 
+          
+          
+    
+}
+",0.85,0.85,00000000000000000000,3cc8167bcc2568422e8049b4c1bf14ef0c71a944,"public boolean squirrelPlay(int temp, boolean isSummer)
+{
+    if(isSummer == true)
+    {
+         if((temp >= 60) && (temp <= 100))
+           {
+               return true;
+           }
+         else 
+            return false;
+    }
+    else
+            if((temp >= 60) && (temp <= 90))
+            {
+               return true;
+            }
+            else 
+               return false;
+        	    
+            
+         
+          
+       
+           
+                 
+          
+          
+    
+}
+",1.0,1.0,True,2
+21,"Write a function in Java that implements the following logic: Given 3 int values, a, b, and c, return their sum. However, if one of the values is 13 then it does not count towards the sum and values to its right do not count. So for example, if b is 13, then both b and c do not count.",11d8ffa1c1cb79e22b6d94667d3847d9,00000111000000111110,568da29045c9b24d7610923677bbe69d266309d1,"public int luckySum(int a, int b, int c)
+{
+    int luckySum = 0;
+    if ( a == 13 )
+    {
+    	luckySum = c;
+    }
+    else if ( b == 13)
+    {
+    	luckySum = a;
+    }
+    else if (c == 13)
+    {
+    	luckySum = a + b;
+    }
+    else
+    {
+    	luckySum = a + b + c;
+    }
+    return luckySum;
+}
+",0.6,0.6,00000000000000000000,f33e751014d0fe6fe713c331ac435ecca0fab0fa,"public int luckySum(int a, int b, int c)
+{
+    int luckySum = 0;
+    if ( a == 13 )
+    {
+    	luckySum = 0;
+    }
+    else if ( b == 13)
+    {
+    	luckySum = a;
+    }
+    else if (c == 13)
+    {
+    	luckySum = a + b;
+    }
+    else
+    {
+    	luckySum = a + b + c;
+    }
+    return luckySum;
+}
+",1.0,1.0,8efe4ff08d6f51db0f7179fbef12f2f1,00000111000000111110,2180b32d62b3a886c2f946eb35487e28e3c091af,"public int luckySum(int a, int b, int c)
+{
+    int s1=a+b+c;
+    int s2=a+b;
+    int s3=a;
+    int s=0;
+    if ((b==13 && c==13) || b==13)
+    {
+        s=s3;
+    }
+    else if (c==13)
+    {
+        s=s2;
+    }
+    else
+    {
+        s=s1;
+    }
+    return s;
+}
+",0.6,0.6,00000000000000000000,ef01d8e78dde95531ce67a25fd24f3677c874157,"public int luckySum(int a, int b, int c)
+{
+    int s1=a+b+c;
+    int s2=a+b;
+    int s3=a;
+    int s=0;
+    if (a==13)
+    {
+        s=0;
+    }
+    else if ((b==13 && c==13) || b==13)
+    {
+        s=s3;
+    }
+    else if (c==13)
+    {
+        s=s2;
+    }
+    else
+    {
+        s=s1;
+    }
+    return s;
+}
+",1.0,1.0,True,1
+17,"Write a function in Java that implements the following logic: You have a red lottery ticket showing ints a, b, and c, each of which is 0, 1, or 2. If they are all the value 2, the result is 10. Otherwise if they are all the same, the result is 5. Otherwise so long as both b and c are different from a, the result is 1. Otherwise the result is 0.",8425bc94a44e3d1bb3c8c026b2702c00,01000000000110101100000000,aef297acae6f43484d03e1b243047ea1a4b0eadd,"public int redTicket(int a, int b, int c)
+{
+    if (a == 2 && b == 2 && c == 2)
+        return 10;
+    if (a == b && b == c && a == c)
+        return 5;
+    if (a != b && b != c && a != c)
+        return 1;
+    if ((a == b && b != c) || (a != b && b == c))
+        return 1;
+    else
+        return 0;
+}
+",0.769231,0.7692307692307693,00001000110001000000001000,538e725bd6f1419912fb8dbf1065bf1b2e2f4adc,"public int redTicket(int a, int b, int c)
+{
+    if (a == 2 && b == 2 && c == 2)
+        return 10;
+    if (a == b && b == c && a == c)
+        return 5;
+    if (a != b && b != c && a != c)
+        return 1;
+    if ((a == b && b != c) || (a != b && b == c))
+        return 0;
+    else
+        return 0;
+}
+",0.807692,0.8076923076923077,a8578be2fe9a67d039ee7b4f18697286,00000000000000000000000000,8347f246cd0bb4d7250ab05f4c7f60922635f705,"public int redTicket(int a, int b, int c)
+{
+    if (a == 2 && b == 2 && c == 2)
+    {
+        return 10;
+    }
+    else if (a == b && b == c)
+    {
+        return 5;
+    }
+    else if (a != b && a != c)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+",0.0,1.0,00000000030000000000000000,3a72802571f600a4da59afca18740af02e17c42b,"public int redTicket(int a, int b, int c)
+{
+    if (a == 2 && b == 2 && c == 2)
+    {
+        return 10;
+    }
+    else if (a == b && b == c)
+    {
+        return 5;
+    }
+    else if (a != b && a != c)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+",0.0,0.9615384615384616,False,3
+17,"Write a function in Java that implements the following logic: You have a red lottery ticket showing ints a, b, and c, each of which is 0, 1, or 2. If they are all the value 2, the result is 10. Otherwise if they are all the same, the result is 5. Otherwise so long as both b and c are different from a, the result is 1. Otherwise the result is 0.",2caad38a4e3a8f3f61537412ef7aa439,00110100000000010000000000,a5ec692ec461fd147520eca84652650f85204ecc,"public int redTicket(int a, int b, int c)
+{
+    if (a == 2 && b == 2 && c == 2)
+    {
+     	return 10;   
+    }
+    else if (a == 2 && b == 2 && c == 2)
+    {
+     	return 5;   
+    }
+    else if ( a != b && a != c)
+    {
+     	return 1;   
+    }
+    else
+    {
+     	return 0;   
+    }
+}
+",0.8461540000000001,0.8461538461538461,00000000000000000000000000,429ece7389d85141f1f52ab070bd875da4a2ea32,"public int redTicket(int a, int b, int c)
+{
+    if (a == 2 && b == 2 && c == 2)
+    {
+     	return 10;   
+    }
+    else if (a == b && b == c && c == a)
+    {
+     	return 5;   
+    }
+    else if ( a != b && a != c)
+    {
+     	return 1;   
+    }
+    else
+    {
+     	return 0;   
+    }
+}
+",1.0,1.0,37b1fe960daba91fffadbdb5a3a9db15,01000010001110101111110000,c1f46ce72d309994ff32f46284a15097e22e255e,"public int redTicket(int a, int b, int c)
+{
+    int returnt;
+    int sum = a + b + c;
+    int div = (b+c)/2;
+    if (sum == 6)
+    {
+     	returnt = 10;   
+    }
+    else if (a==b && b==c)
+    {
+     	returnt = 5;   
+    }
+    else if (a!=b || b!=c)
+    {
+     	returnt = 1;   
+    }
+    else
+    {
+     	returnt = 0;   
+    }
+    return returnt;
+}
+",0.538462,0.5384615384615384,00001010111001000011111000,e5c50450c1a97d24223e96998031b1af421d580e,"public int redTicket(int a, int b, int c)
+{
+    int returnt;
+    int sum = a + b + c;
+    int div = (b+c)/2;
+    if (sum == 6)
+    {
+     	returnt = 10;   
+    }
+    else if (a==b && b==c)
+    {
+     	returnt = 5;   
+    }
+    else if (a!=b && b!=c)
+    {
+     	returnt = 1;   
+    }
+    else
+    {
+     	returnt = 0;   
+    }
+    return returnt;
+}
+",0.576923,0.5769230769230769,False,0
+17,"Write a function in Java that implements the following logic: You have a red lottery ticket showing ints a, b, and c, each of which is 0, 1, or 2. If they are all the value 2, the result is 10. Otherwise if they are all the same, the result is 5. Otherwise so long as both b and c are different from a, the result is 1. Otherwise the result is 0.",17737832ac17be5216f187a82c20936e,00111101110001010000001111,6b8305afc826462810b8f4bd083c246037c299eb,"public int redTicket(int a, int b, int c)
+{
+    
+    if (a== 2 && b==2 && c==2)
+    {
+        return 10;
+    }
+    
+    
+    
+    
+    return 0;
+}
+",0.5,0.5,00001001110001000000001111,2685eddb92291821c954a25328040d9f9408eb9e,"public int redTicket(int a, int b, int c)
+{
+    
+    if (a== 2 && b==2 && c==2)
+    {
+        return 10;
+    }
+    
+    if (a==b && a==c && b==c)
+    {
+        return 5;
+    }
+    
+    
+    
+    
+    return 0;
+}
+",0.653846,0.6538461538461539,73a2ef803debeee21de0e42f9c91aa6c,00110100000000010000000000,450cda17a2cd63f581b1f49c95ce05d1a0f71f9b,"public int redTicket(int a, int b, int c)
+{
+    if (a == b && b == c)
+    {
+     	if ( a == 2)
+            return 10;
+        return c;
+    }
+    if (a != b && a != c)
+        return 1;
+    return 0;
+}
+",0.8461540000000001,0.8461538461538461,00000000000000000000000000,1cc197e2eb09d07e1071b94d43d2811c158b6e04,"public int redTicket(int a, int b, int c)
+{
+    if (a == b && b == c)
+    {
+     	if ( a == 2)
+            return 10;
+        return 5;
+    }
+    if (a != b && a != c)
+        return 1;
+    return 0;
+}
+",1.0,1.0,False,0
+17,"Write a function in Java that implements the following logic: You have a red lottery ticket showing ints a, b, and c, each of which is 0, 1, or 2. If they are all the value 2, the result is 10. Otherwise if they are all the same, the result is 5. Otherwise so long as both b and c are different from a, the result is 1. Otherwise the result is 0.",17737832ac17be5216f187a82c20936e,00001001110001000000001111,2685eddb92291821c954a25328040d9f9408eb9e,"public int redTicket(int a, int b, int c)
+{
+    
+    if (a== 2 && b==2 && c==2)
+    {
+        return 10;
+    }
+    
+    if (a==b && a==c && b==c)
+    {
+        return 5;
+    }
+    
+    
+    
+    
+    return 0;
+}
+",0.653846,0.6538461538461539,00000000000000000000000000,5f137dbfa54f3c15c65ef24630bad52216763faa,"public int redTicket(int a, int b, int c)
+{
+    
+    if (a== 2 && b==2 && c==2)
+    {
+        return 10;
+    }
+    
+    if (a==b && a==c && b==c)
+    {
+        return 5;
+    }
+    
+    if (a!=b && a!=c)
+    {
+        return 1;
+    }
+    
+    
+    
+    
+    return 0;
+}
+",1.0,1.0,e3edca0f6e68bfb76eaf26a8eb6dd94b,00001000110001000000001000,41c85a6df2bdbedfc884e2b668da506a35e42622,"public int redTicket(int a, int b, int c)
+{
+    if(a==b&&a==c&&a==2)return 10;
+    if(a==b&&a==c)return 5;
+    if(a==b||a==c||b==c) return 0;
+    return 1;
+}
+",0.807692,0.8076923076923077,00000000000000000000000000,40d5eefe93b6bfc40e766e864b9c0de2bf4ae7ec,"public int redTicket(int a, int b, int c)
+{
+    if(a==b&&a==c&&a==2)return 10;
+    if(a==b&&a==c)return 5;
+    if(a==b||a==c) return 0;
+    return 1;
+}
+",1.0,1.0,False,3
+17,"Write a function in Java that implements the following logic: You have a red lottery ticket showing ints a, b, and c, each of which is 0, 1, or 2. If they are all the value 2, the result is 10. Otherwise if they are all the same, the result is 5. Otherwise so long as both b and c are different from a, the result is 1. Otherwise the result is 0.",8425bc94a44e3d1bb3c8c026b2702c00,00001000110001000000001000,18ab89e18a6ce4e406b204406f6fb94214480bd9,"public int redTicket(int a, int b, int c)
+{
+    if (a == 2 && b == 2 && c == 2)
+        return 10;
+    if (a == b && b == c && a == c)
+        return 5;
+    if (a != b && b != c && a != c)
+        return 1;
+    else
+        return 0;
+}
+",0.807692,0.8076923076923077,01000000000110101100000000,79f057c302ca54590b2f2dc4acb2058995d5580a,"public int redTicket(int a, int b, int c)
+{
+    if (a == 2 && b == 2 && c == 2)
+        return 10;
+    if (a == b && b == c && a == c)
+        return 5;
+    if (a != b && b != c && a != c)
+        return 1;
+    if (a == b || b == c)
+        return 1;
+    else
+        return 0;
+}
+",0.769231,0.7692307692307693,9f3d342d38e036a9137ef3e270d9d79c,01000011001110101111110111,173c3803f5af881e5bf9236a2cb5c5aba147c1f5,"public int redTicket(int a, int b, int c)
+{
+	if (a == 2 && b == c && a == c)
+    {
+    	return 10;
+    }
+    
+    else if (a == b && b == c)
+    {
+    	return 5; 
+    }
+    
+    if (a == b || a == c || b == c)
+    {
+    	return 1;
+    }
+    
+    else
+    {
+    	return 0;
+    }
+}
+",0.384615,0.38461538461538464,01001010111111101111111000,676c1ddd9aaa1bf6778a70acacf438080c866e02,"public int redTicket(int a, int b, int c)
+{
+	if (a == 2 && b == c && a == c)
+    {
+    	return 10;
+    }
+    
+    else if (a == b && b == c)
+    {
+    	return 5; 
+    }
+    
+    if (a == b || a == c || b == c)
+    {
+    	return 5;
+    }
+    
+    if(b != a || c != a || b != c)
+    {
+    	return 1;
+    }
+    
+    else
+    {
+    	return 0;
+    }
+}
+",0.346154,0.34615384615384615,False,3
+17,"Write a function in Java that implements the following logic: You have a red lottery ticket showing ints a, b, and c, each of which is 0, 1, or 2. If they are all the value 2, the result is 10. Otherwise if they are all the same, the result is 5. Otherwise so long as both b and c are different from a, the result is 1. Otherwise the result is 0.",8425bc94a44e3d1bb3c8c026b2702c00,01000000000110101100000000,aef297acae6f43484d03e1b243047ea1a4b0eadd,"public int redTicket(int a, int b, int c)
+{
+    if (a == 2 && b == 2 && c == 2)
+        return 10;
+    if (a == b && b == c && a == c)
+        return 5;
+    if (a != b && b != c && a != c)
+        return 1;
+    if ((a == b && b != c) || (a != b && b == c))
+        return 1;
+    else
+        return 0;
+}
+",0.769231,0.7692307692307693,00001000110001000000001000,538e725bd6f1419912fb8dbf1065bf1b2e2f4adc,"public int redTicket(int a, int b, int c)
+{
+    if (a == 2 && b == 2 && c == 2)
+        return 10;
+    if (a == b && b == c && a == c)
+        return 5;
+    if (a != b && b != c && a != c)
+        return 1;
+    if ((a == b && b != c) || (a != b && b == c))
+        return 0;
+    else
+        return 0;
+}
+",0.807692,0.8076923076923077,e3edca0f6e68bfb76eaf26a8eb6dd94b,00001000110001000000001000,41c85a6df2bdbedfc884e2b668da506a35e42622,"public int redTicket(int a, int b, int c)
+{
+    if(a==b&&a==c&&a==2)return 10;
+    if(a==b&&a==c)return 5;
+    if(a==b||a==c||b==c) return 0;
+    return 1;
+}
+",0.807692,0.8076923076923077,00000000000000000000000000,40d5eefe93b6bfc40e766e864b9c0de2bf4ae7ec,"public int redTicket(int a, int b, int c)
+{
+    if(a==b&&a==c&&a==2)return 10;
+    if(a==b&&a==c)return 5;
+    if(a==b||a==c) return 0;
+    return 1;
+}
+",1.0,1.0,False,3
+17,"Write a function in Java that implements the following logic: You have a red lottery ticket showing ints a, b, and c, each of which is 0, 1, or 2. If they are all the value 2, the result is 10. Otherwise if they are all the same, the result is 5. Otherwise so long as both b and c are different from a, the result is 1. Otherwise the result is 0.",9f3d342d38e036a9137ef3e270d9d79c,00001001110001000000001111,60edbc616b529f145ae8d2c7396eda1456ae5ff2,"public int redTicket(int a, int b, int c)
+{
+	if (a == 2 && b == c && a == c)
+    {
+    	return 10;
+    }
+    
+    else if (a == b && b == c)
+    {
+    	return 5; 
+    }    
+    
+    if(b == a || c == a || b == c)
+    {
+    	return 0;
+    }
+    
+    else
+    {
+    	return 0;
+    }
+}
+",0.653846,0.6538461538461539,00000000000000000000000000,069cbf3fc268ea77f8a2e3f3c113e639515121cd,"public int redTicket(int a, int b, int c)
+{
+	if (a == 2 && b == 2 && c == 2)
+    {
+    	return 10;
+    }
+    
+    if (a == b && b == c)
+    {
+    	return 5; 
+    }    
+    
+    if(b != a && c != a)
+    {
+    	return 1;
+    }
+    
+    else
+    {
+    	return 0;
+    }
+}
+",1.0,1.0,f417d05af72b37f956c906aea42d1511,00001001110001000000001111,54d6b44c4a4ddd368ba8e41e4901c8de71af2eef,"public int redTicket(int a, int b, int c)
+{
+    if(a == 2 && b == 2 && c == 2)
+    {
+        return 10;
+    }
+    else if (a == b && b ==c)
+    {
+        return 5;
+    }
+    else if(b!= a && c != a)
+    {
+        return 2;
+    }
+    else
+    {
+        return 0;
+    }
+}
+",0.653846,0.6538461538461539,00000000000000000000000000,f6a96a5f145d7e845293a22b29c3be382a03ddae,"public int redTicket(int a, int b, int c)
+{
+    if(a == 2 && b == 2 && c == 2)
+    {
+        return 10;
+    }
+    else if (a == b && b ==c)
+    {
+        return 5;
+    }
+    else if(b!= a && c != a)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+",1.0,1.0,True,3
+21,"Write a function in Java that implements the following logic: Given 3 int values, a, b, and c, return their sum. However, if one of the values is 13 then it does not count towards the sum and values to its right do not count. So for example, if b is 13, then both b and c do not count.",6910a0f1eff035477ff9f52993ebf0b1,01000111100100111111,94ba0a50f8deaea4b071aab5c624dc580f03f900,"public int luckySum(int a, int b, int c)
+{
+    if ( b == 13)
+    {
+        b = 0;
+        c = 0;
+    }
+    return a + b + c;
+            
+}
+",0.4,0.4,00000000000000000000,d82b8f23a638e58a78d87164cc6d48dbf8f84646,"public int luckySum(int a, int b, int c)
+{
+    if ( a == 13)
+    {
+        a = 0;
+        b = 0;
+        c = 0;
+    }
+    if ( b == 13)
+    {
+        b = 0;
+        c = 0;
+    }
+    if (c == 13)
+    {
+        c = 0;
+    }
+    return a + b + c;
+            
+}
+",1.0,1.0,735dd629ab696e3a1bfcc0fe0d687bb1,01000111100100111111,60410af204b44a4561b75d485c4c691dc76aba6d,"public int luckySum(int a, int b, int c)
+{
+    if (a == 13)
+    {
+        return c;
+    }
+    else if (b == 13)
+    {
+        return a;
+    }
+    else if (c == 13)
+    {
+        return b;
+    }
+    else
+    {
+        return a + b + c;
+    }
+    
+}
+",0.4,0.4,00000000000000000000,7dba631225966b307e0de8331d66fd7cff690389,"public int luckySum(int a, int b, int c)
+{
+    if (a == 13)
+    {
+        return 0;
+    }
+    else if (b == 13)
+    {
+        return a;
+    }
+    else if (c == 13)
+    {
+        return a + b;
+    }
+    else
+    {
+        return a + b + c;
+    }
+    
+}
+",1.0,1.0,True,1
+17,"Write a function in Java that implements the following logic: You have a red lottery ticket showing ints a, b, and c, each of which is 0, 1, or 2. If they are all the value 2, the result is 10. Otherwise if they are all the same, the result is 5. Otherwise so long as both b and c are different from a, the result is 1. Otherwise the result is 0.",0aaf61723a352ba7ea1be4502df85765,00001001110001000000001111,b71c92ca2e33a86259c2efea9d442e979f2bd5f9,"public int redTicket(int a, int b, int c)
+{
+    if (a == 2 && (a == b && a==c))
+    {
+     	return 10;   
+    }
+    else if (a == b && b == c)
+    {
+     	return 5;   
+    }
+    return 0;
+}
+",0.653846,0.6538461538461539,00000000000000000000000000,6745672ab45af543cd10052618909c67d0209e3a,"public int redTicket(int a, int b, int c)
+{
+    if (a == 2 && (a == b && a==c))
+    {
+     	return 10;   
+    }
+    else if (a == b && b == c)
+    {
+     	return 5;   
+    }
+    else if (a != b && a != c)
+    {
+     	return 1;   
+    }
+    return 0;
+}
+",1.0,1.0,9f3d342d38e036a9137ef3e270d9d79c,00001001110001000000001111,60edbc616b529f145ae8d2c7396eda1456ae5ff2,"public int redTicket(int a, int b, int c)
+{
+	if (a == 2 && b == c && a == c)
+    {
+    	return 10;
+    }
+    
+    else if (a == b && b == c)
+    {
+    	return 5; 
+    }    
+    
+    if(b == a || c == a || b == c)
+    {
+    	return 0;
+    }
+    
+    else
+    {
+    	return 0;
+    }
+}
+",0.653846,0.6538461538461539,00000000000000000000000000,069cbf3fc268ea77f8a2e3f3c113e639515121cd,"public int redTicket(int a, int b, int c)
+{
+	if (a == 2 && b == 2 && c == 2)
+    {
+    	return 10;
+    }
+    
+    if (a == b && b == c)
+    {
+    	return 5; 
+    }    
+    
+    if(b != a && c != a)
+    {
+    	return 1;
+    }
+    
+    else
+    {
+    	return 0;
+    }
+}
+",1.0,1.0,True,3
+17,"Write a function in Java that implements the following logic: You have a red lottery ticket showing ints a, b, and c, each of which is 0, 1, or 2. If they are all the value 2, the result is 10. Otherwise if they are all the same, the result is 5. Otherwise so long as both b and c are different from a, the result is 1. Otherwise the result is 0.",0aaf61723a352ba7ea1be4502df85765,00001001110001000000001111,b71c92ca2e33a86259c2efea9d442e979f2bd5f9,"public int redTicket(int a, int b, int c)
+{
+    if (a == 2 && (a == b && a==c))
+    {
+     	return 10;   
+    }
+    else if (a == b && b == c)
+    {
+     	return 5;   
+    }
+    return 0;
+}
+",0.653846,0.6538461538461539,00000000000000000000000000,6745672ab45af543cd10052618909c67d0209e3a,"public int redTicket(int a, int b, int c)
+{
+    if (a == 2 && (a == b && a==c))
+    {
+     	return 10;   
+    }
+    else if (a == b && b == c)
+    {
+     	return 5;   
+    }
+    else if (a != b && a != c)
+    {
+     	return 1;   
+    }
+    return 0;
+}
+",1.0,1.0,97cbc42bf29a147e4a2c287664032734,00030001000000000000000111,b658a3f28878bad25bffe8dde3e83dfb300be0dd,"public int redTicket(int a, int b, int c)
+{
+    if (a == 2 & b == 2 & c == 2) 
+        return 10;
+    else if (a == b && b == c)
+        return 5;
+    else if (b == c)
+        return 1;
+    return 0;
+    
+}
+",0.8461540000000001,0.8076923076923077,00000001000000300000000111,3481dd75834b3ac957a214ad87c1a5e9eb366053,"public int redTicket(int a, int b, int c)
+{
+    if (a == 2 & b == 2 & c == 2) 
+        return 10;
+    else if (a == b && b == c)
+        return 5;
+    else if (b == c)
+        return 1;
+    return 0;
+    
+}
+",0.8461540000000001,0.8076923076923077,False,3
+17,"Write a function in Java that implements the following logic: You have a red lottery ticket showing ints a, b, and c, each of which is 0, 1, or 2. If they are all the value 2, the result is 10. Otherwise if they are all the same, the result is 5. Otherwise so long as both b and c are different from a, the result is 1. Otherwise the result is 0.",1379719828be9ee6b08ca64edb818e2b,00001001110001000000001111,541a40fc7a2492594a9fac456d8c04283ab28cb7,"public int redTicket(int a, int b, int c)
+{
+    if (a == 2 && b == 2 && c ==2)
+    {
+        return 10;
+    }
+    else if ( a == b && a == c && b == c)
+    {
+        return 5;
+    }
+    return 0;
+}
+",0.653846,0.6538461538461539,00000000000000000000000000,7afc7aa7e9f5a16647c2f1f9738b0dac52cdd748,"public int redTicket(int a, int b, int c)
+{
+    if (a == 2 && b == 2 && c ==2)
+    {
+        return 10;
+    }
+    else if ( a == b && a == c && b == c)
+    {
+        return 5;
+    }
+    else if ( a != b && a != c)
+    {
+        return 1;
+    }
+    return 0;
+}
+",1.0,1.0,97cbc42bf29a147e4a2c287664032734,00000001000000000000000111,28371e6eb55ffbd7542d31442cf7798d1285d38b,"public int redTicket(int a, int b, int c)
+{
+    if (a == 2 & b == 2 & c == 2) 
+        return 10;
+    else if (a == b && b == c)
+        return 5;
+    else if (b == c)
+        return 1;
+    return 0;
+    
+}
+",0.8461540000000001,0.8461538461538461,00000010001000000011110000,97e31cdda939e0a4ed1635b088ffc5bab26b1e6f,"public int redTicket(int a, int b, int c)
+{
+    if (a == 2 & b == 2 & c == 2) 
+        return 10;
+    else if (a == b && b == c)
+        return 5;
+    else if ((b == c) || ((b != c) && (a != b)))
+        return 1;
+    return 0;
+    
+}
+",0.769231,0.7692307692307693,False,4
+17,"Write a function in Java that implements the following logic: You have a red lottery ticket showing ints a, b, and c, each of which is 0, 1, or 2. If they are all the value 2, the result is 10. Otherwise if they are all the same, the result is 5. Otherwise so long as both b and c are different from a, the result is 1. Otherwise the result is 0.",2caad38a4e3a8f3f61537412ef7aa439,00110100000000010000000000,a5ec692ec461fd147520eca84652650f85204ecc,"public int redTicket(int a, int b, int c)
+{
+    if (a == 2 && b == 2 && c == 2)
+    {
+     	return 10;   
+    }
+    else if (a == 2 && b == 2 && c == 2)
+    {
+     	return 5;   
+    }
+    else if ( a != b && a != c)
+    {
+     	return 1;   
+    }
+    else
+    {
+     	return 0;   
+    }
+}
+",0.8461540000000001,0.8461538461538461,00000000000000000000000000,429ece7389d85141f1f52ab070bd875da4a2ea32,"public int redTicket(int a, int b, int c)
+{
+    if (a == 2 && b == 2 && c == 2)
+    {
+     	return 10;   
+    }
+    else if (a == b && b == c && c == a)
+    {
+     	return 5;   
+    }
+    else if ( a != b && a != c)
+    {
+     	return 1;   
+    }
+    else
+    {
+     	return 0;   
+    }
+}
+",1.0,1.0,73a2ef803debeee21de0e42f9c91aa6c,00110100000000010000000000,450cda17a2cd63f581b1f49c95ce05d1a0f71f9b,"public int redTicket(int a, int b, int c)
+{
+    if (a == b && b == c)
+    {
+     	if ( a == 2)
+            return 10;
+        return c;
+    }
+    if (a != b && a != c)
+        return 1;
+    return 0;
+}
+",0.8461540000000001,0.8461538461538461,00000000000000000000000000,1cc197e2eb09d07e1071b94d43d2811c158b6e04,"public int redTicket(int a, int b, int c)
+{
+    if (a == b && b == c)
+    {
+     	if ( a == 2)
+            return 10;
+        return 5;
+    }
+    if (a != b && a != c)
+        return 1;
+    return 0;
+}
+",1.0,1.0,True,0
+21,"Write a function in Java that implements the following logic: Given 3 int values, a, b, and c, return their sum. However, if one of the values is 13 then it does not count towards the sum and values to its right do not count. So for example, if b is 13, then both b and c do not count.",17737832ac17be5216f187a82c20936e,01110000110110000001,0f009fee1eeddb49a7e3619f47a5095473fcb2c7,"public int luckySum(int a, int b, int c)
+{
+    if (a != 13 && b!= 13 && c!= 13)
+    {
+        return (a+b+c);
+    }
+    
+    else if (a== 13)
+    {
+        return 0;
+    }
+    
+    return 0;
+}
+",0.6,0.6,01000000100100000001,4ce67dfd72514955b9fa47ce60bb8e3e43ad3073,"public int luckySum(int a, int b, int c)
+{
+    if (a != 13 && b!= 13 && c!= 13)
+    {
+        return (a+b+c);
+    }
+    
+    else if (a== 13)
+    {
+        return 0;
+    }
+    
+    else if (b== 13)
+    {
+        return a;
+    }
+    
+    return 0;
+}
+",0.8,0.8,97cbc42bf29a147e4a2c287664032734,01110000110110000001,49f4edd42e46d3d59a51d269be54f216e4b84c03,"public int luckySum(int a, int b, int c)
+{
+    if (a == 13)
+        return 0;
+    if (b == 13)
+        return 0;
+    if (c == 13)
+        return (a + c);
+    return (a + b + c);
+}
+",0.6,0.6,01000000100100000001,f877f2f90aa9897c12c015616683cbe01709a035,"public int luckySum(int a, int b, int c)
+{
+    if (a == 13)
+        return 0;
+    if (b == 13)
+        return a;
+    if (c == 13)
+        return (a + c);
+    return (a + b + c);
+}
+",0.8,0.8,True,1
+21,"Write a function in Java that implements the following logic: Given 3 int values, a, b, and c, return their sum. However, if one of the values is 13 then it does not count towards the sum and values to its right do not count. So for example, if b is 13, then both b and c do not count.",17737832ac17be5216f187a82c20936e,01000000100100000001,4ce67dfd72514955b9fa47ce60bb8e3e43ad3073,"public int luckySum(int a, int b, int c)
+{
+    if (a != 13 && b!= 13 && c!= 13)
+    {
+        return (a+b+c);
+    }
+    
+    else if (a== 13)
+    {
+        return 0;
+    }
+    
+    else if (b== 13)
+    {
+        return a;
+    }
+    
+    return 0;
+}
+",0.8,0.8,00000000000000000000,78a8e8a64b313ff7d1734612cc884e563d6caea4,"public int luckySum(int a, int b, int c)
+{
+    if (a != 13 && b!= 13 && c!= 13)
+    {
+        return (a+b+c);
+    }
+    
+    else if (a== 13)
+    {
+        return 0;
+    }
+    
+    else if (b== 13)
+    {
+        return a;
+    }
+    
+    else if (c==13)
+    {
+        return (a+b);
+    }
+    
+    return 0;
+}
+",1.0,1.0,8ea9805479ddb07d9183081b059dd0d2,00000100000000000000,ddc51057b4ecb217243a4e0d51b074e703709da9,"public int luckySum(int a, int b, int c)
+{
+    int sum = 0;
+    if (a == 13 && b == 13 && c == 13)
+    {
+    	sum = 0;
+        return sum;
+    }
+    else if (a == 13 && b == 13)
+    {
+    	sum = 0;
+        return sum;
+    }
+    else if (a != 13 && b == 13)
+    {
+    	sum = a;
+        return sum;
+    }
+    else if (a == 13 && c == 13)
+    {
+    	sum = 0;
+        return sum;
+    }
+    else if (c == 13)
+    {
+    	sum = a + b;
+        return sum;
+    }
+    else
+    {
+    	sum = a + b + c;
+        return sum;
+    }
+}
+",0.95,0.95,00000000000000000000,5933583ee87b69f29d10eb8e9322d0b30ee0af65,"public int luckySum(int a, int b, int c)
+{
+    int sum = 0;
+    if (a == 13 && b == 13 && c == 13)
+    {
+    	sum = 0;
+        return sum;
+    }
+    else if (a == 13 && b == 13)
+    {
+    	sum = 0;
+        return sum;
+    }
+    else if (a != 13 && b == 13)
+    {
+    	sum = a;
+        return sum;
+    }
+    else if (a == 13 && c == 13)
+    {
+    	sum = 0;
+        return sum;
+    }
+    else if (c == 13)
+    {
+    	sum = a + b;
+        return sum;
+    }
+    else if (a == 13)
+    {
+    	sum = 0;
+        return sum;
+    }
+    else
+    {
+    	sum = a + b + c;
+        return sum;
+    }
+}
+",1.0,1.0,False,1
+17,"Write a function in Java that implements the following logic: You have a red lottery ticket showing ints a, b, and c, each of which is 0, 1, or 2. If they are all the value 2, the result is 10. Otherwise if they are all the same, the result is 5. Otherwise so long as both b and c are different from a, the result is 1. Otherwise the result is 0.",89ea5cb67579289ce2b6a46c42e30424,00000001000000000000000111,507bd7f9a25d541092b0606f944b0bf4f765d24d,"public int redTicket(int a, int b, int c)
+{
+    if (a == b && c == b && a != 2)
+    {
+        return 5;
+    }
+    else if (a == b && c == b && a == 2)
+    {
+        return 10;
+    }
+    else if (a != b && c == b)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}",0.8461540000000001,0.8461538461538461,01000000000110101100000000,2ad7b19b15efca9c20fa53e6ad50182511504f18,"public int redTicket(int a, int b, int c)
+{
+    if (a == b && c == b && a != 2)
+    {
+        return 5;
+    }
+    else if (a == b && c == b && a == 2)
+    {
+        return 10;
+    }
+    else if (a != b && c == b || a != c)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}",0.769231,0.7692307692307693,eb6bdd281dfc2688a42174679b8e5bbd,01001011111111101111111111,8d1dd8e48919a8fc1cabc90b9df119cad00a44dc,"public int redTicket(int a, int b, int c)
+{
+    if( a == b && b == c)
+    {
+        if( a == 2 )
+        {
+            return 10;
+        }
+        else
+        {
+            return 5;
+        }
+    }
+    else
+    {
+        if( a == b || a == c)
+        {
+            return 1;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+}
+",0.192308,0.19230769230769232,00000000000000000000000000,8d648e8392703f4459101437897131ebb7a7f6e5,"public int redTicket(int a, int b, int c)
+{
+    if( a == b && b == c)
+    {
+        if( a == 2 )
+        {
+            return 10;
+        }
+        else
+        {
+            return 5;
+        }
+    }
+    else
+    {
+        if( a != b && a != c)
+        {
+            return 1;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+}
+",1.0,1.0,False,4
+21,"Write a function in Java that implements the following logic: Given 3 int values, a, b, and c, return their sum. However, if one of the values is 13 then it does not count towards the sum and values to its right do not count. So for example, if b is 13, then both b and c do not count.",5364de2e6064f4d8a13c960b970b9f24,00110011000010111110,babb79f27d8c0bd6b79ca2855a676a3b5727dc9a,"public int luckySum(int a, int b, int c)
+{
+    int sum = a + b + c;
+    if (a == 13)
+    {
+        sum = 0;
+    }
+    if (b == 13)
+    {
+        sum = a;
+    }
+    if (c == 13)
+    {
+        sum = a + b;
+    }
+    return sum;
+}
+",0.5,0.5,00000000000000000000,3b4a24940f559084bd21a2ba4fc3e0d67152eafe,"public int luckySum(int a, int b, int c)
+{
+    int sum = a + b + c;
+    if (a == 13)
+    {
+        sum = 0;
+    }
+    else if (b == 13)
+    {
+        sum = a;
+    }
+    else if (c == 13)
+    {
+        sum = a + b;
+    }
+    return sum;
+}
+",1.0,1.0,a70a600d7c593ca50cc6639cd64ed71a,00110011000010111110,5f72237f798b29a813f163b5d18f5e9675fde01d,"public int luckySum(int a, int b, int c)
+{
+    if (c == 13)
+    {
+        return a + b;
+    }
+    else if (b == 13)
+    {
+        return a;
+    }
+    else if (a == 13)
+    {
+        return 0;
+    }
+    else
+    {
+        return a + b + c;
+    }
+}
+",0.5,0.5,00000000000000000000,b8fffa665488c9ce6ffe3c49bf02d562e13af8d9,"public int luckySum(int a, int b, int c)
+{
+    if (a == 13)
+    {
+        return 0;
+    }
+    else if (b == 13)
+    {
+        return a;
+    }
+    else if (c == 13)
+    {
+        return a + b;
+    }
+    else
+    {
+        return a + b + c;
+    }
+}",1.0,1.0,True,4
+21,"Write a function in Java that implements the following logic: Given 3 int values, a, b, and c, return their sum. However, if one of the values is 13 then it does not count towards the sum and values to its right do not count. So for example, if b is 13, then both b and c do not count.",2225c699a36afb253a69074cad850b00,10001000001001000000,9775f6b38520648728d176ecc5ccdcf7f31245e2,"public int luckySum(int a, int b, int c)
+{
+    if (a == 13)
+        return 0;
+    else if (b == 13)
+        return a;
+    else
+        return a + b;
+}
+",0.8,0.8,00000000000000000000,62506cf6a5fc87b7ba9b2c4aea33b02788819087,"public int luckySum(int a, int b, int c)
+{
+    if (a == 13)
+        return 0;
+    else if (b == 13)
+        return a;
+    else if (c == 13)
+        return a + b;
+    else
+        return a + b + c;
+}
+",1.0,1.0,e5815151957be36ad2085b7a1a02c5cc,10001000001001000000,ce5bb444d735284cc05152e4253f5e88a463f827,"public int luckySum(int a, int b, int c)
+{
+    if (a ==13)
+    {
+        return 0;
+    }
+    else if (a != 13 && b == 13)
+    {
+        return a;
+    }
+    else if (a != 13 && b != 13)
+    {
+        return (a + b);
+    }
+    else
+    {
+        return (a + b + c);
+    }
+}
+",0.8,0.8,00000000000000000000,0e264ae18dac708973bde7ef274a9ae4eb920bd8,"public int luckySum(int a, int b, int c)
+{
+    if (a ==13)
+    {
+        return 0;
+    }
+    else if (b == 13)
+    {
+        return a;
+    }
+    else if (c == 13)
+    {
+        return (a + b);
+    }
+    else
+    {
+        return (a + b + c);
+    }
+}
+",1.0,1.0,True,1
+17,"Write a function in Java that implements the following logic: You have a red lottery ticket showing ints a, b, and c, each of which is 0, 1, or 2. If they are all the value 2, the result is 10. Otherwise if they are all the same, the result is 5. Otherwise so long as both b and c are different from a, the result is 1. Otherwise the result is 0.",89ea5cb67579289ce2b6a46c42e30424,01000010001110101111110000,69f15faa97537a638054c14404def8f84c15a609,"public int redTicket(int a, int b, int c)
+{
+    if (a == b && c == b && a != 2)
+    {
+        return 5;
+    }
+    else if (a == b && c == b && a == 2)
+    {
+        return 10;
+    }
+    else if (a != b || a != c)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}",0.538462,0.5384615384615384,00000001000000000000000111,fa7efad190e8c7a6a111bda561793ab16b096805,"public int redTicket(int a, int b, int c)
+{
+    if (a == b && c == b && a != 2)
+    {
+        return 5;
+    }
+    else if (a == b && c == b && a == 2)
+    {
+        return 10;
+    }
+    else if (a != b && c == b)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}",0.8461540000000001,0.8461538461538461,89ea5cb67579289ce2b6a46c42e30424,00001010111001000011111000,fd835799c015c66b068e37fa4b17eb3356bd4a28,"public int redTicket(int a, int b, int c)
+{
+    if (a == b && c == b && a != 2)
+    {
+        return 5;
+    }
+    else if (a == b && c == b && a == 2)
+    {
+        return 10;
+    }
+    else if (a != b && c != b)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}",0.576923,0.5769230769230769,00000000000000000000000000,285f17ea9cf2578714c63d4ba958eeeb89a61a4d,"public int redTicket(int a, int b, int c)
+{
+    if (a == b && c == b && a != 2)
+    {
+        return 5;
+    }
+    else if (a == b && c == b && a == 2)
+    {
+        return 10;
+    }
+    else if (a != b && a != c)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}",1.0,1.0,False,4

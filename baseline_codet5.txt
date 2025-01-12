@@ -1,0 +1,28 @@
+Current Device: cuda
+[2025-01-09 05:24:03,693][root][WARNING] - WARNING: There is no reference data-flows extracted from the whole corpus, and the data-flow match score degenerates to 0. Please consider ignoring this score.
+[2025-01-09 05:24:07,192][root][WARNING] - WARNING: There is no reference data-flows extracted from the whole corpus, and the data-flow match score degenerates to 0. Please consider ignoring this score.
+[2025-01-09 05:24:15,116][root][WARNING] - WARNING: There is no reference data-flows extracted from the whole corpus, and the data-flow match score degenerates to 0. Please consider ignoring this score.
+[2025-01-09 05:24:25,240][root][WARNING] - WARNING: There is no reference data-flows extracted from the whole corpus, and the data-flow match score degenerates to 0. Please consider ignoring this score.
+[2025-01-09 05:24:25,370][root][WARNING] - WARNING: There is no reference data-flows extracted from the whole corpus, and the data-flow match score degenerates to 0. Please consider ignoring this score.
+[2025-01-09 05:24:28,467][root][WARNING] - WARNING: There is no reference data-flows extracted from the whole corpus, and the data-flow match score degenerates to 0. Please consider ignoring this score.
+[2025-01-09 05:24:36,939][root][WARNING] - WARNING: There is no reference data-flows extracted from the whole corpus, and the data-flow match score degenerates to 0. Please consider ignoring this score.
+[2025-01-09 05:24:39,823][root][WARNING] - WARNING: There is no reference data-flows extracted from the whole corpus, and the data-flow match score degenerates to 0. Please consider ignoring this score.
+[2025-01-09 05:24:39,911][root][WARNING] - WARNING: There is no reference data-flows extracted from the whole corpus, and the data-flow match score degenerates to 0. Please consider ignoring this score.
+[2025-01-09 05:24:39,940][root][WARNING] - WARNING: There is no reference data-flows extracted from the whole corpus, and the data-flow match score degenerates to 0. Please consider ignoring this score.
+[2025-01-09 05:24:40,007][root][WARNING] - WARNING: There is no reference data-flows extracted from the whole corpus, and the data-flow match score degenerates to 0. Please consider ignoring this score.
+[2025-01-09 05:24:48,227][root][WARNING] - WARNING: There is no reference data-flows extracted from the whole corpus, and the data-flow match score degenerates to 0. Please consider ignoring this score.
+[2025-01-09 05:24:58,785][root][WARNING] - WARNING: There is no reference data-flows extracted from the whole corpus, and the data-flow match score degenerates to 0. Please consider ignoring this score.
+[2025-01-09 05:24:58,959][root][WARNING] - WARNING: There is no reference data-flows extracted from the whole corpus, and the data-flow match score degenerates to 0. Please consider ignoring this score.
+[2025-01-09 05:25:02,162][root][WARNING] - WARNING: There is no reference data-flows extracted from the whole corpus, and the data-flow match score degenerates to 0. Please consider ignoring this score.
+[2025-01-09 05:25:02,209][root][WARNING] - WARNING: There is no reference data-flows extracted from the whole corpus, and the data-flow match score degenerates to 0. Please consider ignoring this score.
+[2025-01-09 05:25:21,905][root][WARNING] - WARNING: There is no reference data-flows extracted from the whole corpus, and the data-flow match score degenerates to 0. Please consider ignoring this score.
+[2025-01-09 05:25:22,121][root][WARNING] - WARNING: There is no reference data-flows extracted from the whole corpus, and the data-flow match score degenerates to 0. Please consider ignoring this score.
+[2025-01-09 05:25:25,280][root][WARNING] - WARNING: There is no reference data-flows extracted from the whole corpus, and the data-flow match score degenerates to 0. Please consider ignoring this score.
+[2025-01-09 05:25:32,899][root][WARNING] - WARNING: There is no reference data-flows extracted from the whole corpus, and the data-flow match score degenerates to 0. Please consider ignoring this score.
+[2025-01-09 05:25:35,990][root][WARNING] - WARNING: There is no reference data-flows extracted from the whole corpus, and the data-flow match score degenerates to 0. Please consider ignoring this score.
+[2025-01-09 05:25:43,738][root][WARNING] - WARNING: There is no reference data-flows extracted from the whole corpus, and the data-flow match score degenerates to 0. Please consider ignoring this score.
+[2025-01-09 05:25:55,147][root][WARNING] - WARNING: There is no reference data-flows extracted from the whole corpus, and the data-flow match score degenerates to 0. Please consider ignoring this score.
+[2025-01-09 05:25:55,253][root][WARNING] - WARNING: There is no reference data-flows extracted from the whole corpus, and the data-flow match score degenerates to 0. Please consider ignoring this score.
+[2025-01-09 05:25:58,508][root][WARNING] - WARNING: There is no reference data-flows extracted from the whole corpus, and the data-flow match score degenerates to 0. Please consider ignoring this score.
+[2025-01-09 05:26:02,782][root][WARNING] - WARNING: There is no reference data-flows extracted from the whole corpus, and the data-flow match score degenerates to 0. Please consider ignoring this score.
+Code Bleu: 0.8783696981656685

@@ -93,6 +93,7 @@ def generate_code_in_batch(model, dataset, tokenizer, configs, device):
     generated_codes = []
     code_bleu = []
     edit_bleu = []
+    cross_bleu = []
     with torch.no_grad():
         for batch in tqdm(dataloader, desc="Generating Code Embeddings", leave=False):
             concatenated_inputs = batch['inputs']
@@ -117,12 +118,17 @@ def generate_code_in_batch(model, dataset, tokenizer, configs, device):
             code_edit_A2 = generate_code_from_vector(A1_emb + Da, model, tokenizer, device)
             bleu = compute_code_bleu(A2, code_edit_A2)
             edit_bleu += bleu
-            #print(code_edit_A2)
-
             code_edit_B2 = generate_code_from_vector(B1_emb + Db, model, tokenizer, device)
             bleu = compute_code_bleu(B2, code_edit_B2)
             edit_bleu += bleu
-            #'''
+
+            code_cross_A2 = generate_code_from_vector(A1_emb + Db, model, tokenizer, device)
+            bleu = compute_code_bleu(A2, code_cross_A2)
+            cross_bleu += bleu
+            code_cross_B2 = generate_code_from_vector(B1_emb + Da, model, tokenizer, device)
+            bleu = compute_code_bleu(B2, code_cross_B2)
+            cross_bleu += bleu
+            '''
             for a1, a2, code_a1, code_a2 in zip(A1, A2, code_A1, code_edit_A2):
                 print('-----------------------------------A1------------------------------------------------------------------------------A2-------------------------------------------------------')
                 printCodePairSideBySide(a1, a2)
@@ -132,7 +138,7 @@ def generate_code_in_batch(model, dataset, tokenizer, configs, device):
                 printCodePairSideBySide(format_java_code(code_a1), format_java_code(code_a2))
                 print('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
                 print('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
-             #   '''
+               '''
     print('Code Bleu: ' + str(np.mean(code_bleu)))
     print('Edit Bleu: ' + str(np.mean(edit_bleu)))
     return generated_codes

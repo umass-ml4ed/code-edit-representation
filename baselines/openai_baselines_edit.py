@@ -62,7 +62,7 @@ def generate_edit_representation(original_code, modified_code):
         f"The original code snippet is:\n{original_code}\n\n"
         f"The modified code snippet is:\n{modified_code}\n\n"
         "Describe the edits required to transform the original code into the modified code. "
-        # "Make sure the edit description is not more than 5 lines."
+        "Make sure the edit description is not more than 5 lines."
         "Make it as generalized as possible."
         # "Provide a structured and detailed explanation of the changes."
     )
@@ -112,8 +112,8 @@ def generate_code(dataset):
     edit_bleu = []
     for iter, (index, row) in enumerate(tqdm(dataset.iterrows(), desc="Generating GPT4 Desc", leave=False)):
         a1 = row['code_i_1']
-        a2 = row['code_i_2']
-        b1 = row['code_j_1']
+        a2 = row['code_j_1']
+        b1 = row['code_i_2']
         b2 = row['code_j_2']
         labels = row['is_similar']
 
