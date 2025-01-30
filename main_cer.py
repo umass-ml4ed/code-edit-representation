@@ -21,6 +21,7 @@ import matplotlib.pyplot as plt
 @hydra.main(version_base=None, config_path=".", config_name="configs_cer")
 def main(configs):
     now = datetime.now().strftime("%Y%m%d_%H%M%S")
+    print(configs)
 
     # Make reproducible
     set_random_seed(configs.seed)
