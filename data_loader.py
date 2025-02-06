@@ -294,3 +294,15 @@ class DecoderFineTuneDataset(Dataset):
 def create_finetuned_decoder_dataloader(dataframe, encoder_model, tokenizer, device, batch_size=8, shuffle=True):
     dataset = DecoderFineTuneDataset(dataframe, encoder_model, tokenizer, device)
     return DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
+
+def read_seq_data_with_filter(configs: dict, filterset: pd.DataFrame) -> pd.DataFrame:
+    dataset = pd.read_pickle(configs['seq_data_path'])
+
+    allowed_problemIDs = configs['allowed_problem_list']
+    dataset = dataset[dataset['problemID'].isin(allowed_problemIDs)]
+
+    allowed_students = pd.unique(filterset[['studentID_1','studentID_2']].values.ravel())
+
+    dataset = dataset[dataset['studentID'].isin(allowed_students)]
+
+    return dataset

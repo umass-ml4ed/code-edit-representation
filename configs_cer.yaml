@@ -28,6 +28,7 @@ show_accuracy_at_every_epoch: true # shows the accuracy for training, validation
 # data_opts
 ##################################################
 data_path: 'data/dataset.pkl'
+seq_data_path: 'data/seqdataset.pkl'
 test_size: 0.2 # percentage of test dataset
 max_len: 200 # maximum number of submission per student 
 true_false_ratio: 1 # ratio of false to true samples, multiplier of the number of true

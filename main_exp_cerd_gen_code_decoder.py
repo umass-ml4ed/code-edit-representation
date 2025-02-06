@@ -50,22 +50,7 @@ def generate_code_from_vector(encoder_embedding, model, tokenizer, device):
     Returns:
         str: The generated code.
     """
-    # # Reshape encoder_embedding to match decoder input requirements
-    # encoder_embedding = encoder_embedding.unsqueeze(1)  # [batch_size, seq_length=1, hidden_size]
-    # print(encoder_embedding.shape)
-
-    # # Generate code using the decoder
-    # with torch.no_grad():
-    #     generated_ids = model.pretrained_decoder.generate(
-    #         encoder_outputs=BaseModelOutput(last_hidden_state=encoder_embedding),
-    #         max_length=128,
-    #         decoder_start_token_id=tokenizer.pad_token_id  # Start decoding from <pad>
-    #     )
-    #     generated_code = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
-
-    # return generated_code
-
-        # Prepare encoder outputs for the decoder
+    # Prepare encoder outputs for the decoder
     encoder_embedding = encoder_embedding.unsqueeze(1)  # [batch_size, seq_length=1, hidden_size]
     encoder_outputs = BaseModelOutput(last_hidden_state=encoder_embedding)
 
@@ -274,36 +259,6 @@ def make_finetuning_dataloader(dataset: pd.DataFrame, collate_fn: callable, toke
     shuffle = train and not configs.testing
     pytorch_dataset = CERDataset(dataset)
     return torch.utils.data.DataLoader(pytorch_dataset, collate_fn=collate_fn, shuffle=shuffle, batch_size=8, num_workers=n_workers)
-
-
-# class DecoderCollateForEdit(object):
-#     def __init__(self, tokenizer: T5Tokenizer, configs: dict, device: torch.device):
-#         self.tokenizer = tokenizer
-#         self.configs = configs
-#         self.device = device
-
-#     def __call__(self, batch: List[Dict[str, Union[str, int]]]) -> Dict[str, torch.Tensor]:
-#         # Create a single list where each A1, A2, B1, and B2 will be concatenated consecutively
-#         concatenated_inputs = []
-#         target_codes = []
-
-#         # Build input and target code sequences
-#         A1 = [item['A1'] for item in batch]
-#         A2 = [item['A2'] for item in batch]
-#         B1 = [item['B1'] for item in batch]
-#         B2 = [item['B2'] for item in batch]
-#         # concatenated_inputs = A1 + B1
-
-#         # target_codes = A2 + B2  # In this case, the target is the same as the input for finetuning.
-
-#         return {
-#             'A1': A1, 
-#             'A2': A2,
-#             'B1': B1,
-#             'B2': B2,
-#         }
-
-
 
 @hydra.main(version_base=None, config_path=".", config_name="configs_cer")
 def main(configs):
