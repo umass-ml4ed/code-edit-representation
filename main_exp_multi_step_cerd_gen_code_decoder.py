@@ -108,7 +108,7 @@ def generate_code_in_batch(model, history, dataset, tokenizer, configs, device):
             for sid in all_students:
                 sid_dataset = pid_dataset[pid_dataset['studentID'].isin([sid])]
                 data = []
-                if len(sid_dataset) > 2: 
+                if len(sid_dataset) > 1: 
                     for index, row in sid_dataset.iterrows():
                         data.append(row)
                     
@@ -120,12 +120,14 @@ def generate_code_in_batch(model, history, dataset, tokenizer, configs, device):
                         batch_size = embeddings.shape[0] // 4
                         A1, A2, B1, B2 = model.batch_unpack(inputs, batch_size)
                         A1_emb, A2_emb, B1_emb, B2_emb = model.batch_unpack(embeddings, batch_size)
-                        for j in range(i + 2, len(data)):
-                            inputs = [data[j-1]['code'], data[j]['code'], data[j-1]['code'], data[j]['code']]
-                            Da, _ = model.get_edit_encodings(inputs)
-                            D += Da
+                        for j in range(i + 1, len(data)):
+                            if j > i + 1:
+                                inputs = [data[j-1]['code'], data[j]['code'], data[j-1]['code'], data[j]['code']]
+                                Da, _ = model.get_edit_encodings(inputs)
+                                D += Da
+                            Dinp = D #/ (j - i)
                             # Normalize the vectors to compute cosine similarity
-                            input_vector_norm = torch.nn.functional.normalize(D, dim=1).to(device)
+                            input_vector_norm = torch.nn.functional.normalize(Dinp, dim=1).to(device)
                             # Compute cosine similarity
                             similarities = torch.mm(vector_set_norm, input_vector_norm.T).squeeze()
                             closest_idx = torch.argmax(similarities)
@@ -175,6 +177,7 @@ def main(configs):
     # checkpoint_name = '20241215_192723' #with reg, student split, all problems. reconstruction lambda = 1.5
     # checkpoint_name = '20241216_192316' #with reg, student split, all problems. reconstruction lambda = 2. t5-base
     # checkpoint_name = '20241217_212527' #with reg, student split, all problems. reconstruction lambda = 2. code-t5-base
+    
     # checkpoint_name = '20250130_211733' #cerdd, all, reconstruction =.5
     # checkpoint_name = '20250130_212046' #cerdd, all, reconstruction = 1
     # checkpoint_name = '20250130_212102' #cerdd, all, reconstruction = 1.5
@@ -186,6 +189,14 @@ def main(configs):
     # checkpoint_name = '20250130_213807' #cerd, all, reconstruction = 1.5
     # checkpoint_name = '20250130_215832' #cerd, all, reconstruction = 2
     # checkpoint_name = '20250130_220007' #cerd, all, reconstruction = 3
+    # checkpoint_name = '20250207_171519' #cerd, all, reconstruction = 4, epoch 50
+    # checkpoint_name = '20250207_171538' #cerd, all, reconstruction = 5, epoch 50
+    # checkpoint_name = '20250208_162240' #cerd, all, reconstruction = 4, epoch 100
+    # checkpoint_name = '20250208_162301' #cerd, all, reconstruction = 5, epoch 100
+
+
+    # checkpoint_name = '20250206_190729' #cerd, all, reconstruction = 3, regularization = 2
+
     print("checkpoint_name = '20250130_212344' #cerd, all, reconstruction =.5")
     cerd_model, train_set, valid_set, test_set = load_checkpoint_model_and_data(checkpoint_name=checkpoint_name, configs=configs)
 

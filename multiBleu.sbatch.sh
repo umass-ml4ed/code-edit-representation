@@ -8,6 +8,7 @@
 #SBATCH --mail-type=END,FAIL
 hostname
 
+module load conda/latest
 source activate /home/hheickal_umass_edu/.conda/envs/NLP_project
 python main_exp_multi_step_cerd_gen_code_decoder.py
 

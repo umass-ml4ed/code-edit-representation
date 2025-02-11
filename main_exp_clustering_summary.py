@@ -35,6 +35,7 @@ from tqdm import tqdm
 # from evaluator.CodeBLEU import calc_code_bleu
 from main_exp_gen_code_decoder import *
 from sklearn.cluster import DBSCAN
+from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from openai import OpenAI
 
@@ -58,19 +59,28 @@ def generate_code_embeddings(model, dataset, tokenizer, configs, device):
 
 def generate_cluster_summary(model, dataset, tokenizer, configs, device):
     embeddings, code_pairs = generate_code_embeddings(model, dataset, tokenizer, configs, device)
-    dbscan = DBSCAN(eps=configs.margin / 20, min_samples=1, metric='euclidean')
-    cluster_labels = dbscan.fit_predict(embeddings)
-
-    print(f"Clusters found: {len(set(cluster_labels)) - (1 if -1 in cluster_labels else 0)}")
     
-    pca = PCA(n_components=2)
-    reduced_embeddings = pca.fit_transform(embeddings)
+    # dbscan = DBSCAN(eps=configs.margin , min_samples=1, metric='euclidean')
+    # cluster_labels = dbscan.fit_predict(embeddings)
+    
+    num_clusters = 30  # Define the number of clusters
+    kmeans = KMeans(n_clusters=num_clusters, random_state=42)
+    cluster_labels = kmeans.fit_predict(embeddings)
+
+    print(f"Clusters found: {len(set(cluster_labels)) - (1 if -1 in cluster_labels else 0)}. Total instances: {len(embeddings)}")
+    
+    # pca = PCA(n_components=2)
+    # reduced_embeddings = pca.fit_transform(embeddings)
+
+    tsne = TSNE(n_components=2, random_state=0)
+    reduced_embeddings = tsne.fit_transform(embeddings)
+
     plt.scatter(reduced_embeddings[:, 0], reduced_embeddings[:, 1], c=cluster_labels, cmap='viridis', alpha=0.7)
     plt.title('Clustering Summary')
     plt.colorbar()
     plt.savefig('cluster_summary.png')
 
-    summarize_clusters_with_gpt4(cluster_labels=cluster_labels, code_pairs=code_pairs)
+    # summarize_clusters_with_gpt4(cluster_labels=cluster_labels, code_pairs=code_pairs)
 
     return cluster_labels, code_pairs
 
@@ -92,11 +102,15 @@ def summarize_clusters_with_gpt4(cluster_labels, code_pairs):
     
     summaries = {}
     for label, samples in clusters.items():
-        sampled_codes = samples[:5]
-        prompt = f"Provide a single brief summary of edits for all the provided code pairs:\n{sampled_codes}\nThe summary should be a unified one across different problems."
+        sampled_codes = samples[:3]
+        prompt = f"Provide a single brief summary of edits for all the provided code pairs. The summary should be a unified one across different problems. Focus on common edit patterns between code pairs.\n"
+        for (a,b) in sampled_codes:
+            prompt += 'Initial Code:\n' + a
+            prompt += 'Final Code:\n' + b + '\n\n'
         print(prompt)
         response = client.chat.completions.create(
-            model="gpt-4o-mini", 
+            # model="gpt-4o-mini", 
+            model='gpt-4o',
             messages=[
                 {"role": "system", "content": "You are a coding assistant."}, {"role": "user", "content": prompt}
                 ],
@@ -104,7 +118,10 @@ def summarize_clusters_with_gpt4(cluster_labels, code_pairs):
             temperature=0.7
         )
         summaries[label] = response.choices[0].message.content
+        print()
         print(summaries[label])
+        print('--------------------------------------------------------------------')
+        sys.stdout.flush()  # Forces the buffer to write to stdout
 
     with open('cluster_summaries.txt', 'w') as f:
         for label, summary in summaries.items():
@@ -125,9 +142,12 @@ def main(configs):
     tokenizer = create_tokenizer(configs)
     checkpoint_path = configs.model_save_dir
 
+    checkpoint_name = '20250130_212344' #cerd, all, reconstruction =.5
+    _, train_set, valid_set, test_set = load_checkpoint_model_and_data(checkpoint_name=checkpoint_name, configs=configs) #to keep the data constant over experiments
+    
     # Path to the checkpoint
     # checkpoint_name = '20241209_165650' # with regularization, if else  
-    checkpoint_name = '20241209_194800' # with regularization, if else, exclusive problems between train and test
+    # checkpoint_name = '20241209_194800' # with regularization, if else, exclusive problems between train and test
     # checkpoint_name = '20241211_195813' #with reg, student split, all problems.
     # checkpoint_name = '20241213_224930' #with reg, student split, all problems. higher reconstruction lambda
     # checkpoint_name = '20241214_000113' #with reg, student split, all problems. t5-large
@@ -135,7 +155,21 @@ def main(configs):
     # checkpoint_name = '20241216_192316' #with reg, student split, all problems. reconstruction lambda = 2. t5-base
     # checkpoint_name = '20241217_212527' #with reg, student split, all problems. reconstruction lambda = 2. code-t5-base
 
-    cerd_model, train_set, valid_set, test_set = load_checkpoint_model_and_data(checkpoint_name=checkpoint_name, configs=configs)
+    # checkpoint_name = '20250130_211733' #cerdd, all, reconstruction =.5
+    # checkpoint_name = '20250130_212046' #cerdd, all, reconstruction = 1
+    # checkpoint_name = '20250130_212102' #cerdd, all, reconstruction = 1.5
+    # checkpoint_name = '20250130_212215' #cerdd, all, reconstruction = 2
+    # checkpoint_name = '20250130_212223' #cerdd, all, reconstruction = 3
+
+    checkpoint_name = '20250130_212344' #cerd, all, reconstruction =.5
+    # checkpoint_name = '20250130_212343' #cerd, all, reconstruction = 1
+    # checkpoint_name = '20250130_213807' #cerd, all, reconstruction = 1.5
+    # checkpoint_name = '20250130_215832' #cerd, all, reconstruction = 2
+    # checkpoint_name = '20250130_220007' #cerd, all, reconstruction = 3
+    # checkpoint_name = '20250208_162240' #cerd, all, reconstruction = 4
+    # checkpoint_name = '20250208_162301' #cerd, all, reconstruction = 5
+
+    cerd_model, _, _, _ = load_checkpoint_model_and_data(checkpoint_name=checkpoint_name, configs=configs)
 
     # Example usage
     generated_summary = generate_cluster_summary(model= cerd_model, dataset=test_set, tokenizer=tokenizer, configs=configs, device=device)

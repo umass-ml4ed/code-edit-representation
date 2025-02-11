@@ -9,6 +9,6 @@
 hostname
 
 source activate /home/hheickal_umass_edu/.conda/envs/NLP_project
-python main_cer.py exp_name='cerd' epochs=100 lambda_reconstruction=3 lambda_regularization=2
+python main_cer.py exp_name='cerd' lambda_reconstruction=5 lambda_regularization=.5
 
 
