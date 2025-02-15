@@ -83,6 +83,7 @@ def generate_code_in_batch(model, history, dataset, tokenizer, configs, device):
             concatenated_inputs = batch['inputs']
             labels = batch['labels']
             labels = labels.to(device).to(torch.float32)
+            concatenated_inputs_mask = batch['masks']
 
             # Tokenize inputs
             tokenized_inputs = tokenizer(concatenated_inputs, return_tensors="pt", padding=True, truncation=True).to(device)
@@ -93,6 +94,7 @@ def generate_code_in_batch(model, history, dataset, tokenizer, configs, device):
             # Append the vectors to the list
             history_vectors.append(Da.cpu())  # Add Da to the list
             history_vectors.append(Db.cpu())  # Add Db to the list
+            break
 
         # Concatenate all tensors into a single tensor
         history_vectors = torch.cat(history_vectors, dim=0)
@@ -168,6 +170,9 @@ def main(configs):
     tokenizer = create_tokenizer(configs)
     checkpoint_path = configs.model_save_dir
 
+    data_checkpoint_name = '20250130_212344' #cerd, all, reconstruction =.5
+    _, train_set, valid_set, test_set = load_checkpoint_model_and_data(checkpoint_name=data_checkpoint_name, configs=configs) #to keep the data constant over experiments
+    
     # Path to the checkpoint
     # checkpoint_name = '20241209_165650' # with regularization, if else  
     # checkpoint_name = '20241209_194800' # with regularization, if else, exclusive problems between train and test
@@ -177,28 +182,25 @@ def main(configs):
     # checkpoint_name = '20241215_192723' #with reg, student split, all problems. reconstruction lambda = 1.5
     # checkpoint_name = '20241216_192316' #with reg, student split, all problems. reconstruction lambda = 2. t5-base
     # checkpoint_name = '20241217_212527' #with reg, student split, all problems. reconstruction lambda = 2. code-t5-base
-    
+
     # checkpoint_name = '20250130_211733' #cerdd, all, reconstruction =.5
     # checkpoint_name = '20250130_212046' #cerdd, all, reconstruction = 1
     # checkpoint_name = '20250130_212102' #cerdd, all, reconstruction = 1.5
     # checkpoint_name = '20250130_212215' #cerdd, all, reconstruction = 2
     # checkpoint_name = '20250130_212223' #cerdd, all, reconstruction = 3
 
-    checkpoint_name = '20250130_212344' #cerd, all, reconstruction =.5
+    # checkpoint_name = '20250130_212344' #cerd, all, reconstruction =.5
     # checkpoint_name = '20250130_212343' #cerd, all, reconstruction = 1
     # checkpoint_name = '20250130_213807' #cerd, all, reconstruction = 1.5
-    # checkpoint_name = '20250130_215832' #cerd, all, reconstruction = 2
+    checkpoint_name = '20250130_215832' #cerd, all, reconstruction = 2
     # checkpoint_name = '20250130_220007' #cerd, all, reconstruction = 3
-    # checkpoint_name = '20250207_171519' #cerd, all, reconstruction = 4, epoch 50
-    # checkpoint_name = '20250207_171538' #cerd, all, reconstruction = 5, epoch 50
-    # checkpoint_name = '20250208_162240' #cerd, all, reconstruction = 4, epoch 100
-    # checkpoint_name = '20250208_162301' #cerd, all, reconstruction = 5, epoch 100
-
+    # checkpoint_name = '20250208_162240' #cerd, all, reconstruction = 4
+    # checkpoint_name = '20250208_162301' #cerd, all, reconstruction = 5
 
     # checkpoint_name = '20250206_190729' #cerd, all, reconstruction = 3, regularization = 2
 
-    print("checkpoint_name = '20250130_212344' #cerd, all, reconstruction =.5")
-    cerd_model, train_set, valid_set, test_set = load_checkpoint_model_and_data(checkpoint_name=checkpoint_name, configs=configs)
+    print("checkpoint_name = '20250130_215832' #cerd, all, reconstruction = 2")
+    cerd_model, _, _, _ = load_checkpoint_model_and_data(checkpoint_name=checkpoint_name, configs=configs)
 
     # Instantiate the finetune model
     # finetune_model = FinetuneDecoderModel(encoder_model, decoder_model, cer_model, tokenizer, configs, device)

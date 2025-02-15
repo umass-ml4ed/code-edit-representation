@@ -142,8 +142,8 @@ def main(configs):
     tokenizer = create_tokenizer(configs)
     checkpoint_path = configs.model_save_dir
 
-    checkpoint_name = '20250130_212344' #cerd, all, reconstruction =.5
-    _, train_set, valid_set, test_set = load_checkpoint_model_and_data(checkpoint_name=checkpoint_name, configs=configs) #to keep the data constant over experiments
+    data_checkpoint_name = '20250130_212344' #cerd, all, reconstruction =.5
+    _, train_set, valid_set, test_set = load_checkpoint_model_and_data(checkpoint_name=data_checkpoint_name, configs=configs) #to keep the data constant over experiments
     
     # Path to the checkpoint
     # checkpoint_name = '20241209_165650' # with regularization, if else  

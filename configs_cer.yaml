@@ -2,7 +2,7 @@
 # exp_opts
 ##################################################
 seed: 0
-exp_name: 'cerdd' 
+exp_name: 'cerd' 
 use_neptune: true
 save_model: true
 testing: false # only use a very small portion of the dataset for testing purposes
@@ -12,18 +12,19 @@ log_train_every_itr: 100
 model_save_dir: '/work/pi_andrewlan_umass_edu/hheickal_umass_edu/code_edit_representation/checkpoints'
 use_cuda: true
 # allowed_problem_list: ['12'] #smallest set of size 19 + 19
-# allowed_problem_list: ['12', '17', '21'] # only if else related problems
+# allowed_problem_list: ['12', '17', '21'] # small set, only if else related problems
 # allowed_problem_list: ['34', '37', '39', '40'] # string problems
+# allowed_problem_list: ['1', '3', '5', '12', '13', '17', '20', '21', '24', '25'] # all if else problems
 # allowed_problem_list: ['46', '71'] # array problems requiring loops
 allowed_problem_list: ['1','3','5', '12', '13', '17', '20', '21', '22', '24', '25', '34', '37', '39', '40', '46', '71'] # all problems
-#batch_size_exp: 192 # highest for t5-base
-batch_size_exp: 128 # highest for t5-large
+#batch_size_exp: 128 # highest for t5-base
+batch_size_exp: 64 # highest for t5-large
 ##################################################
 # debug_opts
 ##################################################
-verbose: true # shows debug outputs. individual flags below control which of them you want to show. setting this false, will stop printing all debug outputs
-show_loss_at_every_epoch: true # shows the training loss at every epoch
-show_accuracy_at_every_epoch: true # shows the accuracy for training, validation and testing at every epoch
+verbose: false # shows debug outputs. individual flags below control which of them you want to show. setting this false, will stop printing all debug outputs
+show_loss_at_every_epoch: false # shows the training loss at every epoch
+show_accuracy_at_every_epoch: false # shows the accuracy for training, validation and testing at every epoch
 ##################################################
 # data_opts
 ##################################################
@@ -39,14 +40,14 @@ true_false_ratio: 1 # ratio of false to true samples, multiplier of the number o
 # model_name: 't5-base'
 model_inp_dim: 768 # Fixed at 768 as it's the output dimension of t5-base, codet5-base
 #model_name: 't5-large'
-#model_inp_dim: 1024 # Fixed at 1024 as it's the output dimension of t5-large, codet5-large
+# model_inp_dim: 1024 # Fixed at 1024 as it's the output dimension of t5-large, codet5-large
 model_name: 'Salesforce/codet5-base'
 code_change_vector_size: 64
 ##################################################
 # train_opts
 ##################################################
 epochs: 100
-batch_size: 4
+batch_size: 2
 lr: 1e-4
 lr_pretrained_encoder: 0
 lr_fc_edit_encoder: 1e-3
@@ -54,7 +55,7 @@ use_scheduler: true
 warmup_ratio: 0.1
 loss_fn: 'ContrastiveLoss' # ContrastiveLoss or NTXentLoss or TripletLoss or CosineSimilarityLoss or MultipleNegativesRankingLoss
 margin: 1.0
-accumulation_steps: 1
+accumulation_steps: 4
 lambda_contrastive: .5
 lambda_reconstruction: 2
 lambda_regularization: .5

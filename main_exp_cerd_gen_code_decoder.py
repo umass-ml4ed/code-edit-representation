@@ -70,7 +70,7 @@ def generate_code_from_vector(encoder_embedding, model, tokenizer, device):
     return generated_code
 
 # Function to generate codes for a batch of inputs
-def generate_code_in_batch(model, dataset, tokenizer, configs, device):
+def generate_code_in_batch(model, dataset, tokenizer, configs, device, flag_data_flow=False):
     collate_fn = CollateForCER(tokenizer=tokenizer, configs=configs, device=device)
     dataloader  = make_dataloader_experiment(dataset , collate_fn=collate_fn, configs=configs)
 
@@ -94,31 +94,31 @@ def generate_code_in_batch(model, dataset, tokenizer, configs, device):
             A1_emb, A2_emb, B1_emb, B2_emb = model.batch_unpack(embeddings, batch_size)
 
             code_A1 = generate_code_from_vector(A1_emb, model, tokenizer, device)
-            bleu = compute_code_bleu(A1, code_A1)
+            bleu = compute_code_bleu(A1, code_A1, flag_data_flow)
             code_bleu += bleu
             code_A2 = generate_code_from_vector(A2_emb, model, tokenizer, device)
-            bleu = compute_code_bleu(A2, code_A2)
+            bleu = compute_code_bleu(A2, code_A2, flag_data_flow)
             code_bleu += bleu
             code_B1 = generate_code_from_vector(B1_emb, model, tokenizer, device)
-            bleu = compute_code_bleu(B1, code_B1)
+            bleu = compute_code_bleu(B1, code_B1,flag_data_flow)
             code_bleu += bleu
             code_B2 = generate_code_from_vector(B2_emb, model, tokenizer, device)
-            bleu = compute_code_bleu(B2, code_B2)
+            bleu = compute_code_bleu(B2, code_B2,flag_data_flow)
             code_bleu += bleu
 
             code_edit_A2 = generate_code_from_vector(A1_emb + Da, model, tokenizer, device)
-            bleu = compute_code_bleu(A2, code_edit_A2)
+            bleu = compute_code_bleu(A2, code_edit_A2,flag_data_flow)
             edit_bleu += bleu
             code_edit_B2 = generate_code_from_vector(B1_emb + Db, model, tokenizer, device)
-            bleu = compute_code_bleu(B2, code_edit_B2)
+            bleu = compute_code_bleu(B2, code_edit_B2,flag_data_flow)
             edit_bleu += bleu
 
             code_cross_A2 = generate_code_from_vector(A1_emb + Db, model, tokenizer, device)
-            bleu = compute_code_bleu(A2, code_cross_A2)
+            bleu = compute_code_bleu(A2, code_cross_A2,flag_data_flow)
             bleu = [value for value, label in zip(bleu, labels) if label == 1]
             cross_bleu += bleu
             code_cross_B2 = generate_code_from_vector(B1_emb + Da, model, tokenizer, device)
-            bleu = compute_code_bleu(B2, code_cross_B2)
+            bleu = compute_code_bleu(B2, code_cross_B2,flag_data_flow)
             bleu = [value for value, label in zip(bleu, labels) if label == 1]
             cross_bleu += bleu
             '''
@@ -275,6 +275,9 @@ def main(configs):
     tokenizer = create_tokenizer(configs)
     checkpoint_path = configs.model_save_dir
 
+    data_checkpoint_name = '20250130_212344' #cerd, all, reconstruction =.5
+    _, train_set, valid_set, test_set = load_checkpoint_model_and_data(checkpoint_name=data_checkpoint_name, configs=configs) #to keep the data constant over experiments
+    
     # Path to the checkpoint
     # checkpoint_name = '20241209_165650' # with regularization, if else  
     # checkpoint_name = '20241209_194800' # with regularization, if else, exclusive problems between train and test
@@ -283,9 +286,31 @@ def main(configs):
     # checkpoint_name = '20241214_000113' #with reg, student split, all problems. t5-large
     # checkpoint_name = '20241215_192723' #with reg, student split, all problems. reconstruction lambda = 1.5
     # checkpoint_name = '20241216_192316' #with reg, student split, all problems. reconstruction lambda = 2. t5-base
-    checkpoint_name = '20241217_212527' #with reg, student split, all problems. reconstruction lambda = 2. code-t5-base
+    # checkpoint_name = '20241217_212527' #with reg, student split, all problems. reconstruction lambda = 2. code-t5-base
 
-    cerd_model, train_set, valid_set, test_set = load_checkpoint_model_and_data(checkpoint_name=checkpoint_name, configs=configs)
+    # checkpoint_name = '20250130_211733' #cerdd, all, reconstruction =.5
+    # checkpoint_name = '20250130_212046' #cerdd, all, reconstruction = 1
+    # checkpoint_name = '20250130_212102' #cerdd, all, reconstruction = 1.5
+    # checkpoint_name = '20250130_212215' #cerdd, all, reconstruction = 2
+    # checkpoint_name = '20250130_212223' #cerdd, all, reconstruction = 3
+
+    # checkpoint_name = '20250130_212344' #cerd, all, reconstruction =.5
+    # checkpoint_name = '20250130_212343' #cerd, all, reconstruction = 1
+    # checkpoint_name = '20250130_213807' #cerd, all, reconstruction = 1.5
+    # checkpoint_name = '20250130_215832' #cerd, all, reconstruction = 2
+    # checkpoint_name = '20250130_220007' #cerd, all, reconstruction = 3
+    # checkpoint_name = '20250208_162240' #cerd, all, reconstruction = 4
+    # checkpoint_name = '20250208_162301' #cerd, all, reconstruction = 5
+
+    # checkpoint_name = '20250206_190729' #cerd, all, reconstruction = 3, regularization = 2
+    
+    # checkpoint_name = '20250211_212450' #cerd, all, reconstruction = 2, codet5-large
+    checkpoint_name = '20250211_212856' #cerd, all, reconstruction = 3, codet5-large
+    # checkpoint_name = '20250211_212656' #cerdd, all, reconstruction = 2, codet5-large
+    # checkpoint_name = '20250211_213144' #cerdd, all, reconstruction = 3, codet5-large
+
+    print("checkpoint_name = '20250211_212450' #cerd, all, reconstruction = 2, codet5-large")
+    cerd_model, _, _, _ = load_checkpoint_model_and_data(checkpoint_name=checkpoint_name, configs=configs)
 
     # Instantiate the finetune model
     # finetune_model = FinetuneDecoderModel(encoder_model, decoder_model, cer_model, tokenizer, configs, device)
@@ -296,7 +321,7 @@ def main(configs):
     # test_dataloader = make_finetuning_dataloader(test_set, DecoderCollateForEdit(tokenizer, configs, device), tokenizer, configs)
  
     # Example usage
-    generated_code = generate_code_in_batch(model= cerd_model, dataset=test_set, tokenizer=tokenizer, configs=configs, device=device)
+    generated_code = generate_code_in_batch(model= cerd_model, dataset=test_set, tokenizer=tokenizer, configs=configs, device=device, flag_data_flow=True)
 
 if __name__ == "__main__":
     main()

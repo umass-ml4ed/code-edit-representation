@@ -134,14 +134,14 @@ def main(configs):
             test_log = training_step(batch, idx, len(test_loader), model, criterion, optimizer, configs, device=device)
             test_logs.append(test_log)
 
-        if ep % 1 == 0:
-            if configs.show_accuracy_at_every_epoch == True or configs.use_neptune == True:
-                train_accuracy, test_accuracy, valid_accuracy = get_model_accuracy(configs, model, train_set, test_set, valid_set)
+        # if ep % 1 == 0:
+        #     if configs.show_accuracy_at_every_epoch == True or configs.use_neptune == True:
+        #         train_accuracy, test_accuracy, valid_accuracy = get_model_accuracy(configs, model, train_set, test_set, valid_set)
             
-            if configs.verbose == True and configs.show_accuracy_at_every_epoch == True:
-                print("Train Accuracy: ", train_accuracy)
-                print("Test Accuracy: ", test_accuracy)
-                print("Valid Accuracy: ", valid_accuracy)
+        #     if configs.verbose == True and configs.show_accuracy_at_every_epoch == True:
+        #         print("Train Accuracy: ", train_accuracy)
+        #         print("Test Accuracy: ", test_accuracy)
+        #         print("Valid Accuracy: ", valid_accuracy)
         
         ## logging
         train_logs = aggregate_metrics(train_logs)
@@ -161,10 +161,10 @@ def main(configs):
                             run["best_model_at_epoch"].log(ep)
                         torch.save(model, os.path.join(configs.model_save_dir, now, 'model'))
                     
-                    if configs.use_neptune:
-                        plot_clusters(train_loader, model, ep, 'train_cluster', run)
-                        plot_clusters(valid_loader, model, ep, 'valid_cluster', run)
-                        plot_clusters(test_loader, model, ep, 'test_cluster', run)
+                    # if configs.use_neptune:
+                    #     plot_clusters(train_loader, model, ep, 'train_cluster', run)
+                    #     plot_clusters(valid_loader, model, ep, 'valid_cluster', run)
+                    #     plot_clusters(test_loader, model, ep, 'test_cluster', run)
                             
         # if test_set != None:
         for key in test_logs:
@@ -187,9 +187,9 @@ def main(configs):
             for key in best_metrics_with_valid:
                 run["metrics/test/best_"+key+"_with_valid"].log(best_metrics_with_valid[key])
             run["epoch"].log(ep)
-            run["metrics/train_accuracy"].log(train_accuracy)
-            run["metrics/test_accuracy"].log(test_accuracy)
-            run["metrics/valid_accuracy"].log(valid_accuracy)
+            # run["metrics/train_accuracy"].log(train_accuracy)
+            # run["metrics/test_accuracy"].log(test_accuracy)
+            # run["metrics/valid_accuracy"].log(valid_accuracy)
 
     # Evaluation post training for accuracy
     train_accuracy, test_accuracy, valid_accuracy = get_model_accuracy(configs, model, train_set, test_set, valid_set)

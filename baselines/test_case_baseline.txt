@@ -1,0 +1,155 @@
+21,
+"Write a function in Java that implements the following logic: Given 3 int values, a, b, and c, return their sum. However, if one of the values is 13 then it does not count towards the sum and values to its right do not count. So for example, if b is 13, then both b and c do not count.",
+11d8ffa1c1cb79e22b6d94667d3847d9,
+00110111010010111110
+00000111000000111110
+,b5509f3d8d4bcd8f2b81e75b2c675400125936aa,
+"public int luckySum(int a, int b, int c)
+{
+    int luckySum = 0;
+    if ( a == 13 )
+    {
+    	luckySum = c;
+    }
+    else if ( b == 13)
+    {
+    	luckySum = b;
+    }
+    else if (c == 13)
+    {
+    	luckySum = a + b;
+    }
+    else
+    {
+    	luckySum = a + b + c;
+    }
+    return luckySum;
+}
+",0.4,0.4,
+00000111000000111110,568da29045c9b24d7610923677bbe69d266309d1,
+"public int luckySum(int a, int b, int c)
+{
+    int luckySum = 0;
+    if ( a == 13 )
+    {
+    	luckySum = c;
+    }
+    else if ( b == 13)
+    {
+    	luckySum = a;
+    }
+    else if (c == 13)
+    {
+    	luckySum = a + b;
+    }
+    else
+    {
+    	luckySum = a + b + c;
+    }
+    return luckySum;
+}
+",0.6,0.6,
+Input   Expected_output
+1, 2, 2003	6
+1, 2, 13	3
+1, 13, 13	1
+1, 13, 13	1
+6, 5, 2002	13
+13, 2, 3	0
+13, 2, 13	0
+13, 13, 2	0
+9, 4, 13	13
+8, 13, 2002	8
+7, 2, 2001	10
+3, 3, 13	6
+56, 13, 13	56
+12, 28, 37	77
+13, 13, 13	0
+13, 152, 13	0
+13, 23, 13	0
+13, 13, 17	0
+13, 13, 32	0
+10, -8, 13	2
+public int luckySum(int a, int b, int c) {
+    if (a == 13) {
+        return 0;
+    } else if (b == 13) {
+        return a;
+    } else if (c == 13) {
+        return a + b;
+    } else {
+        return a + b + c;
+    }
+}
+
+24,"Write a function in Java that implements the following logic: Given 2 int values greater than 0, return whichever value is nearest to 21 without going over. Return 0 if they both go over.",907372450aa412b4647b9b8a64967f71,1111001000010010011000,8e5b0f729f7c1e4506c7510f4f125ff59f692f8f,"public int blackjack(int a, int b)
+{
+   if (a < 21 && b < 21)
+   {
+       if (a > b)
+       {
+           return a;
+       }
+       else
+       {
+           return b;
+       }
+   }
+   else
+   {
+       return 0;
+       
+   }
+}
+",0.590909,0.5909090909090909,0011001000010000011000,4aba14ab3d6cbfba5204d15c7cbeb35244f9e300,"public int blackjack(int a, int b)
+{
+   if (a <= 21 && b <= 21)
+   {
+       if (a > b)
+       {
+           return a;
+       }
+       else
+       {
+           return b;
+       }
+   }
+   else
+   {
+       return 0;
+       
+   }
+}
+",0.727273,0.7272727272727273,"To transform the original code into the modified code, change the condition in the first `if` statement from `a < 21 && b < 21` to `a <= 21 && b <= 21`. This adjustment allows the values of `a` and `b` to be equal to 21 in addition to being less than 21, thus altering the logic for valid inputs. No other edits are needed in the rest of the code."
+Input   Expected_output
+19, 21	21
+21, 19	21
+19, 22	19
+22, 19	19
+22, 50	0
+22, 22	0
+33, 1	1
+1, 2	2
+34, 33	0
+17, 19	19
+18, 17	18
+16, 23	16
+3, 4	4
+3, 2	3
+21, 20	21
+20, 19	20
+18, 20	20
+19, 22	19
+11, 100	11
+31, 31	0
+101, 108	0
+2, 9	9
+public int blackjack(int a, int b) {
+    if (a > 21 && b > 21) {
+        return 0; // Both numbers are over 21
+    }
+    if (a <= 21 && (b > 21 || a >= b)) {
+        return a; // Return a if b is over 21 or a is greater and within the range
+    }
+    return b; // Default case (b is less than or equal to 21 and greater than a)
+}

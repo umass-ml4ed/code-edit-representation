@@ -174,17 +174,19 @@ class ExtendedCERDModel(BaseCERModel):
         A1, A2, B1, B2 = self.batch_unpack(concatenated_inputs, batch_size)
         A1_emb, A2_emb, B1_emb, B2_emb = self.batch_unpack(embeddings, batch_size)
 
-        # decoder_inputs = torch.cat((A1_emb + Da_fc, B1_emb + Db_fc), dim = 0).unsqueeze(1)
-        decoder_inputs = torch.cat((A2_emb, B2_emb), dim=0).unsqueeze(1)
-        decoder_targets = self.tokenizer(A2 + B2, return_tensors="pt", padding=True, truncation=True).to(self.device)
+        if is_similar == True: 
+            decoder_inputs = torch.cat((A1_emb, A2_emb, B1_emb, B2_emb, A1_emb + Da_fc, B1_emb + Db_fc, A1_emb + Db_fc, B1_emb + Da_fc), dim = 0).unsqueeze(1)
+            decoder_targets = self.tokenizer(A1 + A2 + B1 + B2 + A2 + B2 + A2 + B2, return_tensors="pt", padding=True, truncation=True).to(self.device)
+        else: 
+            decoder_inputs = torch.cat((A1_emb, A2_emb, B1_emb, B2_emb, A1_emb + Da_fc, B1_emb + Db_fc), dim = 0).unsqueeze(1)
+            decoder_targets = self.tokenizer(A1 + A2 + B1 + B2 + A2 + B2, return_tensors="pt", padding=True, truncation=True).to(self.device)
+
         # Decoder reconstruction for A2 and B2
         decoder_outputs = self.pretrained_decoder(
             encoder_outputs=BaseModelOutput(last_hidden_state=decoder_inputs),
             labels=decoder_targets.input_ids
         ).logits
    
-
-
         reconstruction_loss = self.cross_entropy_loss(decoder_outputs.view(-1, decoder_outputs.size(-1)), decoder_targets.input_ids.view(-1))
    
         regularizationObjective = getRegularizationLossObjective(self.configs, self.device)
@@ -242,17 +244,15 @@ class ExtendedCERDDModel(BaseCERModel):
         A1, A2, B1, B2 = self.batch_unpack(concatenated_inputs, batch_size)
         A1_emb, A2_emb, B1_emb, B2_emb = self.batch_unpack(embeddings, batch_size)
 
-        # decoder_inputs = torch.cat((A1_emb + Da_fc, B1_emb + Db_fc), dim = 0).unsqueeze(1)
-        decoder_inputs = torch.cat((A2_emb, B2_emb), dim=0).unsqueeze(1)
-        decoder_targets = self.tokenizer(A2 + B2, return_tensors="pt", padding=True, truncation=True).to(self.device)
+        decoder_inputs = torch.cat((A1_emb, A2_emb, B1_emb, B2_emb, A1_emb + Da_fc, B1_emb + Db_fc), dim = 0).unsqueeze(1)
+        # decoder_inputs = torch.cat((A2_emb, B2_emb), dim=0).unsqueeze(1)
+        decoder_targets = self.tokenizer(A1 + A2 + B1 + B2 + A2 + B2, return_tensors="pt", padding=True, truncation=True).to(self.device)
         # Decoder reconstruction for A2 and B2
         decoder_outputs = self.pretrained_decoder(
             encoder_outputs=BaseModelOutput(last_hidden_state=decoder_inputs),
             labels=decoder_targets.input_ids
         ).logits
    
-
-
         reconstruction_loss = self.cross_entropy_loss(decoder_outputs.view(-1, decoder_outputs.size(-1)), decoder_targets.input_ids.view(-1))
    
         regularizationObjective = getRegularizationLossObjective(self.configs, self.device)

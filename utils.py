@@ -96,15 +96,28 @@ def plot_clusters(dataloader, model, epoch, plotname, neptune_run):
     plt.savefig(plotname + '.png')
     neptune_run['clusters/'+plotname].upload(plotname + '.png')
 
-def compute_code_bleu(ground_truth_codes, generated_codes):
+def compute_code_bleu(ground_truth_codes, generated_codes, ignore_data_flow = False):
     # print(ground_truth_codes)
     # print(generated_codes)
-    params=(0.25,0.25,0.25,0.25)
+    if ignore_data_flow == True:
+        params=(0.25,0.25,0.25,0.0)
+    else:
+        params=(0.25,0.25,0.25,0.25)
+
+    params_df=(0.25,0.25,0.25,0.25)
+    params_ndf=(0.25,0.25,0.25,0.0)
     lang='java'
     # for ground, generated in zip(ground_truth_codes, generated_codes):
     #     print(ground, generated)
     #     print('**')
-    codebleu_score = [calc_codebleu([ground], [generated], lang=lang, weights=params, tokenizer=None)['codebleu'] for ground, generated in zip(ground_truth_codes, generated_codes)]
+    codebleu_score = []
+    for ground, generated in zip(ground_truth_codes, generated_codes):
+        cb_df = calc_codebleu([ground], [generated], lang=lang, weights=params_df, tokenizer=None)['codebleu']
+        cb_ndf = calc_codebleu([ground], [generated], lang=lang, weights=params_ndf, tokenizer=None)['codebleu']
+        codebleu_score.append(max(cb_df, cb_ndf))
+        if cb_ndf > cb_df:
+            print("Dataflow case happened")
+    # codebleu_score = [calc_codebleu([ground], [generated], lang=lang, weights=params, tokenizer=None)['codebleu'] for ground, generated in zip(ground_truth_codes, generated_codes)]
     # print(codebleu_score)
     return codebleu_score#, detailed_codebleu_score
 
