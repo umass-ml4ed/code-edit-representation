@@ -1,0 +1,22 @@
+Current Device: cuda
+Baseline CERD Model with codeT5-base
+Edit Bleu: 0.24415977522433097
+Cross Bleu: 0.24901799022429177
+checkpoint_name = '20250130_215832' #cerd, all, reconstruction = 2, base
+Edit Bleu: 0.7462253555836107
+Cross Bleu: 0.7750718137350884
+checkpoint_name = '20250211_212450' #cerd, all, reconstruction = 2, codet5-large
+Edit Bleu: 0.7279197495783288
+Cross Bleu: 0.7629385849144051
+checkpoint_name = '20250215_160225' #cerd, all, reconstruction = 2, codet5-base, rec and trans
+Edit Bleu: 0.8513009464726604
+Cross Bleu: 0.870950760072606
+checkpoint_name = '20250216_021903' #cerd, all, recstruction = 1, contrastive = 1, regularization = 0
+Edit Bleu: 0.8469867715285142
+Cross Bleu: 0.8668114701141487
+checkpoint_name = '20250216_022008' #cerd, all, recstruction = 0, contrastive = 1, regularization = 1
+Edit Bleu: 0.18875733220951987
+Cross Bleu: 0.18303546668407436
+# checkpoint_name = '20250216_022136' #cerd, all, recstruction = 1, contrastive = 0, regularization = 1
+Edit Bleu: 0.8491866583668111
+Cross Bleu: 0.747867262925578

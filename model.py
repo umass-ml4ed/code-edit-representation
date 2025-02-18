@@ -106,6 +106,23 @@ class BaselineCERModel(BaseCERModel):
         self.pretrained_encoder = T5Model.from_pretrained(configs.model_name).encoder
         self.embedding_size = self.pretrained_encoder.config.d_model
 
+class BaselineCERDModel(BaseCERModel):
+    def __init__(self, configs: dict, device: torch.device):
+        super(BaselineCERDModel, self).__init__(configs, device)
+
+        self.pretrained_encoder = T5Model.from_pretrained(configs.model_name).encoder
+        self.embedding_size = self.pretrained_encoder.config.d_model
+
+        self.pretrained_decoder = T5ForConditionalGeneration.from_pretrained(configs.model_name)#.decoder
+
+    def get_edit_encodings_tokenized(self, tokenized_inputs):
+        embeddings = self.get_embeddings_tokenized(tokenized_inputs)
+        batch_size = embeddings.shape[0] // 4
+        A1_emb, A2_emb, B1_emb, B2_emb = self.batch_unpack(embeddings, batch_size)
+        Da = A2_emb - A1_emb
+        Db = B2_emb - B1_emb
+        return Da, Db
+
 class ExtendedCERModel(BaseCERModel):
     def __init__(self, configs: dict, device: torch.device):
         super(ExtendedCERModel, self).__init__(configs, device)
@@ -174,13 +191,13 @@ class ExtendedCERDModel(BaseCERModel):
         A1, A2, B1, B2 = self.batch_unpack(concatenated_inputs, batch_size)
         A1_emb, A2_emb, B1_emb, B2_emb = self.batch_unpack(embeddings, batch_size)
 
-        if is_similar == True: 
-            decoder_inputs = torch.cat((A1_emb, A2_emb, B1_emb, B2_emb, A1_emb + Da_fc, B1_emb + Db_fc, A1_emb + Db_fc, B1_emb + Da_fc), dim = 0).unsqueeze(1)
-            decoder_targets = self.tokenizer(A1 + A2 + B1 + B2 + A2 + B2 + A2 + B2, return_tensors="pt", padding=True, truncation=True).to(self.device)
-        else: 
+        if self.configs.reconstruction_edit_flag:
             decoder_inputs = torch.cat((A1_emb, A2_emb, B1_emb, B2_emb, A1_emb + Da_fc, B1_emb + Db_fc), dim = 0).unsqueeze(1)
             decoder_targets = self.tokenizer(A1 + A2 + B1 + B2 + A2 + B2, return_tensors="pt", padding=True, truncation=True).to(self.device)
-
+        else:
+            decoder_inputs = torch.cat((A1_emb, A2_emb, B1_emb, B2_emb), dim=0).unsqueeze(1)
+            decoder_targets = self.tokenizer(A1 + A2 + B1 + B2, return_tensors="pt", padding=True, truncation=True).to(self.device)
+        
         # Decoder reconstruction for A2 and B2
         decoder_outputs = self.pretrained_decoder(
             encoder_outputs=BaseModelOutput(last_hidden_state=decoder_inputs),

@@ -63,7 +63,7 @@ def generate_cluster_summary(model, dataset, tokenizer, configs, device):
     # dbscan = DBSCAN(eps=configs.margin , min_samples=1, metric='euclidean')
     # cluster_labels = dbscan.fit_predict(embeddings)
     
-    num_clusters = 30  # Define the number of clusters
+    num_clusters = 100  # Define the number of clusters
     kmeans = KMeans(n_clusters=num_clusters, random_state=42)
     cluster_labels = kmeans.fit_predict(embeddings)
 
@@ -76,11 +76,11 @@ def generate_cluster_summary(model, dataset, tokenizer, configs, device):
     reduced_embeddings = tsne.fit_transform(embeddings)
 
     plt.scatter(reduced_embeddings[:, 0], reduced_embeddings[:, 1], c=cluster_labels, cmap='viridis', alpha=0.7)
-    plt.title('Clustering Summary')
-    plt.colorbar()
+    # plt.title('Clustering Summary')
+    # plt.colorbar()
     plt.savefig('cluster_summary.png')
 
-    # summarize_clusters_with_gpt4(cluster_labels=cluster_labels, code_pairs=code_pairs)
+    summarize_clusters_with_gpt4(cluster_labels=cluster_labels, code_pairs=code_pairs)
 
     return cluster_labels, code_pairs
 
@@ -101,12 +101,20 @@ def summarize_clusters_with_gpt4(cluster_labels, code_pairs):
         clusters[label].append(code)
     
     summaries = {}
+    newdatalist = []
     for label, samples in clusters.items():
-        sampled_codes = samples[:3]
-        prompt = f"Provide a single brief summary of edits for all the provided code pairs. The summary should be a unified one across different problems. Focus on common edit patterns between code pairs.\n"
+        sampled_codes = samples[:5]
+        newdata = []
+        newdata.append(label)
+        # prompt = f"Provide a single brief summary of edits for all the provided code pairs. The summary should be a unified one across different problems. Focus on common edit patterns between code pairs.\n"
+        prompt = "You are given the following 5 code pairs. Each of them belong to a possibly different student. The 'Inital Code' is student's first attempt and the 'Next Code' is their next attempt to correct 'Initial Code'. Analyze these and produce the common mistakes in the 'Initial Code's. Also find common debugging patterns the students used to get to 'Next Code'. Focus on finding common patterns that exist in all 5.\n"
         for (a,b) in sampled_codes:
+            newdata.append(a)
+            newdata.append(b)
             prompt += 'Initial Code:\n' + a
-            prompt += 'Final Code:\n' + b + '\n\n'
+            prompt += 'Next Code:\n' + b + '\n\n'
+
+        prompt += "Make sure the output is just one paragraph and very brief."
         print(prompt)
         response = client.chat.completions.create(
             # model="gpt-4o-mini", 
@@ -118,14 +126,28 @@ def summarize_clusters_with_gpt4(cluster_labels, code_pairs):
             temperature=0.7
         )
         summaries[label] = response.choices[0].message.content
+        newdata.append(summaries[label])
+        newdatalist.append(newdata)
         print()
         print(summaries[label])
         print('--------------------------------------------------------------------')
         sys.stdout.flush()  # Forces the buffer to write to stdout
+        # break
 
     with open('cluster_summaries.txt', 'w') as f:
         for label, summary in summaries.items():
             f.write(f"Cluster {label}:\n{summary}\n\n")
+    
+    newdf = pd.DataFrame(newdatalist, columns=['clusterID', 
+                                           'code_i_1', 'code_j_1',
+                                           'code_i_2', 'code_j_2',
+                                           'code_i_3', 'code_j_3',
+                                           'code_i_4', 'code_j_4',
+                                           'code_i_5', 'code_j_5',
+                                           'summary'
+                                           ])
+    newdf.to_csv('gpt4o_cluster_summaries.csv', index=False )
+
 
 @hydra.main(version_base=None, config_path=".", config_name="configs_cer")
 def main(configs):
@@ -161,7 +183,7 @@ def main(configs):
     # checkpoint_name = '20250130_212215' #cerdd, all, reconstruction = 2
     # checkpoint_name = '20250130_212223' #cerdd, all, reconstruction = 3
 
-    checkpoint_name = '20250130_212344' #cerd, all, reconstruction =.5
+    # checkpoint_name = '20250130_212344' #cerd, all, reconstruction =.5
     # checkpoint_name = '20250130_212343' #cerd, all, reconstruction = 1
     # checkpoint_name = '20250130_213807' #cerd, all, reconstruction = 1.5
     # checkpoint_name = '20250130_215832' #cerd, all, reconstruction = 2
@@ -169,10 +191,24 @@ def main(configs):
     # checkpoint_name = '20250208_162240' #cerd, all, reconstruction = 4
     # checkpoint_name = '20250208_162301' #cerd, all, reconstruction = 5
 
+    # checkpoint_name = '20250206_190729' #cerd, all, reconstruction = 3, regularization = 2
+
+    # checkpoint_name = '20250211_212450' #cerd, all, reconstruction = 2, codet5-large
+    # checkpoint_name = '20250211_212856' #cerd, all, reconstruction = 3, codet5-large
+    # checkpoint_name = '20250211_212656' #cerdd, all, reconstruction = 2, codet5-large
+    # checkpoint_name = '20250211_213144' #cerdd, all, reconstruction = 3, codet5-large
+
+    checkpoint_name = '20250215_160225' #cerd, all, reconstruction = 2, codet5-base, rec and trans
+    # checkpoint_name = '20250215_160712' #cerdd, all, reconstruction = 2, codet5-base, rec and trans
+
+    # checkpoint_name = '20250216_021903' #cerd, all, recstruction = 1, contrastive = 1, regularization = 0
+    # checkpoint_name = '20250216_022008' #cerd, all, recstruction = 0, contrastive = 1, regularization = 1
+    # checkpoint_name = '20250216_022136' #cerd, all, recstruction = 1, contrastive = 0, regularization = 1
+
     cerd_model, _, _, _ = load_checkpoint_model_and_data(checkpoint_name=checkpoint_name, configs=configs)
 
     # Example usage
-    generated_summary = generate_cluster_summary(model= cerd_model, dataset=test_set, tokenizer=tokenizer, configs=configs, device=device)
+    generated_summary = generate_cluster_summary(model= cerd_model, dataset=train_set, tokenizer=tokenizer, configs=configs, device=device)
 
 if __name__ == "__main__":
     main()

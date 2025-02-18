@@ -10,6 +10,7 @@ testing_size: 8
 neptune_project: 'hhjami/Code-Edit-Representation' # change to your own "username/projectname"
 log_train_every_itr: 100
 model_save_dir: '/work/pi_andrewlan_umass_edu/hheickal_umass_edu/code_edit_representation/checkpoints'
+java_code_save_dir: 'javafiles'
 use_cuda: true
 # allowed_problem_list: ['12'] #smallest set of size 19 + 19
 # allowed_problem_list: ['12', '17', '21'] # small set, only if else related problems
@@ -59,3 +60,5 @@ accumulation_steps: 4
 lambda_contrastive: .5
 lambda_reconstruction: 2
 lambda_regularization: .5
+reconstruction_edit_flag: false
+reconstruction_cross_flag: false
